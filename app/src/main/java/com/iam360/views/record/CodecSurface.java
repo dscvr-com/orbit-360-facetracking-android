@@ -211,7 +211,7 @@ public class CodecSurface
         if (VERBOSE) Log.d(TAG, "new frame available");
         synchronized (mFrameSyncObject) {
             if (mFrameAvailable) {
-                //Timber.e("mFrameAvailable already set, frame could be dropped"); FIXME
+                Log.e(TAG, "mFrameAvailable already set, frame could be dropped");
             }
             mFrameAvailable = true;
             mFrameSyncObject.notifyAll();

@@ -132,11 +132,11 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if(dataListener != null) {
                 if(surface.awaitNewImage()) {
                     surface.drawImage(false);
-                    //Timber.d("Fetch frame success"); FIXME
+                    Log.e(TAG, "Fetch frame success");
                     dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, surface.colorFormat);
                 }
             } else {
-                //Timber.e("Fetch frame failed"); FIXME
+                Log.e(TAG,"Fetch frame failed");
                 Thread.sleep(10, 0);
             }
         } catch (RuntimeException e) {
@@ -197,7 +197,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
     }
 
     private void openCamera(int width, int height) {
-        // Todo - open camera
         CameraManager manager = (CameraManager)getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             Log.d(TAG, "tryAcquire");
@@ -207,7 +206,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
             for (String cameraId : manager.getCameraIdList()){
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                if(characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT){
+                if(characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT){
                     continue;
                 }
                 StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
