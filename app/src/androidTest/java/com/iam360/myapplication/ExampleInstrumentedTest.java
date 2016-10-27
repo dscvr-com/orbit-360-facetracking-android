@@ -1,4 +1,4 @@
-package iam360.com.myapplication;
+package com.iam360.myapplication;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
