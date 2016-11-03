@@ -1,5 +1,6 @@
 package com.iam360.myapplication;
 
+
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
@@ -8,8 +9,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
+import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.RecorderPreviewView;
-import com.iam360.myapplication.R;
 
 public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -17,7 +18,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
-    RecorderPreviewView recordPreview;
+    private RecorderPreviewView recordPreview;
 
     @Override
     public void onResume() {
@@ -43,6 +44,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         setContentView(R.layout.activity_main);
         requestCameraPermission();
         recordPreview = new RecorderPreviewView(this);
+        recordPreview.setPreviewListener(new FaceTrackingListener(this));
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         layout.addView(recordPreview);
     }
