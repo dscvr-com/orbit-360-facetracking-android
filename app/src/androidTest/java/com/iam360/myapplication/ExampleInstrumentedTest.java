@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("iam360.com.myapplication", appContext.getPackageName());
+        assertEquals("com.iam360.myapplication", appContext.getPackageName());
     }
 }
