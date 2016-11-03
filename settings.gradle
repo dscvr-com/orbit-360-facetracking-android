@@ -1,2 +1,2 @@
 include ':app'
-include ':OpenCV-android-sdk:sdk:java'
+include ':OpenCV-android-sdk'

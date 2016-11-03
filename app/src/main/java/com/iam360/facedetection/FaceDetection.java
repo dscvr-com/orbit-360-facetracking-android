@@ -2,7 +2,10 @@ package com.iam360.facedetection;
 
 import android.content.Context;
 import android.util.Log;
-import org.opencv.core.*;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
