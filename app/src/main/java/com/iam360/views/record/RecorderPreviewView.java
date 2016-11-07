@@ -132,7 +132,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if(dataListener != null) {
                 if(surface.awaitNewImage()) {
                     surface.drawImage(false);
-                    Log.e(TAG, "Fetch frame success");
+                    Log.i(TAG, "Fetch frame success");
                     dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, surface.colorFormat);
                 }
             } else {

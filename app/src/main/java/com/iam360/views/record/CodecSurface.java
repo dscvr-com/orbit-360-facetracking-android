@@ -41,6 +41,8 @@ public class CodecSurface
     private Object mFrameSyncObject = new Object();     // guards mFrameAvailable
     private boolean mFrameAvailable = false;
     private ByteBuffer mPixelBuf;                       // used by saveFrame()
+    private int sizeOfImageInRGBA;
+
     /**
      * Creates a CodecOutputSurface backed by a pbuffer with the specified dimensions.  The
      * new EGL context and surface will be made current.  Creates a Surface that can be passed
@@ -52,6 +54,7 @@ public class CodecSurface
         }
         mWidth = width;
         mHeight = height;
+        sizeOfImageInRGBA = mWidth * mHeight * 4;
         eglSetup();
         makeCurrent();
         setup();
@@ -79,7 +82,7 @@ public class CodecSurface
         mSurfaceTexture.setOnFrameAvailableListener(this);
         mSurfaceTexture.setDefaultBufferSize(mWidth, mHeight);
         mSurface = new Surface(mSurfaceTexture);
-        mPixelBuf = ByteBuffer.allocateDirect(mWidth * mHeight * 4);
+        mPixelBuf = ByteBuffer.allocateDirect(sizeOfImageInRGBA);
         mPixelBuf.order(ByteOrder.LITTLE_ENDIAN);
     }
     /**
@@ -221,7 +224,9 @@ public class CodecSurface
         mPixelBuf.rewind();
         GLES20.glReadPixels(0, 0, mWidth, mHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE,
                 mPixelBuf);
-        return mPixelBuf.array();
+        byte[] result = new byte[sizeOfImageInRGBA];
+        mPixelBuf.get(result,0, sizeOfImageInRGBA);
+        return result;
     }
     /**
      * Saves the current frame to disk as a PNG image.
