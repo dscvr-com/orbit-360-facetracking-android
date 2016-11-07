@@ -3,13 +3,7 @@ package com.iam360.views.record;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
-import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -19,11 +13,7 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -33,31 +23,102 @@ import java.util.concurrent.TimeUnit;
 public class RecorderPreviewView extends AutoFitTextureView {
 
     private static final String TAG = "RecordPreviewView";
-
+    private final static int START_DECODER = 0;
+    private final static int FETCH_FRAME = 1;
+    private final static int EXIT_DECODER = 2;
     private AutoFitTextureView textureView;
     private CameraDevice cameraDevice;
     private CameraCaptureSession previewSession;
     private CaptureRequest.Builder previewBuilder;
-
     private HandlerThread backgroundThread;
     private Handler backgroundHandler;
-
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
-
     private Size previewSize;
     private Size videoSize;
-
     private CodecSurface surface;
     private HandlerThread decoderThread;
     private Handler decoderHandler;
-
     private RecorderPreviewListener
             dataListener;
+    // Callbacks for cam opening - save camera ref and start preview
+    private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
 
+        @Override
+        public void onOpened(CameraDevice cameraDevice) {
+            RecorderPreviewView.this.cameraDevice = cameraDevice;
+            startPreview();
+            cameraOpenCloseLock.release();
+            if (null != textureView) {
+                configureTransform(textureView.getWidth(), textureView.getHeight());
+            }
+            if (null != dataListener) {
+                dataListener.cameraOpened(cameraDevice);
+            }
+        }
+
+        @Override
+        public void onDisconnected(CameraDevice cameraDevice) {
+            cameraOpenCloseLock.release();
+            cameraDevice.close();
+            RecorderPreviewView.this.cameraDevice = null;
+            if (null != dataListener) {
+                dataListener.cameraClosed(cameraDevice);
+            }
+        }
+
+        @Override
+        public void onError(CameraDevice cameraDevice, int error) {
+            cameraOpenCloseLock.release();
+            cameraDevice.close();
+            RecorderPreviewView.this.cameraDevice = null;
+        }
+
+    };
+    // Callbacks for surface texture loading - open camera as soon as texture exists
+    private SurfaceHolder.Callback surfaceTextureListener
+            = new SurfaceHolder.Callback() {
+
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            openCamera(videoSize.getWidth(), videoSize.getHeight());
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            configureTransform(width, height);
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+
+        }
+
+    };
     public RecorderPreviewView(Context ctx) {
         super(ctx);
         this.textureView = this;
         this.videoSize = new Size(720, 1280); //Size we want for stitcher input
+    }
+
+    private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height, Size aspectRatio) {
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        List<Size> bigEnough = new ArrayList<Size>();
+        int w = aspectRatio.getWidth();
+        int h = aspectRatio.getHeight();
+        for (Size option : choices) {
+            if (option.getHeight() == option.getWidth() * h / w &&
+                    option.getWidth() >= width && option.getHeight() >= height) {
+                bigEnough.add(option);
+            }
+        }
+
+        // Pick the smallest of those, assuming we found any
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new CompareSizesByArea());
+        } else {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return choices[0];
+        }
     }
 
     // To be called from parent activity
@@ -73,10 +134,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
     public void setPreviewListener(RecorderPreviewListener dataListener) {
         this.dataListener = dataListener;
     }
-
-    private final static int START_DECODER = 0;
-    private final static int FETCH_FRAME = 1;
-    private final static int EXIT_DECODER = 2;
 
     private void startBackgroundThread() {
         backgroundThread = new HandlerThread("CameraBackground");
@@ -106,12 +163,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
         };
 
         decoderHandler.obtainMessage(START_DECODER).sendToTarget();
-    }
-
-    public interface RecorderPreviewListener {
-        void imageDataReady(byte[] data, int width, int height, Bitmap.Config colorFormat);
-        void cameraOpened(CameraDevice device);
-        void cameraClosed(CameraDevice device);
     }
 
     private void createDecoderSurface() {
@@ -144,8 +195,11 @@ public class RecorderPreviewView extends AutoFitTextureView {
         } catch (InterruptedException e) {
             // Do nothing
         }
-
-        decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
+        try {
+            decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
+        } catch (IllegalStateException e) {
+            Log.i(TAG, "Dead Thread", e);
+        }
     }
 
     // To be called from parent activity
@@ -228,28 +282,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height, Size aspectRatio) {
-        // Collect the supported resolutions that are at least as big as the preview Surface
-        List<Size> bigEnough = new ArrayList<Size>();
-        int w = aspectRatio.getWidth();
-        int h = aspectRatio.getHeight();
-        for (Size option : choices) {
-            if (option.getHeight() == option.getWidth() * h / w &&
-                    option.getWidth() >= width && option.getHeight() >= height) {
-                bigEnough.add(option);
-            }
-        }
-
-        // Pick the smallest of those, assuming we found any
-        if (bigEnough.size() > 0) {
-            return Collections.min(bigEnough, new CompareSizesByArea());
-        } else {
-            Log.e(TAG, "Couldn't find any suitable preview size");
-            return choices[0];
-        }
-    }
-
-
     // Starts the preview, if all necassary parts are there.
     private void startPreview() {
         if (null == cameraDevice || !textureView.isAvailable() || null == previewSize) {
@@ -318,61 +350,13 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    // Callbacks for surface texture loading - open camera as soon as texture exists
-    private SurfaceHolder.Callback surfaceTextureListener
-            = new SurfaceHolder.Callback() {
+    public interface RecorderPreviewListener {
+        void imageDataReady(byte[] data, int width, int height, Bitmap.Config colorFormat);
 
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            openCamera(videoSize.getWidth(), videoSize.getHeight());
-        }
+        void cameraOpened(CameraDevice device);
 
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            configureTransform(width, height);
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-
-        }
-
-    };
-
-    // Callbacks for cam opening - save camera ref and start preview
-    private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
-
-        @Override
-        public void onOpened(CameraDevice cameraDevice) {
-            RecorderPreviewView.this.cameraDevice = cameraDevice;
-            startPreview();
-            cameraOpenCloseLock.release();
-            if (null != textureView) {
-                configureTransform(textureView.getWidth(), textureView.getHeight());
-            }
-            if(null != dataListener) {
-                dataListener.cameraOpened(cameraDevice);
-            }
-        }
-
-        @Override
-        public void onDisconnected(CameraDevice cameraDevice) {
-            cameraOpenCloseLock.release();
-            cameraDevice.close();
-            RecorderPreviewView.this.cameraDevice = null;
-            if(null != dataListener) {
-                dataListener.cameraClosed(cameraDevice);
-            }
-        }
-
-        @Override
-        public void onError(CameraDevice cameraDevice, int error) {
-            cameraOpenCloseLock.release();
-            cameraDevice.close();
-            RecorderPreviewView.this.cameraDevice = null;
-        }
-
-    };
+        void cameraClosed(CameraDevice device);
+    }
 
     static class CompareSizesByArea implements Comparator<Size> {
 
