@@ -184,7 +184,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 if(surface.awaitNewImage()) {
                     surface.drawImage(false);
                     Log.i(TAG, "Fetch frame success");
-                    dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, surface.colorFormat);
+                    dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, CodecSurface.colorFormat);
                 }
             } else {
                 Log.e(TAG,"Fetch frame failed");
@@ -195,11 +195,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         } catch (InterruptedException e) {
             // Do nothing
         }
-        try {
             decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
-        } catch (IllegalStateException e) {
-            Log.i(TAG, "Dead Thread", e);
-        }
     }
 
     // To be called from parent activity
