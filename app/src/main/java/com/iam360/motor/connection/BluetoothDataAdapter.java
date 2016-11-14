@@ -27,10 +27,24 @@ public class BluetoothDataAdapter extends ArrayAdapter<BluetoothDevice> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_bluetooth, parent, false);
         }
         // Lookup view for data population
-        TextView tvName = (TextView) convertView.findViewById(R.id.tvName);
+        TextView name = (TextView) convertView.findViewById(R.id.tvName);
         // Populate the data into the template view using the data object
-        tvName.setText(device.getName());
+        String state = getState(device.getBondState());
+        name.setText(device.getName() + " " + state);
         // Return the completed view to render on screen
         return convertView;
+    }
+
+    private String getState(int bluetoothState) {
+        if (BluetoothDevice.BOND_NONE == bluetoothState) {
+            return getContext().getString(R.string.bond);
+        }
+        if (BluetoothDevice.BOND_BONDING == bluetoothState) {
+            return getContext().getString(R.string.bonding);
+        }
+        if (BluetoothDevice.BOND_BONDED == bluetoothState) {
+            return getContext().getString(R.string.bonded);
+        }
+        return "";
     }
 }

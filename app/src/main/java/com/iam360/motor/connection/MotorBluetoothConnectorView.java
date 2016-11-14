@@ -1,6 +1,5 @@
 package com.iam360.motor.connection;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -8,11 +7,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.view.Gravity;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 
@@ -25,24 +21,13 @@ public class MotorBluetoothConnectorView extends FrameLayout {
     private final BluetoothDataAdapter dataAdapter;
     private BluetoothAdapter adapter;
     private ListView list;
-    private Activity context;
 
     public MotorBluetoothConnectorView(Activity context) {
         super(context);
-        this.context = context;
         list = new ListView(context);
         adapter = BluetoothAdapter.getDefaultAdapter();
-        ProgressBar progressBar = new ProgressBar(context);
-        progressBar.setLayoutParams(new ActionBar.LayoutParams(ActionBar.LayoutParams.WRAP_CONTENT,
-                ActionBar.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
-        progressBar.setIndeterminate(true);
-        list.setEmptyView(progressBar);
-
-        // Must add the progress bar to the root of the layout
-        ViewGroup root = (ViewGroup) context.findViewById(android.R.id.content);
-        root.addView(progressBar);
-
         dataAdapter = new BluetoothDataAdapter(context, loadData());
+        adapter.startDiscovery();
         list.setAdapter(dataAdapter);
         addView(list);
     }
@@ -51,7 +36,7 @@ public class MotorBluetoothConnectorView extends FrameLayout {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        context.registerReceiver(new BluetoothBroadcastReceiver(), filter);
+        getContext().registerReceiver(new BluetoothBroadcastReceiver(), filter);
         if (adapter.getBondedDevices() != null) {
             return new ArrayList<>(adapter.getBondedDevices());
         } else {

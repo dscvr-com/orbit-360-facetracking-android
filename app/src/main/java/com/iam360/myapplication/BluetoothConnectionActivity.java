@@ -1,5 +1,6 @@
 package com.iam360.myapplication;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
@@ -14,7 +15,10 @@ public class BluetoothConnectionActivity extends Activity {
 
     private static final int BLUETOOTH_REQUEST = 1;
     private static final String TAG = "BluetoothConnectionActivity";
+    private static final int BLUETOOTH_LOCATION_REQUEST = 2;
     private BluetoothAdapter adapter;
+    private boolean btOn = false;
+    private boolean btLocationOn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +32,9 @@ public class BluetoothConnectionActivity extends Activity {
         if (!adapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
+            Intent enableBtLocationIntent = new Intent(Manifest.permission.ACCESS_COARSE_LOCATION);
+            startActivityForResult(enableBtLocationIntent, BLUETOOTH_LOCATION_REQUEST);
+
         } else {
             loadBluetooth();
         }
@@ -40,13 +47,22 @@ public class BluetoothConnectionActivity extends Activity {
             case BLUETOOTH_REQUEST: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    loadBluetooth();
+                    btOn = true;
                 } else {
-                    Log.e(TAG, "No Camera permission");
+                    Log.e(TAG, "No Bluetooth permission");
+                }
+            }
+            case BLUETOOTH_LOCATION_REQUEST: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    btLocationOn = true;
+                } else {
+                    Log.e(TAG, "No Bluetooth Location permission");
                 }
             }
 
         }
+        loadBluetooth();
     }
 
     private void loadBluetooth() {
