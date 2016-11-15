@@ -28,15 +28,17 @@ public class BluetoothConnectionActivity extends Activity {
         if (adapter == null) {
             throw new IllegalStateException("No Bluetooth-adapter found");
         }
+        if (((BluetoothApplicationContext) getApplicationContext()).getBluetoothService() == null) {
+            if (!adapter.isEnabled()) {
 
-        if (!adapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
-            Intent enableBtLocationIntent = new Intent(Manifest.permission.ACCESS_COARSE_LOCATION);
-            startActivityForResult(enableBtLocationIntent, BLUETOOTH_LOCATION_REQUEST);
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
+                Intent enableBtLocationIntent = new Intent(Manifest.permission.ACCESS_COARSE_LOCATION);
+                startActivityForResult(enableBtLocationIntent, BLUETOOTH_LOCATION_REQUEST);
 
-        } else {
-            loadBluetooth();
+            } else {
+                loadBluetooth();
+            }
         }
 
     }
@@ -70,4 +72,5 @@ public class BluetoothConnectionActivity extends Activity {
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_bluetooth_connection);
         layout.addView(bluetoothConnectorView);
     }
+
 }

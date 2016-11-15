@@ -12,6 +12,7 @@
     <uses-feature android:name="android.hardware.bluetooth_le"/>
 
     <application
+            android:name=".BluetoothApplicationContext"
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
@@ -26,6 +27,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <receiver android:name="com.iam360.motor.connection.BluetoothConnectionReciver">
+                <intent-filter>
+                    <action android:name="com.iam360.bluetooth.BLUETOOTH_CONNECTED"/>
+                    <action android:name="com.iam360.bluetooth.BLUETOOTH_DISCONNECTED"/>
+                </intent-filter>
+            </receiver>
         </activity>
         <activity android:name=".BluetoothConnectionActivity">
         </activity>

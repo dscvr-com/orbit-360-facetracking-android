@@ -30,7 +30,7 @@ public class BluetoothDataAdapter extends ArrayAdapter<BluetoothDevice> {
         TextView name = (TextView) convertView.findViewById(R.id.tvName);
         // Populate the data into the template view using the data object
         String state = getState(device.getBondState());
-        name.setText(device.getName() + " " + state);
+        name.setText(device.getName() + "\n" + state);
         // Return the completed view to render on screen
         return convertView;
     }
@@ -47,4 +47,5 @@ public class BluetoothDataAdapter extends ArrayAdapter<BluetoothDevice> {
         }
         return "";
     }
+
 }
