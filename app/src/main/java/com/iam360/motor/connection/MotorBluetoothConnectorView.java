@@ -3,10 +3,15 @@ package com.iam360.motor.connection;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 
@@ -28,6 +33,11 @@ public class MotorBluetoothConnectorView extends FrameLayout {
         adapter = BluetoothAdapter.getDefaultAdapter();
         dataAdapter = new BluetoothDataAdapter(context, loadData());
         adapter.startDiscovery();
+        ScanSettings settings = new ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build();
+        ArrayList<ScanFilter> filters = new ArrayList<>();
+        adapter.getBluetoothLeScanner().startScan(filters, settings, new BluetoothLeScanCallback());
         list.setAdapter(dataAdapter);
         addView(list);
     }
@@ -62,4 +72,20 @@ public class MotorBluetoothConnectorView extends FrameLayout {
             }
         }
     }
+
+    private class BluetoothLeScanCallback extends ScanCallback {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            BluetoothDevice device = result.getDevice();
+            Log.i(TAG, String.format("Device Found %s %s", device.getName(), device.getAddress()));
+            dataAdapter.add(device);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            Log.e("Scan Failed", "Error Code: " + errorCode);
+        }
+    }
+
+
 }
