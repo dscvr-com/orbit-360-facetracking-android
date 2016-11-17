@@ -17,7 +17,7 @@ import android.widget.ListView;
 import com.iam360.myapplication.BluetoothApplicationContext;
 
 import java.util.ArrayList;
-import java.util.UUID;
+import java.util.List;
 
 /**
  * Class to manage the Bluetooth-Connection to the motor.
@@ -25,11 +25,13 @@ import java.util.UUID;
  */
 public class MotorBluetoothConnectorView extends FrameLayout {
     public static final String TAG = "MotorBluetoothConnectorView";
-    private static final long SCAN_PERIOD = 10000;
+    private static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("00001000-0000-1000-8000-00805F9B34FB");
+    private static final long SCAN_PERIOD = 10000000;//very long time
     private final BluetoothDataAdapter dataAdapter;
     private final Handler stopScanhandler = new Handler();
     private BluetoothAdapter adapter;
     private ListView list;
+
 
 
     public MotorBluetoothConnectorView(Activity context) {
@@ -48,13 +50,14 @@ public class MotorBluetoothConnectorView extends FrameLayout {
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
         ArrayList<ScanFilter> filters = new ArrayList<>();
-        filters.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(UUID.fromString("1000"))).build());
+        filters.add(new ScanFilter.Builder().setServiceUuid(SERVICE_UUID).build());
         adapter.getBluetoothLeScanner().startScan(filters, settings, scanCallback);
         list.setAdapter(dataAdapter);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 BluetoothDevice device = dataAdapter.getItem(i);
+                adapter.getBluetoothLeScanner().stopScan(scanCallback);
                 connectToDevice(device);
             }
         });
@@ -82,7 +85,6 @@ public class MotorBluetoothConnectorView extends FrameLayout {
             BluetoothDevice device = result.getDevice();
             Log.i(TAG, String.format("Device Found %s %s", device.getName(), device.getAddress()));
             dataAdapter.add(device);
-            dataAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -99,18 +101,33 @@ public class MotorBluetoothConnectorView extends FrameLayout {
                 case BluetoothProfile.STATE_CONNECTED:
                     Log.i("gattCallback", "STATE_CONNECTED");
                     gatt.discoverServices();
-                    BluetoothGattService service = gatt.getService(UUID.fromString("1000"));
-                    ((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(service);
-                    getContext().sendBroadcast(new Intent(BluetoothConnectionReciver.CONNECTED));
                     break;
                 case BluetoothProfile.STATE_DISCONNECTED:
                     Log.e("gattCallback", "STATE_DISCONNECTED");
                     ((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(null);
-                    getContext().sendBroadcast(new Intent(BluetoothConnectionReciver.DISCONNECTED));
+                    getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.DISCONNECTED));
                     break;
                 default:
                     Log.e("gattCallback", "STATE_OTHER");
             }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            List<BluetoothGattService> services = gatt.getServices();
+            Log.i("onServicesDiscovered: ", services.toString());
+            BluetoothGattService correctService = null;
+            for (BluetoothGattService service : services) {
+                if (service.getUuid().equals(SERVICE_UUID.getUuid())) {
+                    correctService = service;
+                    break;
+                }
+            }
+            if (correctService == null) {
+                Log.e(TAG, "couldn't find the needed service");
+            }
+            ((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(correctService);
+            getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.CONNECTED));
         }
     }
 

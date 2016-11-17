@@ -28,7 +28,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <receiver android:name="com.iam360.motor.connection.BluetoothConnectionReciver">
+            <receiver android:name="com.iam360.motor.connection.BluetoothConnectionReceiver">
                 <intent-filter>
                     <action android:name="com.iam360.bluetooth.BLUETOOTH_CONNECTED"/>
                     <action android:name="com.iam360.bluetooth.BLUETOOTH_DISCONNECTED"/>

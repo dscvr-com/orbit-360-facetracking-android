@@ -3,11 +3,7 @@ package com.iam360.myapplication;
 
 import android.Manifest;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,11 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.ViewGroup;
 import com.iam360.facedetection.FaceTrackingListener;
-import com.iam360.motor.connection.BluetoothConnectionReciver;
-import com.iam360.motor.connection.MotorBluetoothConnectorView;
 import com.iam360.views.record.RecorderPreviewView;
-
-import java.util.Set;
 
 public class CameraActivity extends Activity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -32,14 +24,10 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
     }
 
     private RecorderPreviewView recordPreview;
-    private MotorBluetoothConnectorView motorBluetoothConnectorView;
-    private BroadcastReceiver bluetoothConnectionResiver;
-    private IntentFilter bluetoothBroadcastIntentFilter;
 
     @Override
     public void onResume() {
         super.onResume();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
         if (recordPreview != null) {
             recordPreview.onResume();
         }
@@ -52,7 +40,6 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
         if (recordPreview != null) {
             recordPreview.onPause();
         }
-        unregisterReceiver(bluetoothConnectionResiver);
     }
 
 
@@ -60,16 +47,12 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        bluetoothBroadcastIntentFilter = new IntentFilter("com.iam360.bluetooth.BLUETOOTH_CONNECTED");
-        bluetoothBroadcastIntentFilter.addAction("com.iam360.bluetooth.BLUETOOTH_DISCONNECTED");
-        bluetoothConnectionResiver = new BluetoothConnectionReciver();
-        requestCameraPermission();
-        BluetoothDevice device;
-        //1. Test if we can autoconnect
-        Set<BluetoothDevice> bondedDevices = BluetoothAdapter.getDefaultAdapter().getBondedDevices();
-        Log.i(TAG, String.format("%d bonded devices found.", bondedDevices.size()));
-        //2. otherwise open Motor BluetoothConnectorView
-        startActivity(new Intent(this, BluetoothConnectionActivity.class));
+
+        if (((BluetoothApplicationContext) this.getApplicationContext()).getBluetoothService() == null) {
+            startActivity(new Intent(this, BluetoothConnectionActivity.class));
+        } else {
+            requestCameraPermission();
+        }
 
     }
 
