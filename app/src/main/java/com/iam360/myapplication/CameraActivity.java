@@ -48,7 +48,7 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (((BluetoothApplicationContext) this.getApplicationContext()).getBluetoothService() == null) {
+        if (!((BluetoothApplicationContext) this.getApplicationContext()).hasBluetoothConnection()) {
             startActivity(new Intent(this, BluetoothConnectionActivity.class));
         } else {
             requestCameraPermission();

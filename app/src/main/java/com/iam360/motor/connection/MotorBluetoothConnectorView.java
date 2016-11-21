@@ -8,7 +8,6 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,15 +16,12 @@ import android.widget.ListView;
 import com.iam360.myapplication.BluetoothApplicationContext;
 
 import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Class to manage the Bluetooth-Connection to the motor.
  * Created by Charlotte on 07.11.2016.
  */
 public class MotorBluetoothConnectorView extends FrameLayout {
     public static final String TAG = "MotorBluetoothConnectorView";
-    private static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("00001000-0000-1000-8000-00805F9B34FB");
     private static final long SCAN_PERIOD = 10000000;//very long time
     private final BluetoothDataAdapter dataAdapter;
     private final Handler stopScanhandler = new Handler();
@@ -50,7 +46,7 @@ public class MotorBluetoothConnectorView extends FrameLayout {
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
         ArrayList<ScanFilter> filters = new ArrayList<>();
-        filters.add(new ScanFilter.Builder().setServiceUuid(SERVICE_UUID).build());
+        filters.add(new ScanFilter.Builder().setServiceUuid(BluetoothMotorControlService.SERVICE_UUID).build());
         adapter.getBluetoothLeScanner().startScan(filters, settings, scanCallback);
         list.setAdapter(dataAdapter);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -65,7 +61,6 @@ public class MotorBluetoothConnectorView extends FrameLayout {
     }
 
     private void connectToDevice(BluetoothDevice device) {
-        //FIXME
         device.connectGatt(getContext(), true, new GattCallback());
     }
 
@@ -114,20 +109,12 @@ public class MotorBluetoothConnectorView extends FrameLayout {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            List<BluetoothGattService> services = gatt.getServices();
-            Log.i("onServicesDiscovered: ", services.toString());
-            BluetoothGattService correctService = null;
-            for (BluetoothGattService service : services) {
-                if (service.getUuid().equals(SERVICE_UUID.getUuid())) {
-                    correctService = service;
-                    break;
-                }
+            if (((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(gatt)) {
+                getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.CONNECTED));
+            } else {
+                getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.DISCONNECTED));
             }
-            if (correctService == null) {
-                Log.e(TAG, "couldn't find the needed service");
-            }
-            ((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(correctService);
-            getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.CONNECTED));
+
         }
     }
 

@@ -64,7 +64,7 @@ public class BluetoothConnectionActivity extends Activity {
         if (adapter == null) {
             throw new IllegalStateException("No Bluetooth-adapter found");
         }
-        if (((BluetoothApplicationContext) getApplicationContext()).getBluetoothService() == null) {
+        if (!((BluetoothApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
             btLocationOn = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             btOn = adapter.isEnabled();
             if (!btLocationOn) {

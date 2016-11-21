@@ -1,19 +1,26 @@
 package com.iam360.myapplication;
 
 import android.app.Application;
-import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothGatt;
+import com.iam360.motor.connection.BluetoothMotorControlService;
 
 /**
  * Created by Charlotte on 15.11.2016.
  */
 public class BluetoothApplicationContext extends Application {
-    private BluetoothGattService bluetoothService = null;
+    private BluetoothMotorControlService bluetoothService = new BluetoothMotorControlService();
 
-    public BluetoothGattService getBluetoothService() {
-        return bluetoothService;
+
+    public boolean setBluetoothService(BluetoothGatt gatt) {
+        return bluetoothService.setBluetoothGatt(gatt);
+
     }
 
-    public void setBluetoothService(BluetoothGattService bluetoothService) {
-        this.bluetoothService = bluetoothService;
+    public boolean hasBluetoothConnection() {
+        return bluetoothService.hasBluetoothService();
+    }
+
+    public BluetoothMotorControlService getBluetoothService() {
+        return bluetoothService;
     }
 }

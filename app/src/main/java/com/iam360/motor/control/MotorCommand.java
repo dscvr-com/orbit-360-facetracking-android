@@ -78,4 +78,8 @@ public class MotorCommand {
     private byte[] getByteArray(int steps) {
         return ByteBuffer.allocate(4).putInt(steps).array();
     }
+
+    public byte[] getValue() {
+        return value;
+    }
 }
