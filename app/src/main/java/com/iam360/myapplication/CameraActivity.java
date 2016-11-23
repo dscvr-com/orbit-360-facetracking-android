@@ -68,7 +68,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 createCameraView();
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO},
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         REQUEST_CAMERA_PERMISSION);
             }
         } else {

@@ -28,7 +28,7 @@ public class MediaRecorderWrapper {
     private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
     private static final String TAG = "MediaRecorderWrapper";
-    private static final String FORMAT = "facedetection-%s";
+    private static final String FORMAT = "facedetection-%s.mp4";
 
     static {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -52,83 +52,22 @@ public class MediaRecorderWrapper {
     private CaptureRequest.Builder previewBuilder;
     private CameraCaptureSession previewSession;
     private Activity activity;
-    private Handler backgroundHandler;
     private String nextVideoAbsolutePath;
     private int sensorOrientation;
-    private HandlerThread backgroundThread;
 
-    public MediaRecorderWrapper(CameraDevice device, Size size, Surface surface, Activity activity, int sensorOrientation) {
+    public MediaRecorderWrapper(CameraDevice device, Size size, Activity activity, int sensorOrientation) {
         this.size = size;
         this.device = device;
-        this.surfaceForPreview = surface;
         this.activity = activity;
         this.sensorOrientation = sensorOrientation;
     }
 
-    /**
-     * Starts a background thread and its {@link Handler}.
-     */
-    private void startBackgroundThread() {
-        backgroundThread = new HandlerThread("CameraBackground");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
+    public Surface getSurface() {
+        return recorder.getSurface();
     }
-
-    public void onResume() {
-        startBackgroundThread();
-    }
-
-    public void onPause() {
-        stopBackgroundThread();
-    }
-
-    private void stopBackgroundThread() {
-        backgroundThread.quitSafely();
-        try {
-            backgroundThread.join();
-            backgroundThread = null;
-            backgroundHandler = null;
-        } catch (InterruptedException e) {
-            Log.e(TAG, "error while stop camera background thread.", e);
-        }
-    }
-
 
     public void startRecord() throws CameraAccessException, IOException {
         setUpMediaRecorder();
-//        assert texture != null;
-//        texture.setDefaultBufferSize(size.getWidth(), size.getHeight());
-        previewBuilder = device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-        List<Surface> surfaces = new ArrayList<>();
-
-        surfaces.add(surfaceForPreview);
-        previewBuilder.addTarget(surfaceForPreview);
-
-        device.createCaptureSession(surfaces, new StateCallback() {
-
-            @Override
-            public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-                previewSession = cameraCaptureSession;
-                try {
-                    updatePreview();
-                } catch (CameraAccessException e) {
-                    Log.e(TAG, "error while updatePreview", e);
-                }
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        recorder.start();
-                    }
-                });
-            }
-
-            @Override
-            public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-                if (null != activity) {
-                    Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }, backgroundHandler);
     }
 
     public void stopRecordingVideo() {
@@ -142,25 +81,8 @@ public class MediaRecorderWrapper {
         }
     }
 
-
-    private void updatePreview() throws CameraAccessException {
-
-        setUpCaptureRequestBuilder(previewBuilder);
-        HandlerThread thread = new HandlerThread("CameraPreview");
-        thread.start();
-        previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
-
-    }
-
-    private void setUpCaptureRequestBuilder(CaptureRequest.Builder builder) {
-        builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-    }
-
-
     private void setUpMediaRecorder() throws IOException {
-        if (null == activity) {
-            return;
-        }
+
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
@@ -171,7 +93,7 @@ public class MediaRecorderWrapper {
         recorder.setOutputFile(nextVideoAbsolutePath);
         recorder.setVideoEncodingBitRate(10000000);
         recorder.setVideoFrameRate(30);
-        recorder.setVideoSize(size.getWidth(), size.getHeight());
+        recorder.setVideoSize(size.getHeight(), size.getWidth());
         recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -184,6 +106,7 @@ public class MediaRecorderWrapper {
                 break;
         }
         recorder.prepare();
+        recorder.start();
 
     }
 

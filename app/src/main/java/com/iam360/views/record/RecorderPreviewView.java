@@ -61,7 +61,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 dataListener.cameraOpened(cameraDevice);
             }
             if (null == videoRecorder) {
-                videoRecorder = new MediaRecorderWrapper(cameraDevice, videoSize, textureView.getHolder().getSurface(), activity, sensorOrientation);
+                videoRecorder = new MediaRecorderWrapper(cameraDevice, videoSize, activity, sensorOrientation);
             }
         }
 
@@ -137,6 +137,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         if (videoRecorder != null) {
             try {
                 videoRecorder.startRecord();
+                startPreview();
             } catch (CameraAccessException | IOException e) {
                 Log.e(TAG, "Error starting record", e);
             }
@@ -146,7 +147,8 @@ public class RecorderPreviewView extends AutoFitTextureView {
     public void stopVideo() {
         if (videoRecorder != null) {
             videoRecorder.stopRecordingVideo();
-
+            videoRecorder = null;
+            startPreview();
         }
     }
 
@@ -157,9 +159,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
             openCamera(textureView.getWidth(), textureView.getHeight());
         } else {
             textureView.getHolder().addCallback(surfaceTextureListener);
-        }
-        if (null != videoRecorder) {
-            videoRecorder.onResume();
         }
     }
 
@@ -234,9 +233,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
     // To be called from parent activity
     public void onPause() {
         stopBackgroundThread();
-        if (null != videoRecorder) {
-            videoRecorder.onPause();
-        }
         closeCamera();
     }
 
@@ -322,13 +318,23 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
         try {
             closePreviewSession();
-            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
 
             Surface previewSurface = textureView.getHolder().getSurface();
-            previewBuilder.addTarget(previewSurface);
-            previewBuilder.addTarget(surface.getSurface());
 
-            cameraDevice.createCaptureSession(Arrays.asList(previewSurface, surface.getSurface()), new CameraCaptureSession.StateCallback() {
+            List<Surface> surfaces = new ArrayList<>();
+
+            surfaces.add(previewSurface);
+            surfaces.add(surface.getSurface());
+
+            if(videoRecorder != null) {
+                surfaces.add(videoRecorder.getSurface());
+            }
+
+            for(Surface surface : surfaces){
+                previewBuilder.addTarget(surface);
+            }
+            cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
 
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
