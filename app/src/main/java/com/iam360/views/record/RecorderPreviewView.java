@@ -1,5 +1,6 @@
 package com.iam360.views.record;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
@@ -12,8 +13,13 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import com.iam360.videorecording.MediaRecorderWrapper;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +32,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private final static int START_DECODER = 0;
     private final static int FETCH_FRAME = 1;
     private final static int EXIT_DECODER = 2;
+    private final Activity activity;
     private AutoFitTextureView textureView;
     private CameraDevice cameraDevice;
     private CameraCaptureSession previewSession;
@@ -33,6 +40,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private HandlerThread backgroundThread;
     private Handler backgroundHandler;
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
+    private int sensorOrientation;
     private Size previewSize;
     private Size videoSize;
     private CodecSurface surface;
@@ -40,6 +48,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private Handler decoderHandler;
     private RecorderPreviewListener
             dataListener;
+    private MediaRecorderWrapper videoRecorder;
     // Callbacks for cam opening - save camera ref and start preview
     private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
 
@@ -54,6 +63,9 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if (null != dataListener) {
                 dataListener.cameraOpened(cameraDevice);
             }
+            if (null == videoRecorder) {
+                videoRecorder = new MediaRecorderWrapper(cameraDevice, videoSize, activity, sensorOrientation);
+            }
         }
 
         @Override
@@ -64,6 +76,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if (null != dataListener) {
                 dataListener.cameraClosed(cameraDevice);
             }
+            videoRecorder = null;
         }
 
         @Override
@@ -94,8 +107,10 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
 
     };
-    public RecorderPreviewView(Context ctx) {
+
+    public RecorderPreviewView(Activity ctx) {
         super(ctx);
+        this.activity = ctx;
         this.textureView = this;
         this.videoSize = new Size(720, 1280); //Size we want for stitcher input
     }
@@ -118,6 +133,25 @@ public class RecorderPreviewView extends AutoFitTextureView {
         } else {
             Log.e(TAG, "Couldn't find any suitable preview size");
             return choices[0];
+        }
+    }
+
+    public void startVideo() {
+        if (videoRecorder != null) {
+            try {
+                videoRecorder.startRecord();
+                startPreview();
+            } catch (CameraAccessException | IOException e) {
+                Log.e(TAG, "Error starting record", e);
+            }
+        }
+    }
+
+    public void stopVideo() {
+        if (videoRecorder != null) {
+            videoRecorder.stopRecordingVideo();
+            videoRecorder = null;
+            startPreview();
         }
     }
 
@@ -146,15 +180,16 @@ public class RecorderPreviewView extends AutoFitTextureView {
             @Override
             public void handleMessage(Message msg) {
                 Log.w(TAG, "Message tag: " + msg.what);
-                if(msg.what == START_DECODER) {
+                if (msg.what == START_DECODER) {
                     createDecoderSurface();
                     // So I have no idea what we wait for. So we just wait.
                     try {
                         Thread.sleep(2500, 0);
-                    } catch (InterruptedException e) { }
-                } else if(msg.what == FETCH_FRAME) {
+                    } catch (InterruptedException e) {
+                    }
+                } else if (msg.what == FETCH_FRAME) {
                     fetchFrame();
-                } else if(msg.what == EXIT_DECODER) {
+                } else if (msg.what == EXIT_DECODER) {
                     destroyDecoderSurface();
                 }
 
@@ -176,18 +211,18 @@ public class RecorderPreviewView extends AutoFitTextureView {
     }
 
     private void fetchFrame() {
-        if(surface == null) {
+        if (surface == null) {
             return;
         }
         try {
-            if(dataListener != null) {
-                if(surface.awaitNewImage()) {
+            if (dataListener != null) {
+                if (surface.awaitNewImage()) {
                     surface.drawImage(false);
                     Log.i(TAG, "Fetch frame success");
                     dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, CodecSurface.colorFormat);
                 }
             } else {
-                Log.e(TAG,"Fetch frame failed");
+                Log.e(TAG, "Fetch frame failed");
                 Thread.sleep(10, 0);
             }
         } catch (RuntimeException e) {
@@ -195,7 +230,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         } catch (InterruptedException e) {
             // Do nothing
         }
-            decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
+        decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
     }
 
     // To be called from parent activity
@@ -210,7 +245,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     }
 
     private void stopBackgroundThread() {
-        if(backgroundThread == null)
+        if (backgroundThread == null)
             return;
         backgroundThread.quitSafely();
         try {
@@ -247,20 +282,21 @@ public class RecorderPreviewView extends AutoFitTextureView {
     }
 
     private void openCamera(int width, int height) {
-        CameraManager manager = (CameraManager)getContext().getSystemService(Context.CAMERA_SERVICE);
+        CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             Log.d(TAG, "tryAcquire");
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
 
-            for (String cameraId : manager.getCameraIdList()){
+            for (String cameraId : manager.getCameraIdList()) {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                if(characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT){
+                if (characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
                     continue;
                 }
                 StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), width, height, videoSize);
+                sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
                 configureTransform(width, height);
                 manager.openCamera(cameraId, stateCallback, null);
@@ -285,13 +321,23 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
         try {
             closePreviewSession();
-            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
 
             Surface previewSurface = textureView.getHolder().getSurface();
-            previewBuilder.addTarget(previewSurface);
-            previewBuilder.addTarget(surface.getSurface());
 
-            cameraDevice.createCaptureSession(Arrays.asList(previewSurface, surface.getSurface()), new CameraCaptureSession.StateCallback() {
+            List<Surface> surfaces = new ArrayList<>();
+
+            surfaces.add(previewSurface);
+            surfaces.add(surface.getSurface());
+
+            if(videoRecorder != null) {
+                surfaces.add(videoRecorder.getSurface());
+            }
+
+            for(Surface surface : surfaces){
+                previewBuilder.addTarget(surface);
+            }
+            cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
 
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
@@ -331,7 +377,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             previewBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
             previewBuilder.set(CaptureRequest.CONTROL_AWB_LOCK, true);
             previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
-//            previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
+            previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
             previewSession.stopRepeating();
             previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
         } catch (CameraAccessException e) {

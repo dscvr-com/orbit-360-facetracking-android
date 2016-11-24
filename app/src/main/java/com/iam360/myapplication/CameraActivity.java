@@ -2,19 +2,21 @@ package com.iam360.myapplication;
 
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.RecorderPreviewView;
 
-public class CameraActivity extends Activity implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
@@ -24,6 +26,7 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
     }
 
     private RecorderPreviewView recordPreview;
+    private boolean isFilming = false;
 
     @Override
     public void onResume() {
@@ -47,9 +50,8 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         if (!((BluetoothApplicationContext) this.getApplicationContext()).hasBluetoothConnection()) {
-            startActivity(new Intent(this, BluetoothConnectionActivity.class));
+            startActivity(new Intent(this, BluetoothConnectionActivity.class));/**/
         } else {
             requestCameraPermission();
         }
@@ -58,15 +60,24 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
 
 
     private void requestCameraPermission() {
-        if (ContextCompat.checkSelfPermission(this,
+        boolean isCameraPermGranted = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
+                == PackageManager.PERMISSION_GRANTED;
+        boolean isAudioPermGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean isWritePermGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+        if (!(isCameraPermGranted && isAudioPermGranted && isWritePermGranted)) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
+                    Manifest.permission.CAMERA) && ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.RECORD_AUDIO) && ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 createCameraView();
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA},
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         REQUEST_CAMERA_PERMISSION);
             }
         } else {
@@ -95,6 +106,22 @@ public class CameraActivity extends Activity implements ActivityCompat.OnRequest
         recordPreview.setPreviewListener(new FaceTrackingListener(this));
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         layout.addView(recordPreview);
+        FloatingActionButton cameraButton = (FloatingActionButton) findViewById(R.id.camera);
+        cameraButton.bringToFront();
+        cameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isFilming) {
+                    Log.i(TAG, "stop video");
+                    recordPreview.stopVideo();
+                    isFilming = false;
+                } else {
+                    Log.i(TAG, "start video");
+                    recordPreview.startVideo();
+                    isFilming = true;
+                }
+            }
+        });
     }
 }
 
