@@ -190,8 +190,8 @@ public class MediaRecorderWrapper {
     //only the dir: fileName? how do I call my files?
     public String getVideoAbsolutePath() {
         File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-        File resultFile = new File(dir, String.format(FORMAT, System.nanoTime()));
-        return resultFile.getAbsolutePath();
+        File resultFile = new File(dir, String.format(FORMAT, System.currentTimeMillis()));
+        return resultFile.getAbsolutePath().replaceAll(" ", "_");
 
     }
 }

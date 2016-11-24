@@ -60,15 +60,24 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
 
     private void requestCameraPermission() {
-        if (ContextCompat.checkSelfPermission(this,
+        boolean isCameraPermGranted = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
+                == PackageManager.PERMISSION_GRANTED;
+        boolean isAudioPermGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean isWritePermGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+        if (!(isCameraPermGranted && isAudioPermGranted && isWritePermGranted)) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
+                    Manifest.permission.CAMERA) && ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.RECORD_AUDIO) && ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 createCameraView();
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO},
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         REQUEST_CAMERA_PERMISSION);
             }
         } else {
@@ -103,9 +112,11 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             @Override
             public void onClick(View v) {
                 if (isFilming) {
+                    Log.i(TAG, "stop video");
                     recordPreview.stopVideo();
                     isFilming = false;
                 } else {
+                    Log.i(TAG, "start video");
                     recordPreview.startVideo();
                     isFilming = true;
                 }
