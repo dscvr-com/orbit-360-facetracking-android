@@ -1,13 +1,12 @@
 package com.iam360.videorecording;
 
 import android.app.Activity;
-import android.hardware.camera2.*;
-import android.hardware.camera2.CameraCaptureSession.StateCallback;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CaptureRequest;
 import android.media.MediaRecorder;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -16,8 +15,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Charlotte on 22.11.2016.
@@ -68,6 +65,7 @@ public class MediaRecorderWrapper {
 
     public void startRecord() throws CameraAccessException, IOException {
         setUpMediaRecorder();
+        recorder.start();
     }
 
     public void stopRecordingVideo() {
@@ -81,8 +79,8 @@ public class MediaRecorderWrapper {
         }
     }
 
-    private void setUpMediaRecorder() throws IOException {
 
+    private void setUpMediaRecorder() throws IOException {
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
@@ -106,11 +104,9 @@ public class MediaRecorderWrapper {
                 break;
         }
         recorder.prepare();
-        recorder.start();
 
     }
 
-    //only the dir: fileName? how do I call my files?
     public String getVideoAbsolutePath() {
         File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
         File resultFile = new File(dir, String.format(FORMAT, System.currentTimeMillis()));
