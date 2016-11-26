@@ -11,12 +11,14 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * Class gto control Motor.
+ * Can send MotorCommands to the motor
  * Created by Charlotte on 21.11.2016.
  */
 public class BluetoothMotorControlService {
 
     public static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("00001000-0000-1000-8000-00805F9B34FB");
-    public static final UUID CHARACTERISITC_UUID = UUID.fromString("00001001-0000-1000-8000-00805F9B34FB");
+    public static final UUID CHARACTERISTIC_UUID = UUID.fromString("00001001-0000-1000-8000-00805F9B34FB");
 
     private BluetoothGattService bluetoothService;
     private BluetoothGatt gatt;
@@ -46,14 +48,31 @@ public class BluetoothMotorControlService {
         return bluetoothService != null;
     }
 
-    public boolean moveX(int steps) {
-        BluetoothGattCharacteristic characteristic = bluetoothService.getCharacteristic(CHARACTERISITC_UUID);
-        assert (((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) |
-                (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0);
+    public void moveX(int steps) {
         MotorCommand command = new MotorCommand();
         command.moveX(steps);
+        sendCommand(command);
+    }
+
+    private void sendCommand(MotorCommand command) {
+        BluetoothGattCharacteristic characteristic = bluetoothService.getCharacteristic(CHARACTERISTIC_UUID);
+        assert (((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) |
+                (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0);
         characteristic.setValue(command.getValue());
         gatt.writeCharacteristic(characteristic);
-        return true;
+
+    }
+
+    public void moveY(int steps) {
+        MotorCommand command = new MotorCommand();
+        command.moveY(steps);
+        sendCommand(command);
+    }
+
+    public void moveXY(int stepsX, int stepsY) {
+        MotorCommand command = new MotorCommand();
+        command.moveXY(stepsX, stepsY);
+        sendCommand(command);
+
     }
 }
