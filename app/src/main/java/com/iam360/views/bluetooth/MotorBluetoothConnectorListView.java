@@ -1,4 +1,4 @@
-package com.iam360.motor.connection;
+package com.iam360.views.bluetooth;
 
 import android.app.Activity;
 import android.bluetooth.*;
@@ -13,6 +13,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import com.iam360.motor.connection.BluetoothConnectionReceiver;
+import com.iam360.motor.connection.BluetoothDataAdapter;
+import com.iam360.motor.connection.BluetoothMotorControlService;
 import com.iam360.myapplication.BluetoothApplicationContext;
 
 import java.util.ArrayList;
@@ -20,8 +23,8 @@ import java.util.ArrayList;
  * Class to manage the Bluetooth-Connection to the motor.
  * Created by Charlotte on 07.11.2016.
  */
-public class MotorBluetoothConnectorView extends FrameLayout {
-    public static final String TAG = "MotorBluetoothConnectorView";
+public class MotorBluetoothConnectorListView extends FrameLayout {
+    public static final String TAG = "BluetoothConnectorView";//because of 23 charcters
     private static final long SCAN_PERIOD = 10000000;//very long time
     private final BluetoothDataAdapter dataAdapter;
     private final Handler stopScanhandler = new Handler();
@@ -29,8 +32,7 @@ public class MotorBluetoothConnectorView extends FrameLayout {
     private ListView list;
 
 
-
-    public MotorBluetoothConnectorView(Activity context) {
+    public MotorBluetoothConnectorListView(Activity context) {
         super(context);
         list = new ListView(context);
         adapter = BluetoothAdapter.getDefaultAdapter();

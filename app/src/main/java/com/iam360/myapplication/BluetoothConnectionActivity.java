@@ -13,12 +13,12 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.ViewGroup;
 import com.iam360.motor.connection.BluetoothConnectionReceiver;
-import com.iam360.motor.connection.MotorBluetoothConnectorView;
+import com.iam360.views.bluetooth.MotorBluetoothConnectorListView;
 
 public class BluetoothConnectionActivity extends Activity {
 
     private static final int BLUETOOTH_REQUEST = 1;
-    private static final String TAG = "BluetoothConnectionActivity";
+    private static final String TAG = "BluetoothActivity";//only 23 chars are allowed
     private static final int BLUETOOTH_LOCATION_REQUEST = 2;
     private BluetoothAdapter adapter;
     private boolean btOn = false;
@@ -110,7 +110,7 @@ public class BluetoothConnectionActivity extends Activity {
     }
 
     private void loadBluetooth() {
-        MotorBluetoothConnectorView bluetoothConnectorView = new MotorBluetoothConnectorView(this);
+        MotorBluetoothConnectorListView bluetoothConnectorView = new MotorBluetoothConnectorListView(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_bluetooth_connection);
         layout.addView(bluetoothConnectorView);
     }
