@@ -10,6 +10,8 @@ import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.views.record.RecorderPreviewView;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Charlotte on 03.11.2016.
@@ -18,6 +20,7 @@ public class FaceTrackingListener implements RecorderPreviewView.RecorderPreview
     public static final String TAG = "FaceTrackingListener";
     private final BluetoothMotorControlService motorControlService;
     private FaceDetection faceDetection;
+    private ExecutorService executor = Executors.newFixedThreadPool(10);
 
     public FaceTrackingListener(Context context){
         motorControlService = ((BluetoothCameraApplicationContext
@@ -26,11 +29,15 @@ public class FaceTrackingListener implements RecorderPreviewView.RecorderPreview
     }
 
     @Override
-    public void imageDataReady(byte[] data, int width, int height, Bitmap.Config colorFormat) {
-        //FIXME: Put this in another thread?
-        List<Rect> detectionResult = faceDetection.detect(data, height, width);
-        motorControlService.reactOnFaces(detectionResult, width, height);
-        Log.i(TAG, String.format("Found %d faces\n", detectionResult.size()));
+    public void imageDataReady(final byte[] data, final int width, final int height, Bitmap.Config colorFormat) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Rect> detectionResult = faceDetection.detect(data, height, width);
+                motorControlService.reactOnFaces(detectionResult, width, height);
+                Log.d(TAG, String.format("Found %d faces\n", detectionResult.size()));
+            }
+        });
     }
 
     @Override
@@ -42,4 +49,5 @@ public class FaceTrackingListener implements RecorderPreviewView.RecorderPreview
     public void cameraClosed(CameraDevice device) {
 
     }
+
 }
