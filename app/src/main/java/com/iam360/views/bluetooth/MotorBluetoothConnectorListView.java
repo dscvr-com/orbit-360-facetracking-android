@@ -27,10 +27,9 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
     public static final String TAG = "BluetoothConnectorView";//because of 23 charcters
     private static final long SCAN_PERIOD = 10000000;//very long time
     private final BluetoothDataAdapter dataAdapter;
-    private final Handler stopScanhandler = new Handler();
+    private final Handler stopScanHandler = new Handler();
     private BluetoothAdapter adapter;
     private ListView list;
-
 
     public MotorBluetoothConnectorListView(Activity context) {
         super(context);
@@ -38,7 +37,7 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
         adapter = BluetoothAdapter.getDefaultAdapter();
         dataAdapter = new BluetoothDataAdapter(context, loadData());
         final BluetoothLeScanCallback scanCallback = new BluetoothLeScanCallback();
-        stopScanhandler.postDelayed(new Runnable() {
+        stopScanHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 adapter.getBluetoothLeScanner().stopScan(scanCallback);
@@ -60,6 +59,10 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
             }
         });
         addView(list);
+    }
+
+    public void onStop() {
+        adapter.getBluetoothLeScanner().stopScan(new BluetoothLeScanCallback());
     }
 
     private void connectToDevice(BluetoothDevice device) {
