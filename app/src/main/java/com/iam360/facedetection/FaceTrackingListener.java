@@ -8,9 +8,6 @@ import android.util.Log;
 import com.iam360.motor.connection.BluetoothMotorControlService;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.views.record.RecorderPreviewView;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
 
@@ -30,13 +27,8 @@ public class FaceTrackingListener implements RecorderPreviewView.RecorderPreview
 
     @Override
     public void imageDataReady(byte[] data, int width, int height, Bitmap.Config colorFormat) {
-        Mat rgba = new Mat(height, width, CvType.CV_8UC4);
-        Mat grey = new Mat(height,width, CvType.CV_8UC1);
-        rgba.put(0, 0, data);
-        Imgproc.cvtColor(rgba, grey, Imgproc.COLOR_RGBA2GRAY);
-        Imgproc.equalizeHist(grey,grey);
         //FIXME: Put this in another thread?
-        List<Rect> detectionResult = faceDetection.detect(grey, height, width);
+        List<Rect> detectionResult = faceDetection.detect(data, height, width);
         motorControlService.reactOnFaces(detectionResult, width, height);
         Log.i(TAG, String.format("Found %d faces\n", detectionResult.size()));
     }
