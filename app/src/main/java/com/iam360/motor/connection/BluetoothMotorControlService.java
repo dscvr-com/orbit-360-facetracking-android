@@ -15,7 +15,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 /**
- * Class gto control Motor.
+ * Class to control Motor.
  * Can send MotorCommands to the motor
  * Created by Charlotte on 21.11.2016.
  */
