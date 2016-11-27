@@ -10,6 +10,8 @@ import android.util.Log;
 import com.iam360.motor.control.MotorCommand;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 /**
@@ -23,13 +25,16 @@ public class BluetoothMotorControlService {
     public static final UUID CHARACTERISTIC_UUID = UUID.fromString("00001001-0000-1000-8000-00805F9B34FB");
     private static final double STEPS_FOR_ONE_ROUND_X = 5111;
     private static final double STEPS_FOR_ONE_ROUND_Y = 15000;
-    private static final float EPSILON_TO_MIDDLE = 0.1f;
+    private static final float EPSILON_TO_MIDDLE = 0.2f;
+    private static final int PERIOD = 100;
+
 
     private BluetoothGattService bluetoothService;
     private BluetoothGatt gatt;
     //this value has to be multiplied with the width because we don't have the width when we calc this value
     private float focalLengthInPx;
     private boolean isFinishedMoving = true;
+    private Timer timer;
 
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
@@ -49,6 +54,18 @@ public class BluetoothMotorControlService {
         } else {
             this.gatt = gatt;
             this.bluetoothService = correctService;
+            if (timer != null) {
+                timer.cancel();
+            }
+            timer = new Timer();
+            //stop timer if disconnected
+            timer.scheduleAtFixedRate(new TimerTask() {
+
+                @Override
+                public void run() {
+                    isFinishedMoving = true;
+                }
+            }, PERIOD, PERIOD);
             return true;
         }
     }
@@ -90,11 +107,13 @@ public class BluetoothMotorControlService {
             double angX = Math.atan2(deltaX, focalLengthInPx * width);
             double angY = Math.atan2(deltaY, focalLengthInPx * width);
 
-            int xSteps = (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI));
-            int ySteps = (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI));
+            int xSteps = (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI)) * 30;
+            int ySteps = (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI)) * 30;
+
 
             if (Math.abs(deltaX) < EPSILON_TO_MIDDLE * width) {
                 isFinishedMoving = true;
+                stop();
                 return;
             }
 
