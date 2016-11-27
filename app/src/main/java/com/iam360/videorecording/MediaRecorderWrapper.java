@@ -2,9 +2,6 @@ package com.iam360.videorecording;
 
 import android.app.Activity;
 import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CaptureRequest;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
@@ -44,17 +41,12 @@ public class MediaRecorderWrapper {
     private MediaRecorder recorder;
     //    private SurfaceTexture texture;
     private Size size;
-    private CameraDevice device;
-    private Surface surfaceForPreview;
-    private CaptureRequest.Builder previewBuilder;
-    private CameraCaptureSession previewSession;
     private Activity activity;
     private String nextVideoAbsolutePath;
     private int sensorOrientation;
 
-    public MediaRecorderWrapper(CameraDevice device, Size size, Activity activity, int sensorOrientation) {
+    public MediaRecorderWrapper(Size size, Activity activity, int sensorOrientation) {
         this.size = size;
-        this.device = device;
         this.activity = activity;
         this.sensorOrientation = sensorOrientation;
     }

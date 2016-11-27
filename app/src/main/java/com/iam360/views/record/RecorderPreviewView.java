@@ -65,7 +65,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 dataListener.cameraOpened(cameraDevice);
             }
             if (null == videoRecorder) {
-                videoRecorder = new MediaRecorderWrapper(cameraDevice, videoSize, activity, sensorOrientation);
+                videoRecorder = new MediaRecorderWrapper(videoSize, activity, sensorOrientation);
             }
             CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
             ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(manager, cameraDevice.getId());
