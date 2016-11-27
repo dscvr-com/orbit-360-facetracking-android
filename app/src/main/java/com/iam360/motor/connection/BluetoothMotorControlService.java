@@ -23,11 +23,14 @@ public class BluetoothMotorControlService {
     public static final UUID CHARACTERISTIC_UUID = UUID.fromString("00001001-0000-1000-8000-00805F9B34FB");
     private static final double STEPS_FOR_ONE_ROUND_X = 5111;
     private static final double STEPS_FOR_ONE_ROUND_Y = 15000;
+    private static final float EPSILON_TO_MIDDLE = 0.1f;
 
     private BluetoothGattService bluetoothService;
     private BluetoothGatt gatt;
     //this value has to be multiplied with the width because we don't have the width when we calc this value
     private float focalLengthInPx;
+    private boolean isFinishedMoving = true;
+
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
 
@@ -82,15 +85,24 @@ public class BluetoothMotorControlService {
     public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) {
         if (detectionResult.size() > 0) {
             Rect currentRelevantFace = detectionResult.get(0);
-            int deltaX = currentRelevantFace.centerX() - (width / 2);
-            int deltaY = currentRelevantFace.centerY() - (height / 2);
+            int deltaX = (width / 2) - currentRelevantFace.centerX();
+            int deltaY = (height / 2) - currentRelevantFace.centerY();
             double angX = Math.atan2(deltaX, focalLengthInPx * width);
             double angY = Math.atan2(deltaY, focalLengthInPx * width);
 
             int xSteps = (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI));
             int ySteps = (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI));
-            //FIXME: should be moveXY(xSteps,ySteps);
-            moveX(xSteps);
+
+            if (Math.abs(deltaX) < EPSILON_TO_MIDDLE * width) {
+                isFinishedMoving = true;
+                return;
+            }
+
+            if (isFinishedMoving) {
+                //FIXME: should be moveXY(xSteps,ySteps);
+                moveX(xSteps);
+                isFinishedMoving = false;
+            }
         } else {
             stop();
         }
