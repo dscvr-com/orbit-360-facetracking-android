@@ -80,7 +80,7 @@ public class MotorCommand {
         data[stepsAsArray.length] = (byte) 0x03;
         data[stepsAsArray.length + 1] = (byte) 0xE8;
         //full stepps
-        data[stepsAsArray.length + 2] = (byte) 0x00;
+        data[stepsAsArray.length + 2] = (byte) 0x01;
         return data;
     }
 
