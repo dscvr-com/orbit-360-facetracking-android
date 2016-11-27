@@ -16,7 +16,7 @@ public class BluetoothConnectionReceiver extends BroadcastReceiver {
 
     public static final String CONNECTED = "com.iam360.bluetooth.BLUETOOTH_CONNECTED";
     public static final String DISCONNECTED = "com.iam360.bluetooth.BLUETOOTH_DISCONNECTED";
-    private static final String TAG = "BluetoothConnectionReceiver";
+    private static final String TAG = "BluetoothConnectReceive";
 
     @Override
     public void onReceive(Context context, Intent intent) {

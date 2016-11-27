@@ -18,11 +18,9 @@ import com.iam360.views.bluetooth.MotorBluetoothConnectorListView;
 public class BluetoothConnectionActivity extends Activity {
 
     private static final int BLUETOOTH_REQUEST = 1;
-    private static final String TAG = "BluetoothActivity";//only 23 chars are allowed
-    private static final int BLUETOOTH_LOCATION_REQUEST = 2;
+    private static final String TAG = "BluetoothActivity";//only 23 chars are allowed7
+    private static final int BLUETOOTH__LOCATION_REQUEST = 2;
     private BluetoothAdapter adapter;
-    private boolean btOn = false;
-    private boolean btLocationOn = false;
     private IntentFilter bluetoothBroadcastIntentFilter;
     private BluetoothConnectionReceiver bluetoothConnectionReceiver;
 
@@ -55,6 +53,7 @@ public class BluetoothConnectionActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_bluetooth_connection);
         bluetoothBroadcastIntentFilter = new IntentFilter("com.iam360.bluetooth.BLUETOOTH_CONNECTED");
         bluetoothBroadcastIntentFilter.addAction("com.iam360.bluetooth.BLUETOOTH_DISCONNECTED");
@@ -65,21 +64,12 @@ public class BluetoothConnectionActivity extends Activity {
             throw new IllegalStateException("No Bluetooth-adapter found");
         }
         if (!((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
-            btLocationOn = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-            btOn = adapter.isEnabled();
-            if (!btLocationOn) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        BLUETOOTH_LOCATION_REQUEST);
-            }
-            if (!adapter.isEnabled()) {
+
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
-            }
-            if (btLocationOn && btOn) {
-                loadBluetooth();
-            }
-        }
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, BLUETOOTH__LOCATION_REQUEST);
+
+    }
 
     }
 
@@ -89,23 +79,26 @@ public class BluetoothConnectionActivity extends Activity {
             case BLUETOOTH_REQUEST: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    btOn = true;
+                    Log.d(TAG, "bluetooth Req");
                 } else {
                     Log.e(TAG, "No Bluetooth permission");
                 }
             }
-            case BLUETOOTH_LOCATION_REQUEST: {
+            case BLUETOOTH__LOCATION_REQUEST: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    btLocationOn = true;
+                    Log.d(TAG, "bluetooth Req");
                 } else {
-                    Log.e(TAG, "No Bluetooth Location permission");
+                    Log.e(TAG, "No Bluetooth permission");
                 }
             }
+            adapter = BluetoothAdapter.getDefaultAdapter();
+            if (adapter != null && adapter.isEnabled() && ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                loadBluetooth();
+            }
 
-        }
-        if (btOn && btLocationOn) {
-            loadBluetooth();
         }
     }
 
