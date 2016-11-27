@@ -6,7 +6,43 @@ import java.nio.ByteBuffer;
  * Created by Charlotte on 17.11.2016.
  */
 public class MotorCommand {
+    private static final byte[] EMTY = new byte[0];
     private byte[] value = new byte[32];
+
+    private MotorCommand() {
+
+    }
+
+    public static MotorCommand moveX(int steps) {
+        MotorCommand command = new MotorCommand();
+        //func: 0x01 -> x motor
+        command.createCommand((byte) 0x01, command.createData(steps));
+        return command;
+
+    }
+
+    public static MotorCommand moveY(int steps) {
+        MotorCommand command = new MotorCommand();
+        //func: 0x02 -> y motor
+        command.createCommand((byte) 0x02, command.createData(steps));
+        return command;
+    }
+
+    public static MotorCommand moveXY(int stepsX, int stepsY) {
+        MotorCommand command = new MotorCommand();
+        byte[] dataX = command.createData(stepsX);
+        byte[] dataY = command.createData(stepsY);
+        byte[] data = command.mergeArrays(dataX, dataY);
+        //func: 0x03 -> x + y motor
+        command.createCommand((byte) 0x03, data);
+        return command;
+    }
+
+    public static MotorCommand stop() {
+        MotorCommand command = new MotorCommand();
+        command.createCommand((byte) 0x04, EMTY);
+        return command;
+    }
 
     private void createCommand(byte function, byte[] data) {
         value[0] = (byte) 0xFE;
@@ -20,28 +56,6 @@ public class MotorCommand {
             checksum += value[i];
         }
         value[data.length + 3] = (byte) (checksum & 0xFF);
-    }
-
-    public MotorCommand moveX(int steps) {
-        //func: 0x01 -> x motor
-        createCommand((byte) 0x01, createData(steps));
-        return this;
-
-    }
-
-    public MotorCommand moveY(int steps) {
-        //func: 0x02 -> y motor
-        createCommand((byte) 0x02, createData(steps));
-        return this;
-    }
-
-    public MotorCommand moveXY(int stepsX, int stepsY) {
-        byte[] dataX = createData(stepsX);
-        byte[] dataY = createData(stepsY);
-        byte[] data = mergeArrays(dataX, dataY);
-        //func: 0x03 -> x + y motor
-        createCommand((byte) 0x03, data);
-        return this;
     }
 
     private byte[] mergeArrays(byte[] dataX, byte[] dataY) {

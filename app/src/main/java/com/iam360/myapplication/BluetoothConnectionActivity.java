@@ -13,42 +13,42 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.ViewGroup;
 import com.iam360.motor.connection.BluetoothConnectionReceiver;
-import com.iam360.motor.connection.MotorBluetoothConnectorView;
+import com.iam360.views.bluetooth.MotorBluetoothConnectorListView;
 
 public class BluetoothConnectionActivity extends Activity {
 
     private static final int BLUETOOTH_REQUEST = 1;
-    private static final String TAG = "BluetoothConnectionActivity";
+    private static final String TAG = "BluetoothActivity";//only 23 chars are allowed
     private static final int BLUETOOTH_LOCATION_REQUEST = 2;
     private BluetoothAdapter adapter;
     private boolean btOn = false;
     private boolean btLocationOn = false;
     private IntentFilter bluetoothBroadcastIntentFilter;
-    private BluetoothConnectionReceiver bluetoothConnectionResiver;
+    private BluetoothConnectionReceiver bluetoothConnectionReceiver;
 
 
     @Override
     protected void onPause() {
-        unregisterReceiver(bluetoothConnectionResiver);
+        unregisterReceiver(bluetoothConnectionReceiver);
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(bluetoothConnectionResiver);
+        unregisterReceiver(bluetoothConnectionReceiver);
         super.onDestroy();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
+        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
+        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
 
     }
 
@@ -58,13 +58,13 @@ public class BluetoothConnectionActivity extends Activity {
         setContentView(R.layout.activity_bluetooth_connection);
         bluetoothBroadcastIntentFilter = new IntentFilter("com.iam360.bluetooth.BLUETOOTH_CONNECTED");
         bluetoothBroadcastIntentFilter.addAction("com.iam360.bluetooth.BLUETOOTH_DISCONNECTED");
-        bluetoothConnectionResiver = new BluetoothConnectionReceiver();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
+        bluetoothConnectionReceiver = new BluetoothConnectionReceiver();
+        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
             throw new IllegalStateException("No Bluetooth-adapter found");
         }
-        if (!((BluetoothApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
+        if (!((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
             btLocationOn = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             btOn = adapter.isEnabled();
             if (!btLocationOn) {
@@ -110,7 +110,7 @@ public class BluetoothConnectionActivity extends Activity {
     }
 
     private void loadBluetooth() {
-        MotorBluetoothConnectorView bluetoothConnectorView = new MotorBluetoothConnectorView(this);
+        MotorBluetoothConnectorListView bluetoothConnectorView = new MotorBluetoothConnectorListView(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_bluetooth_connection);
         layout.addView(bluetoothConnectorView);
     }
