@@ -24,31 +24,31 @@ public class BluetoothConnectionActivity extends Activity {
     private boolean btOn = false;
     private boolean btLocationOn = false;
     private IntentFilter bluetoothBroadcastIntentFilter;
-    private BluetoothConnectionReceiver bluetoothConnectionResiver;
+    private BluetoothConnectionReceiver bluetoothConnectionReceiver;
 
 
     @Override
     protected void onPause() {
-        unregisterReceiver(bluetoothConnectionResiver);
+        unregisterReceiver(bluetoothConnectionReceiver);
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(bluetoothConnectionResiver);
+        unregisterReceiver(bluetoothConnectionReceiver);
         super.onDestroy();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
+        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
+        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
 
     }
 
@@ -58,13 +58,13 @@ public class BluetoothConnectionActivity extends Activity {
         setContentView(R.layout.activity_bluetooth_connection);
         bluetoothBroadcastIntentFilter = new IntentFilter("com.iam360.bluetooth.BLUETOOTH_CONNECTED");
         bluetoothBroadcastIntentFilter.addAction("com.iam360.bluetooth.BLUETOOTH_DISCONNECTED");
-        bluetoothConnectionResiver = new BluetoothConnectionReceiver();
-        registerReceiver(bluetoothConnectionResiver, bluetoothBroadcastIntentFilter);
+        bluetoothConnectionReceiver = new BluetoothConnectionReceiver();
+        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
             throw new IllegalStateException("No Bluetooth-adapter found");
         }
-        if (!((BluetoothApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
+        if (!((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
             btLocationOn = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             btOn = adapter.isEnabled();
             if (!btLocationOn) {

@@ -16,7 +16,7 @@ import android.widget.ListView;
 import com.iam360.motor.connection.BluetoothConnectionReceiver;
 import com.iam360.motor.connection.BluetoothDataAdapter;
 import com.iam360.motor.connection.BluetoothMotorControlService;
-import com.iam360.myapplication.BluetoothApplicationContext;
+import com.iam360.myapplication.BluetoothCameraApplicationContext;
 
 import java.util.ArrayList;
 /**
@@ -101,7 +101,7 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
                     break;
                 case BluetoothProfile.STATE_DISCONNECTED:
                     Log.e("gattCallback", "STATE_DISCONNECTED");
-                    ((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(null);
+                    ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setBluetoothService(null);
                     getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.DISCONNECTED));
                     break;
                 default:
@@ -111,7 +111,7 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (((BluetoothApplicationContext) getContext().getApplicationContext()).setBluetoothService(gatt)) {
+            if (((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setBluetoothService(gatt)) {
                 getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.CONNECTED));
             } else {
                 getContext().sendBroadcast(new Intent(BluetoothConnectionReceiver.DISCONNECTED));

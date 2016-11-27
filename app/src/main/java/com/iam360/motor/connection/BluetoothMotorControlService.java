@@ -3,7 +3,9 @@ package com.iam360.motor.connection;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.graphics.Rect;
 import android.os.ParcelUuid;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import com.iam360.motor.control.MotorCommand;
 
@@ -19,9 +21,13 @@ public class BluetoothMotorControlService {
 
     public static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("00001000-0000-1000-8000-00805F9B34FB");
     public static final UUID CHARACTERISTIC_UUID = UUID.fromString("00001001-0000-1000-8000-00805F9B34FB");
+    private static final double STEPS_FOR_ONE_ROUND_X = 5111;
+    private static final double STEPS_FOR_ONE_ROUND_Y = 15000;
 
     private BluetoothGattService bluetoothService;
     private BluetoothGatt gatt;
+    //this value has to be multiplied with the width because we don't have the width when we calc this value
+    private float focalLengthInPx;
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
 
@@ -49,8 +55,7 @@ public class BluetoothMotorControlService {
     }
 
     public void moveX(int steps) {
-        MotorCommand command = new MotorCommand();
-        command.moveX(steps);
+        MotorCommand command = MotorCommand.moveX(steps);
         sendCommand(command);
     }
 
@@ -64,15 +69,38 @@ public class BluetoothMotorControlService {
     }
 
     public void moveY(int steps) {
-        MotorCommand command = new MotorCommand();
-        command.moveY(steps);
+        MotorCommand command = MotorCommand.moveY(steps);
         sendCommand(command);
     }
 
     public void moveXY(int stepsX, int stepsY) {
-        MotorCommand command = new MotorCommand();
-        command.moveXY(stepsX, stepsY);
+        MotorCommand command = MotorCommand.moveXY(stepsX, stepsY);
         sendCommand(command);
 
+    }
+
+    public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) {
+        if (detectionResult.size() > 0) {
+            Rect currentRelevantFace = detectionResult.get(0);
+            int deltaX = currentRelevantFace.centerX() - (width / 2);
+            int deltaY = currentRelevantFace.centerY() - (height / 2);
+            double angX = Math.atan2(deltaX, focalLengthInPx * width);
+            double angY = Math.atan2(deltaY, focalLengthInPx * width);
+
+            int xSteps = (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI));
+            int ySteps = (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI));
+            //FIXME: should be moveXY(xSteps,ySteps);
+            moveX(xSteps);
+        } else {
+            stop();
+        }
+    }
+
+    private void stop() {
+        sendCommand(MotorCommand.stop());
+    }
+
+    public void setFocalLengthInPx(float focalLengthInPx) {
+        this.focalLengthInPx = focalLengthInPx;
     }
 }

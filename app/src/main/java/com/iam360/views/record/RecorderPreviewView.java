@@ -13,6 +13,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.videorecording.MediaRecorderWrapper;
 
 import java.io.IOException;
@@ -66,6 +67,9 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if (null == videoRecorder) {
                 videoRecorder = new MediaRecorderWrapper(cameraDevice, videoSize, activity, sensorOrientation);
             }
+            CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
+            ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(manager, cameraDevice.getId());
+
         }
 
         @Override
@@ -179,7 +183,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
         this.decoderHandler = new Handler(decoderThread.getLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                Log.w(TAG, "Message tag: " + msg.what);
                 if (msg.what == START_DECODER) {
                     createDecoderSurface();
                     // So I have no idea what we wait for. So we just wait.
