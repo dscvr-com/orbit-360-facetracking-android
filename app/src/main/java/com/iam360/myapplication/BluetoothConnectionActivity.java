@@ -23,29 +23,38 @@ public class BluetoothConnectionActivity extends Activity {
     private BluetoothAdapter adapter;
     private IntentFilter bluetoothBroadcastIntentFilter;
     private BluetoothConnectionReceiver bluetoothConnectionReceiver;
+    private MotorBluetoothConnectorListView bluetoothConnectorView;
 
 
     @Override
     protected void onPause() {
         unregisterReceiver(bluetoothConnectionReceiver);
+        if (bluetoothConnectorView != null) {
+            bluetoothConnectorView.onStop();
+        }
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(bluetoothConnectionReceiver);
+        if (bluetoothConnectorView != null) {
+            bluetoothConnectorView.onStop();
+        }
         super.onDestroy();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        loadBluetooth();
         registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
+        loadBluetooth();
         registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
 
     }
@@ -65,11 +74,11 @@ public class BluetoothConnectionActivity extends Activity {
         }
         if (!((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
 
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, BLUETOOTH__LOCATION_REQUEST);
 
-    }
+        }
 
     }
 
@@ -103,7 +112,7 @@ public class BluetoothConnectionActivity extends Activity {
     }
 
     private void loadBluetooth() {
-        MotorBluetoothConnectorListView bluetoothConnectorView = new MotorBluetoothConnectorListView(this);
+        bluetoothConnectorView = new MotorBluetoothConnectorListView(this);
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_bluetooth_connection);
         layout.addView(bluetoothConnectorView);
     }

@@ -74,7 +74,7 @@ public class FaceDetection {
 
     private int makeSmaller(Mat input) {
         int scale = 1;
-        while (input.cols() > 240 && input.rows() > SIZE_OF_SCALLED_IMAGE) {
+        while (input.cols() > SIZE_OF_SCALLED_IMAGE && input.rows() > SIZE_OF_SCALLED_IMAGE) {
             Imgproc.pyrDown(input, input);
             scale *= 2;
         }

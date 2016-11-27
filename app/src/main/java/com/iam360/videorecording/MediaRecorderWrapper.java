@@ -39,7 +39,6 @@ public class MediaRecorderWrapper {
     }
 
     private MediaRecorder recorder;
-    //    private SurfaceTexture texture;
     private Size size;
     private Activity activity;
     private String nextVideoAbsolutePath;
