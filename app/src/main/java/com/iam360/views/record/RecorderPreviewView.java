@@ -153,6 +153,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
     public void stopVideo() {
         if (videoRecorder != null) {
+            closePreviewSession();
             videoRecorder.stopRecordingVideo();
             videoRecorder = null;
             startPreview();
@@ -324,6 +325,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
         try {
             closePreviewSession();
+
             previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
 
             Surface previewSurface = textureView.getHolder().getSurface();
@@ -384,12 +386,18 @@ public class RecorderPreviewView extends AutoFitTextureView {
             previewSession.stopRepeating();
             previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e(TAG, "camera Error: ", e);
         }
     }
 
     private void closePreviewSession() {
         if (previewSession != null) {
+            try {
+                previewSession.stopRepeating();
+                previewSession.abortCaptures();
+            } catch (CameraAccessException e) {
+                Log.e(TAG, "Error on closing Preview Session");
+            }
             previewSession.close();
             previewSession = null;
         }

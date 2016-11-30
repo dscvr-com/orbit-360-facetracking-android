@@ -1,14 +1,11 @@
 package com.iam360.views.record;
+
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
-import android.opengl.EGL14;
-import android.opengl.EGLConfig;
-import android.opengl.EGLContext;
-import android.opengl.EGLDisplay;
-import android.opengl.EGLSurface;
-import android.opengl.GLES20;
+import android.opengl.*;
 import android.util.Log;
 import android.view.Surface;
+
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,17 +24,17 @@ import java.nio.ByteOrder;
  */
 public class CodecSurface
         implements SurfaceTexture.OnFrameAvailableListener {
+    static final Bitmap.Config colorFormat = Bitmap.Config.ARGB_8888;
+    private static final String TAG = "CodecSurface";
+    private static final boolean VERBOSE = true;
+    int mWidth;
+    int mHeight;
     private SurfaceRenderer mTextureRender;
     private SurfaceTexture mSurfaceTexture;
     private Surface mSurface;
-    private static final String TAG = "CodecSurface";
-    private static final boolean VERBOSE = true;
-    static final Bitmap.Config colorFormat = Bitmap.Config.ARGB_8888;
     private EGLDisplay mEGLDisplay = EGL14.EGL_NO_DISPLAY;
     private EGLContext mEGLContext = EGL14.EGL_NO_CONTEXT;
     private EGLSurface mEGLSurface = EGL14.EGL_NO_SURFACE;
-    int mWidth;
-    int mHeight;
     private Object mFrameSyncObject = new Object();     // guards mFrameAvailable
     private boolean mFrameAvailable = false;
     private ByteBuffer mPixelBuf;                       // used by saveFrame()
@@ -211,7 +208,7 @@ public class CodecSurface
     // SurfaceTexture callback
     @Override
     public void onFrameAvailable(SurfaceTexture st) {
-        if (VERBOSE) Log.d(TAG, "new frame available");
+        if (VERBOSE)
         synchronized (mFrameSyncObject) {
             if (mFrameAvailable) {
                 Log.e(TAG, "mFrameAvailable already set, frame could be dropped");

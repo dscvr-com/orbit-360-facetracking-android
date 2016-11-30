@@ -51,7 +51,6 @@ public class FaceDetection {
     }
 
     public List<android.graphics.Rect> detect(byte[] data, int height, int width) {
-        Log.d(TAG, "Started FaceDetection");
         Mat grey = getGreyMat(data, height, width);
         int scale = makeSmaller(grey);
 
