@@ -106,9 +106,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         recordPreview.setPreviewListener(new FaceTrackingListener(this));
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         layout.addView(recordPreview);
-        FloatingActionButton cameraButton = (FloatingActionButton) findViewById(R.id.camera);
-        cameraButton.bringToFront();
-        cameraButton.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton videoButton = (FloatingActionButton) findViewById(R.id.camera);
+        videoButton.bringToFront();
+        videoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (isFilming) {
@@ -122,6 +122,14 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 }
             }
         });
+        FloatingActionButton photoButton = (FloatingActionButton) findViewById(R.id.photo);
+        photoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                recordPreview.takePicture();
+            }
+        });
+        photoButton.bringToFront();
     }
 }
 

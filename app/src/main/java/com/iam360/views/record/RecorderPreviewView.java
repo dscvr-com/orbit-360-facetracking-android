@@ -1,22 +1,31 @@
 package com.iam360.views.record;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.videorecording.MediaRecorderWrapper;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -65,7 +74,11 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 dataListener.cameraOpened(cameraDevice);
             }
             if (null == videoRecorder) {
-                videoRecorder = new MediaRecorderWrapper(videoSize, activity, sensorOrientation);
+                try {
+                    videoRecorder = new MediaRecorderWrapper(videoSize, activity, sensorOrientation);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
             ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(manager, cameraDevice.getId());
@@ -222,7 +235,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if (dataListener != null) {
                 if (surface.awaitNewImage()) {
                     surface.drawImage(false);
-                    Log.i(TAG, "Fetch frame success");
+//                    Log.i(TAG, "Fetch frame success");
                     dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, CodecSurface.colorFormat);
                 }
             } else {
@@ -303,6 +316,10 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
                 configureTransform(width, height);
+                if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    //do nothing we habe the permission already checked
+                    return;
+                }
                 manager.openCamera(cameraId, stateCallback, null);
                 break;
             }
@@ -326,7 +343,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         try {
             closePreviewSession();
 
-            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);//Is This the Point?
 
             Surface previewSurface = textureView.getHolder().getSurface();
 
@@ -335,11 +352,11 @@ public class RecorderPreviewView extends AutoFitTextureView {
             surfaces.add(previewSurface);
             surfaces.add(surface.getSurface());
 
-            if(videoRecorder != null) {
+            if (videoRecorder != null) {
                 surfaces.add(videoRecorder.getSurface());
             }
 
-            for(Surface surface : surfaces){
+            for (Surface surface : surfaces) {
                 previewBuilder.addTarget(surface);
             }
             cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
@@ -347,7 +364,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     previewSession = cameraCaptureSession;
-                    beginPreview();
+                    beginPreviewAfterStarting();
                 }
 
                 @Override
@@ -360,7 +377,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    private void beginPreview() {
+    private void beginPreviewAfterStarting() {
         if (null == cameraDevice) {
             return;
         }
@@ -395,11 +412,107 @@ public class RecorderPreviewView extends AutoFitTextureView {
             try {
                 previewSession.stopRepeating();
                 previewSession.abortCaptures();
+                previewSession.close();
             } catch (CameraAccessException e) {
                 Log.e(TAG, "Error on closing Preview Session");
+            } catch (IllegalStateException e) {
+                //nop - then the session was closed
             }
-            previewSession.close();
             previewSession = null;
+        }
+    }
+
+    public void takePicture() {
+        if (null == cameraDevice) {
+            Log.e(TAG, "cameraDevice is null");
+            return;
+        }
+        CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
+        try {
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+            Size[] jpegSizes = null;
+            if (characteristics != null) {
+                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+            }
+            int width = 640;
+            int height = 480;
+            if (jpegSizes != null && 0 < jpegSizes.length) {
+                width = jpegSizes[0].getWidth();
+                height = jpegSizes[0].getHeight();
+            }
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            List<Surface> outputSurfaces = new ArrayList<Surface>(2);
+            outputSurfaces.add(reader.getSurface());
+            outputSurfaces.add(surface.getSurface());//FIXME
+            final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(reader.getSurface());
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            // Orientation
+            int rotation = MediaRecorderWrapper.getOrientation(sensorOrientation, activity.getWindowManager().getDefaultDisplay().getRotation());
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
+            File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Facedetection");
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            final File file = new File(dir, String.format("facedetection_%s.jpg", System.currentTimeMillis()));
+            ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = null;
+                    try {
+                        image = reader.acquireLatestImage();
+                        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                        byte[] bytes = new byte[buffer.capacity()];
+                        buffer.get(bytes);
+                        save(bytes);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (image != null) {
+                            image.close();
+                        }
+                    }
+                }
+
+                private void save(byte[] bytes) throws IOException {
+                    OutputStream output = null;
+                    try {
+                        output = new FileOutputStream(file);
+                        output.write(bytes);
+                    } finally {
+                        if (null != output) {
+                            output.close();
+                        }
+                    }
+                }
+            };
+            reader.setOnImageAvailableListener(readerListener, backgroundHandler);
+            final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+                    super.onCaptureCompleted(session, request, result);
+                    Toast.makeText(getContext(), "Saved:" + file, Toast.LENGTH_SHORT).show();
+                    startPreview();
+                }
+            };
+            cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(CameraCaptureSession session) {
+                    try {
+                        session.capture(captureBuilder.build(), captureListener, backgroundHandler);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onConfigureFailed(CameraCaptureSession session) {
+                }
+            }, backgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
         }
     }
 

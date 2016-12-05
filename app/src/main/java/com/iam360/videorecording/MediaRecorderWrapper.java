@@ -44,10 +44,21 @@ public class MediaRecorderWrapper {
     private String nextVideoAbsolutePath;
     private int sensorOrientation;
 
-    public MediaRecorderWrapper(Size size, Activity activity, int sensorOrientation) {
+    public MediaRecorderWrapper(Size size, Activity activity, int sensorOrientation) throws IOException {
         this.size = size;
         this.activity = activity;
         this.sensorOrientation = sensorOrientation;
+        setUpMediaRecorder();
+    }
+
+    public static int getOrientation(int sensorOrientation, int rotation) {
+        switch (sensorOrientation) {
+            case SENSOR_ORIENTATION_DEFAULT_DEGREES:
+                return DEFAULT_ORIENTATIONS.get(rotation);
+            case SENSOR_ORIENTATION_INVERSE_DEGREES:
+                return INVERSE_ORIENTATIONS.get(rotation);
+        }
+        return rotation;
     }
 
     public Surface getSurface() {
@@ -55,7 +66,6 @@ public class MediaRecorderWrapper {
     }
 
     public void startRecord() throws CameraAccessException, IOException {
-        setUpMediaRecorder();
         recorder.start();
     }
 
@@ -69,7 +79,6 @@ public class MediaRecorderWrapper {
             Log.d(TAG, "Video saved: " + nextVideoAbsolutePath);
         }
     }
-
 
     private void setUpMediaRecorder() throws IOException {
         recorder = new MediaRecorder();
@@ -85,15 +94,10 @@ public class MediaRecorderWrapper {
         recorder.setVideoSize(size.getHeight(), size.getWidth());
         recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        switch (sensorOrientation) {
-            case SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                recorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
-                break;
-            case SENSOR_ORIENTATION_INVERSE_DEGREES:
-                recorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation));
-                break;
-        }
+
+        int orientation = getOrientation(sensorOrientation, activity.getWindowManager().getDefaultDisplay().getRotation());
+
+        recorder.setOrientationHint(orientation);
         recorder.prepare();
 
     }
