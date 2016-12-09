@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
@@ -516,13 +515,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    public interface RecorderPreviewListener {
-        void imageDataReady(byte[] data, int width, int height, Bitmap.Config colorFormat);
 
-        void cameraOpened(CameraDevice device);
-
-        void cameraClosed(CameraDevice device);
-    }
 
     static class CompareSizesByArea implements Comparator<Size> {
 
