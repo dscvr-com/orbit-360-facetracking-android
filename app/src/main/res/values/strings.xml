@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">FaceTracking</string>
     <string name="bond">not paired</string>
     <string name="bonded">was paired</string>
     <string name="bonding">paring</string>

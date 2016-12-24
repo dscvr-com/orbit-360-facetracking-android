@@ -1,12 +1,10 @@
 package com.iam360.facedetection;
 
 import android.content.Context;
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import com.iam360.motor.connection.BluetoothMotorControlService;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 
-import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
@@ -17,12 +15,16 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
     private Thread current;
     private FaceDetection faceDetection;
 
-
     public SingleThreadWithoutQueueExecutor(Context context) {
         motorControlService = ((BluetoothCameraApplicationContext
                 ) context.getApplicationContext()).getBluetoothService();
 
         faceDetection = new FaceDetection(context);
+        faceDetection.addFaceDetectionResultListener((rects, width, height) -> motorControlService.reactOnFaces(rects, width, height));
+    }
+
+    public FaceDetection getFaceDetection() {
+        return faceDetection;
     }
 
     @Override
@@ -52,8 +54,7 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
 
         @Override
         public void run() {
-            List<Rect> detectionResult = faceDetection.detect(data, height, width);
-            motorControlService.reactOnFaces(detectionResult, width, height);
+            faceDetection.detect(data, height, width);
         }
     }
 }

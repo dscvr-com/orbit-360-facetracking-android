@@ -4,13 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
-import android.media.ImageReader;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -20,15 +17,14 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.widget.Toast;
+import com.iam360.facedetection.FaceDetection;
+import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
+import com.iam360.videorecording.ImageWrapper;
 import com.iam360.videorecording.MediaRecorderWrapper;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -55,11 +51,13 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private CodecSurface surface;
     private HandlerThread decoderThread;
     private Handler decoderHandler;
-    private RecorderPreviewListener
-            dataListener;
+    private ImageWrapper imageWrapper = null;
+    private FaceTrackingListener dataListener;
     private MediaRecorderWrapper videoRecorder;
+    private Timer timer = new Timer("ImageTime");
     // Callbacks for cam opening - save camera ref and start preview
     private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
+
 
         @Override
         public void onOpened(CameraDevice cameraDevice) {
@@ -79,6 +77,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                     e.printStackTrace();
                 }
             }
+            imageWrapper = new ImageWrapper(getContext());
             CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
             ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(manager, cameraDevice.getId());
 
@@ -182,7 +181,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    public void setPreviewListener(RecorderPreviewListener dataListener) {
+    public void setPreviewListener(FaceTrackingListener dataListener) {
         this.dataListener = dataListener;
     }
 
@@ -234,7 +233,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
             if (dataListener != null) {
                 if (surface.awaitNewImage()) {
                     surface.drawImage(false);
-//                    Log.i(TAG, "Fetch frame success");
                     dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, CodecSurface.colorFormat);
                 }
             } else {
@@ -426,95 +424,35 @@ public class RecorderPreviewView extends AutoFitTextureView {
             Log.e(TAG, "cameraDevice is null");
             return;
         }
-        CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
-        try {
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
-            Size[] jpegSizes = null;
-            if (characteristics != null) {
-                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+        List<Surface> outputSurfaces = new ArrayList<Surface>(2);
+        outputSurfaces.add(surface.getSurface());
+        final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
+            @Override
+            public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+                super.onCaptureCompleted(session, request, result);
+                Toast.makeText(getContext(), "Saved Image", Toast.LENGTH_SHORT).show();
+                startPreview();
             }
-            int width = 640;
-            int height = 480;
-            if (jpegSizes != null && 0 < jpegSizes.length) {
-                width = jpegSizes[0].getWidth();
-                height = jpegSizes[0].getHeight();
-            }
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
-            List<Surface> outputSurfaces = new ArrayList<Surface>(2);
-            outputSurfaces.add(reader.getSurface());
-            outputSurfaces.add(surface.getSurface());//FIXME
-            final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(reader.getSurface());
-            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            // Orientation
-            int rotation = MediaRecorderWrapper.getOrientation(sensorOrientation, activity.getWindowManager().getDefaultDisplay().getRotation());
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-            File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Facedetection");
-            if (!dir.exists()) {
-                dir.mkdir();
-            }
-            final File file = new File(dir, String.format("facedetection_%s.jpg", System.currentTimeMillis()));
-            ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
-                @Override
-                public void onImageAvailable(ImageReader reader) {
-                    Image image = null;
-                    try {
-                        image = reader.acquireLatestImage();
-                        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                        byte[] bytes = new byte[buffer.capacity()];
-                        buffer.get(bytes);
-                        save(bytes);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (image != null) {
-                            image.close();
+        };
+        int rotationOfWindow = activity.getWindowManager().getDefaultDisplay().getRotation();
+        int rotation = MediaRecorderWrapper.getOrientation(sensorOrientation, rotationOfWindow);
+        TimerTask currentTask = new TimerTask() {
+            @Override
+            public void run() {
+                dataListener.getFaceDection().addFaceDetectionResultListener(new ImageProcessor() {
+
+                    @Override
+                    public void facesDetected(List<Rect> rects, int width, int height) {
+                        if (rects.size() >= 1) {
+                            imageWrapper.takePicture(cameraDevice, outputSurfaces, rotation, captureListener, backgroundHandler);
+                            setReadyToRemove();
                         }
                     }
-                }
-
-                private void save(byte[] bytes) throws IOException {
-                    OutputStream output = null;
-                    try {
-                        output = new FileOutputStream(file);
-                        output.write(bytes);
-                    } finally {
-                        if (null != output) {
-                            output.close();
-                        }
-                    }
-                }
-            };
-            reader.setOnImageAvailableListener(readerListener, backgroundHandler);
-            final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
-                @Override
-                public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
-                    super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(getContext(), "Saved:" + file, Toast.LENGTH_SHORT).show();
-                    startPreview();
-                }
-            };
-            cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
-                @Override
-                public void onConfigured(CameraCaptureSession session) {
-                    try {
-                        session.capture(captureBuilder.build(), captureListener, backgroundHandler);
-                    } catch (CameraAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onConfigureFailed(CameraCaptureSession session) {
-                }
-            }, backgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
+                });
+            }
+        };
+        timer.schedule(currentTask, 3000);
     }
-
 
 
     static class CompareSizesByArea implements Comparator<Size> {
@@ -526,6 +464,19 @@ public class RecorderPreviewView extends AutoFitTextureView {
                     (long) rhs.getWidth() * rhs.getHeight());
         }
 
+    }
+
+    private abstract class ImageProcessor implements FaceDetection.NonPermanentFaceDetectionResultListener {
+        private boolean readyToRemove = false;
+
+        @Override
+        public boolean readyToRemove() {
+            return readyToRemove;
+        }
+
+        protected void setReadyToRemove() {
+            readyToRemove = true;
+        }
     }
 
 }

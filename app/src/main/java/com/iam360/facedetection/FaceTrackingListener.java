@@ -3,17 +3,21 @@ package com.iam360.facedetection;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.hardware.camera2.CameraDevice;
-import com.iam360.views.record.RecorderPreviewView;
+import com.iam360.views.record.RecorderPreviewListener;
 
 /**
  * Created by Charlotte on 03.11.2016.
  */
-public class FaceTrackingListener implements RecorderPreviewView.RecorderPreviewListener {
+public class FaceTrackingListener implements RecorderPreviewListener {
     public static final String TAG = "FaceTrackingListener";
     private SingleThreadWithoutQueueExecutor executor;
 
     public FaceTrackingListener(Context context){
         executor = new SingleThreadWithoutQueueExecutor(context);
+    }
+
+    public FaceDetection getFaceDection() {
+        return executor.getFaceDetection();
     }
 
     @Override

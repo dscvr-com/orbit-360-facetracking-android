@@ -11,7 +11,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.view.ViewGroup;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.RecorderPreviewView;
@@ -108,27 +107,19 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         layout.addView(recordPreview);
         FloatingActionButton videoButton = (FloatingActionButton) findViewById(R.id.camera);
         videoButton.bringToFront();
-        videoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isFilming) {
-                    Log.i(TAG, "stop video");
-                    recordPreview.stopVideo();
-                    isFilming = false;
-                } else {
-                    Log.i(TAG, "start video");
-                    recordPreview.startVideo();
-                    isFilming = true;
-                }
+        videoButton.setOnClickListener(v -> {
+            if (isFilming) {
+                Log.i(TAG, "stop video");
+                recordPreview.stopVideo();
+                isFilming = false;
+            } else {
+                Log.i(TAG, "start video");
+                recordPreview.startVideo();
+                isFilming = true;
             }
         });
         FloatingActionButton photoButton = (FloatingActionButton) findViewById(R.id.photo);
-        photoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                recordPreview.takePicture();
-            }
-        });
+        photoButton.setOnClickListener(v -> recordPreview.takePicture());
         photoButton.bringToFront();
     }
 }

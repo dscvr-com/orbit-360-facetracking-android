@@ -24,6 +24,7 @@ public class FaceDetection {
     public static final String TAG = "FaceDetection";
     private final int SIZE_OF_SCALLED_IMAGE = 240;
     private CascadeClassifier detector;
+    private ArrayList<FaceDetectionResultListener> resultListeners = new ArrayList<>();
 
     public FaceDetection(Context context) {
         try {
@@ -50,14 +51,31 @@ public class FaceDetection {
         }
     }
 
-    public List<android.graphics.Rect> detect(byte[] data, int height, int width) {
+    public void addFaceDetectionResultListener(FaceDetectionResultListener listener) {
+        resultListeners.add(listener);
+    }
+
+    public boolean removeFaceDetectionResultListener(FaceDetectionResultListener listener) {
+        return resultListeners.remove(listener);
+    }
+
+    public void detect(byte[] data, int height, int width) {
         Mat grey = getGreyMat(data, height, width);
         int scale = makeSmaller(grey);
 
         MatOfRect resultMatOfRect = new MatOfRect();
         detector.detectMultiScale(grey, resultMatOfRect);
-        return resizeAndReformatFaces(resultMatOfRect.toList(), scale);
+        informListeners(resizeAndReformatFaces(resultMatOfRect.toList(), scale), width, height);
 
+    }
+
+    private void informListeners(List<android.graphics.Rect> rects, int width, int height) {
+        for (FaceDetectionResultListener listener : resultListeners) {
+            listener.facesDetected(rects, width, height);
+            if (listener.getClass().isAssignableFrom(NonPermanentFaceDetectionResultListener.class) && ((NonPermanentFaceDetectionResultListener) listener).readyToRemove()) {
+                removeFaceDetectionResultListener(listener);
+            }
+        }
     }
 
     private List<android.graphics.Rect> resizeAndReformatFaces(List<Rect> rects, int scale) {
@@ -87,5 +105,13 @@ public class FaceDetection {
         Imgproc.cvtColor(rgba, grey, Imgproc.COLOR_RGBA2GRAY);
         Imgproc.equalizeHist(grey, grey);
         return grey;
+    }
+
+    public interface FaceDetectionResultListener {
+        void facesDetected(List<android.graphics.Rect> rects, int width, int height);
+    }
+
+    public interface NonPermanentFaceDetectionResultListener extends FaceDetectionResultListener {
+        boolean readyToRemove();
     }
 }
