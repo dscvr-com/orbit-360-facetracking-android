@@ -38,6 +38,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private final static int START_DECODER = 0;
     private final static int FETCH_FRAME = 1;
     private final static int EXIT_DECODER = 2;
+    private static final int DELAY_FOR_IMAGE = 3000;
     private final Activity activity;
     private AutoFitTextureView textureView;
     private CameraDevice cameraDevice;
@@ -452,18 +453,18 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 });
             }
         };
-        timer.schedule(currentTask, 3000);
+        timer.schedule(currentTask, DELAY_FOR_IMAGE);
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 currentTask.cancel();
             }
-        }, 6000);
-        showCountDown(3);
+        }, DELAY_FOR_IMAGE * 2);
+        showCountDown(DELAY_FOR_IMAGE);
     }
 
-    private void showCountDown(int i) {
-        new CountDownTimer(i * 1000, 1000) {
+    private void showCountDown(int millis) {
+        new CountDownTimer(millis, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 Toast.makeText(getContext(), (int) (millisUntilFinished / 1000), Toast.LENGTH_SHORT).show();
