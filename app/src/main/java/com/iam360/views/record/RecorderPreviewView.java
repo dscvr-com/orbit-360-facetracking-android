@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -370,7 +371,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 }
             }, backgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Problem with the camera: ", e);
         }
     }
 
@@ -383,7 +384,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             previewSession.stopRepeating();
             previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Problem with the camera: ", e);
         }
     }
 
@@ -411,7 +412,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 previewSession.abortCaptures();
                 previewSession.close();
             } catch (CameraAccessException e) {
-                Log.e(TAG, "Error on closing Preview Session");
+                Log.e(TAG, "Error on closing Preview Session", e);
             } catch (IllegalStateException e) {
                 //nop - then the session was closed
             }
@@ -452,6 +453,26 @@ public class RecorderPreviewView extends AutoFitTextureView {
             }
         };
         timer.schedule(currentTask, 3000);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                currentTask.cancel();
+            }
+        }, 6000);
+        showCountDown(3);
+    }
+
+    private void showCountDown(int i) {
+        new CountDownTimer(i * 1000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                Toast.makeText(getContext(), (int) (millisUntilFinished / 1000), Toast.LENGTH_SHORT).show();
+            }
+
+            public void onFinish() {
+                Toast.makeText(getContext(), "0", Toast.LENGTH_SHORT).show();
+            }
+        }.start();
     }
 
 
