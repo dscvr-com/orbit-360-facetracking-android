@@ -6,6 +6,7 @@ import android.hardware.camera2.*;
 import android.media.ImageReader;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
@@ -17,9 +18,9 @@ import java.util.Timer;
  * Created by Charlotte on 21.12.2016.
  */
 public class ImageWrapper {
-
     public static final String FACEDETECTION_FILENAME = "facedetection_%s.jpg";
     public static final String DIR_NAME = "Facedetection";
+    private static final String TAG = "ImageWrapper";
     private final Context context;
     private final CameraManager manager;
     private Timer timer = new Timer("PictureTimer");
@@ -38,8 +39,6 @@ public class ImageWrapper {
             captureBuilder.addTarget(reader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
             surfaces.add(reader.getSurface());
-            // Orientation
-
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
             final File file = getFile();
             ImageReader.OnImageAvailableListener readerListener = new ImageListener(file);
@@ -50,7 +49,7 @@ public class ImageWrapper {
                     try {
                         session.capture(captureBuilder.build(), callback, backgroundHandler);
                     } catch (CameraAccessException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "Error with camera callback", e);?
                     }
                 }
 

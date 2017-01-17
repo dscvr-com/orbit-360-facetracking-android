@@ -467,7 +467,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         new CountDownTimer(millis, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                Toast.makeText(getContext(), (int) (millisUntilFinished / 1000), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), ((int) (millisUntilFinished / 1000)) + "", Toast.LENGTH_SHORT).show();
             }
 
             public void onFinish() {
