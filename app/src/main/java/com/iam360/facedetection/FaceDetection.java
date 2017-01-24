@@ -18,13 +18,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * starts faceDetection and informs listener about the result.
  * Created by Charlotte on 03.11.2016.
  */
 public class FaceDetection {
     public static final String TAG = "FaceDetection";
-    private final int SIZE_OF_SCALLED_IMAGE = 240;
+    private final int SIZE_OF_SCALED_IMAGE = 240;
     private CascadeClassifier detector;
     private ArrayList<FaceDetectionResultListener> resultListeners = new ArrayList<>();
+    private ArrayList<NonPermanentFaceDetectionResultListener> onlyOnceCalledListener = new ArrayList<>();
 
     public FaceDetection(Context context) {
         try {
@@ -55,6 +57,11 @@ public class FaceDetection {
         resultListeners.add(listener);
     }
 
+    public void addFaceDetectionResultListenerForNonPerm(NonPermanentFaceDetectionResultListener listener) {
+        onlyOnceCalledListener.add(listener);
+    }
+
+
     public boolean removeFaceDetectionResultListener(FaceDetectionResultListener listener) {
         return resultListeners.remove(listener);
     }
@@ -72,9 +79,13 @@ public class FaceDetection {
     private void informListeners(List<android.graphics.Rect> rects, int width, int height) {
         for (FaceDetectionResultListener listener : resultListeners) {
             listener.facesDetected(rects, width, height);
-            if (listener.getClass().isAssignableFrom(NonPermanentFaceDetectionResultListener.class) && ((NonPermanentFaceDetectionResultListener) listener).readyToRemove()) {
-                removeFaceDetectionResultListener(listener);
+        }
+        if (rects.size() >= 1) {
+            for (NonPermanentFaceDetectionResultListener listener : onlyOnceCalledListener) {
+                listener.facesDetected(rects, width, height);
             }
+            onlyOnceCalledListener = new ArrayList<>();
+
         }
     }
 
@@ -91,7 +102,7 @@ public class FaceDetection {
 
     private int makeSmaller(Mat input) {
         int scale = 1;
-        while (input.cols() > SIZE_OF_SCALLED_IMAGE && input.rows() > SIZE_OF_SCALLED_IMAGE) {
+        while (input.cols() > SIZE_OF_SCALED_IMAGE && input.rows() > SIZE_OF_SCALED_IMAGE) {
             Imgproc.pyrDown(input, input);
             scale *= 2;
         }
@@ -112,6 +123,5 @@ public class FaceDetection {
     }
 
     public interface NonPermanentFaceDetectionResultListener extends FaceDetectionResultListener {
-        boolean readyToRemove();
     }
 }

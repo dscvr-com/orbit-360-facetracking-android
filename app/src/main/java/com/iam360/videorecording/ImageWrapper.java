@@ -6,24 +6,28 @@ import android.hardware.camera2.*;
 import android.media.ImageReader;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
 import java.io.File;
-import java.util.List;
-import java.util.Timer;
+import java.util.ArrayList;
 
 /**
  * Created by Charlotte on 21.12.2016.
  */
 public class ImageWrapper {
-    public static final String FACEDETECTION_FILENAME = "facedetection_%s.jpg";
-    public static final String DIR_NAME = "Facedetection";
+    public static final String FACEDETECTION_FILENAME = "faceDetection_%s.jpg";
+    public static final String DIR_NAME = "FaceDetection";
     private static final String TAG = "ImageWrapper";
     private final Context context;
     private final CameraManager manager;
-    private Timer timer = new Timer("PictureTimer");
+    public CameraCaptureSession session;
+
+    //keep this because of garbage Collector
+    private Surface surface;
+    private ImageReader reader;
 
     public ImageWrapper(Context context) {
         this.context = context;
@@ -31,36 +35,43 @@ public class ImageWrapper {
     }
 
 
-    public void takePicture(CameraDevice device, List<Surface> surfaces, int rotation, CameraCaptureSession.CaptureCallback callback, Handler backgroundHandler) {
+    public void takePicture(CameraDevice device, Surface previewSurface, int rotation, CameraCaptureSession.CaptureCallback callback, Handler backgroundHandler) {
         try {
+            ArrayList<Surface> surfaces = new ArrayList<>();
+            surfaces.add(previewSurface);
             Size size = getSize(device);
-            ImageReader reader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.JPEG, 1);
+            reader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.JPEG, 1);
+            surface = reader.getSurface();
             final CaptureRequest.Builder captureBuilder = device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(reader.getSurface());
+            captureBuilder.addTarget(surface);
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            surfaces.add(reader.getSurface());
+            surfaces.add(surface);
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
             final File file = getFile();
-            ImageReader.OnImageAvailableListener readerListener = new ImageListener(file);
+            ImageReader.OnImageAvailableListener readerListener = new ImageListener(file, context);
             reader.setOnImageAvailableListener(readerListener, backgroundHandler);
             device.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
+
                 @Override
-                public void onConfigured(CameraCaptureSession session) {
+                public void onConfigured(@NonNull CameraCaptureSession session) {
+                    ImageWrapper.this.session = session;
                     try {
                         session.capture(captureBuilder.build(), callback, backgroundHandler);
+
                     } catch (CameraAccessException e) {
-                        Log.e(TAG, "Error with camera callback", e);?
+                        Log.e(TAG, "Error with camera callback", e);
                     }
                 }
 
                 @Override
-                public void onConfigureFailed(CameraCaptureSession session) {
+                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
                 }
             }, backgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error with camera access.", e);
         }
     }
+
 
     private File getFile() {
         File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), DIR_NAME);
@@ -72,10 +83,8 @@ public class ImageWrapper {
 
     private Size getSize(CameraDevice device) throws CameraAccessException {
         CameraCharacteristics characteristics = manager.getCameraCharacteristics(device.getId());
-        Size[] jpegSizes = null;
-        if (characteristics != null) {
-            jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
-        }
+        Size[] jpegSizes;
+        jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
         int width = 640;
         int height = 480;
         if (jpegSizes != null && 0 < jpegSizes.length) {

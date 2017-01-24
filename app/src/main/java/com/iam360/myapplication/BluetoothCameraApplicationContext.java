@@ -9,6 +9,7 @@ import android.util.Log;
 import com.iam360.motor.connection.BluetoothMotorControlService;
 
 /**
+ * New Application context which controls the bluetooth connection
  * Created by Charlotte on 15.11.2016.
  */
 public class BluetoothCameraApplicationContext extends Application {
@@ -29,7 +30,7 @@ public class BluetoothCameraApplicationContext extends Application {
     }
 
     public void setFocalLengthInPx(CameraManager cameraManager, String cameraId) {
-        float[] focalLengths = new float[0];
+        float[] focalLengths;
         try {
             CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
             focalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);

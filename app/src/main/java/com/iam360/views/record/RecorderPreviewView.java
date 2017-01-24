@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
@@ -12,13 +11,13 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.widget.Toast;
-import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.videorecording.ImageWrapper;
@@ -76,7 +75,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 try {
                     videoRecorder = new MediaRecorderWrapper(videoSize, activity, sensorOrientation);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, e.getMessage());
                 }
             }
             imageWrapper = new ImageWrapper(getContext());
@@ -134,7 +133,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
     private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height, Size aspectRatio) {
         // Collect the supported resolutions that are at least as big as the preview Surface
-        List<Size> bigEnough = new ArrayList<Size>();
+        List<Size> bigEnough = new ArrayList<>();
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
         for (Size option : choices) {
@@ -203,6 +202,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                     try {
                         Thread.sleep(2500, 0);
                     } catch (InterruptedException e) {
+                        Log.i(TAG, e.getMessage());
                     }
                 } else if (msg.what == FETCH_FRAME) {
                     fetchFrame();
@@ -307,30 +307,26 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
             for (String cameraId : manager.getCameraIdList()) {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue;
+                if (characteristics != null) {
+                    if (characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
+                        continue;
+                    }
+                    StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                    previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), width, height, videoSize);
+                    sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                    textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
+                    configureTransform(width, height);
+                    if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    manager.openCamera(cameraId, stateCallback, null);
+                    break;
+
                 }
-                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), width, height, videoSize);
-                sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
-                configureTransform(width, height);
-                if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    //do nothing we habe the permission already checked
-                    return;
-                }
-                manager.openCamera(cameraId, stateCallback, null);
-                break;
             }
 
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            // Currently an NPE is thrown when the Camera2API is used but not supported on the
-            // device this code runs.
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera opening.");
+        } catch (CameraAccessException | NullPointerException | InterruptedException e) {
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -361,13 +357,13 @@ public class RecorderPreviewView extends AutoFitTextureView {
             cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
 
                 @Override
-                public void onConfigured(CameraCaptureSession cameraCaptureSession) {
+                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     previewSession = cameraCaptureSession;
                     beginPreviewAfterStarting();
                 }
 
                 @Override
-                public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
+                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
                     Log.e(TAG, "Camera configure failed.");
                 }
             }, backgroundHandler);
@@ -426,11 +422,9 @@ public class RecorderPreviewView extends AutoFitTextureView {
             Log.e(TAG, "cameraDevice is null");
             return;
         }
-        List<Surface> outputSurfaces = new ArrayList<Surface>(2);
-        outputSurfaces.add(surface.getSurface());
         final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
             @Override
-            public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+            public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                 super.onCaptureCompleted(session, request, result);
                 Toast.makeText(getContext(), "Saved Image", Toast.LENGTH_SHORT).show();
                 startPreview();
@@ -441,14 +435,9 @@ public class RecorderPreviewView extends AutoFitTextureView {
         TimerTask currentTask = new TimerTask() {
             @Override
             public void run() {
-                dataListener.getFaceDection().addFaceDetectionResultListener(new ImageProcessor() {
-
-                    @Override
-                    public void facesDetected(List<Rect> rects, int width, int height) {
-                        if (rects.size() >= 1) {
-                            imageWrapper.takePicture(cameraDevice, outputSurfaces, rotation, captureListener, backgroundHandler);
-                            setReadyToRemove();
-                        }
+                dataListener.getFaceDection().addFaceDetectionResultListenerForNonPerm((rects, width, height) -> {
+                    if (rects.size() >= 1) {
+                        imageWrapper.takePicture(cameraDevice, surface.getSurface(), rotation, captureListener, backgroundHandler);
                     }
                 });
             }
@@ -487,18 +476,4 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
 
     }
-
-    private abstract class ImageProcessor implements FaceDetection.NonPermanentFaceDetectionResultListener {
-        private boolean readyToRemove = false;
-
-        @Override
-        public boolean readyToRemove() {
-            return readyToRemove;
-        }
-
-        protected void setReadyToRemove() {
-            readyToRemove = true;
-        }
-    }
-
 }
