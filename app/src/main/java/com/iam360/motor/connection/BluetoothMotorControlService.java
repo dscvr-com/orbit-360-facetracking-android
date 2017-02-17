@@ -45,6 +45,9 @@ public class BluetoothMotorControlService {
 
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
+        if (gatt == null && this.hasBluetoothService()) {
+            stop();
+        }
 
         // set: bluetoothService
         List<BluetoothGattService> services = gatt.getServices();
@@ -124,6 +127,8 @@ public class BluetoothMotorControlService {
                 moveXY(steps, speed);
             else
                 stop();
+        } else {
+            stop();
         }
     }
 
@@ -131,7 +136,7 @@ public class BluetoothMotorControlService {
         float deltaX = (width / 2) - pointOfFace.getX();
         float deltaY = (height / 3) - pointOfFace.getY();
         MotorCommandPoint steps = new MotorCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
-        return steps.mul(P);
+        return steps.mul(P).mul(-1);
     }
 
     private void stop() {

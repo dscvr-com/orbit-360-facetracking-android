@@ -32,6 +32,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onResume();
         if (recordPreview != null) {
             recordPreview.onResume();
+
         }
 
     }
@@ -41,6 +42,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onPause();
         if (recordPreview != null) {
             recordPreview.onPause();
+            ((BluetoothCameraApplicationContext) getApplicationContext()).setBluetoothService(null);
         }
     }
 
