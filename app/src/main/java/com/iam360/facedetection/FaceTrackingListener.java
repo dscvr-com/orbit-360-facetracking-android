@@ -16,7 +16,7 @@ public class FaceTrackingListener implements RecorderPreviewListener {
         executor = new SingleThreadWithoutQueueExecutor(context);
     }
 
-    public FaceDetection getFaceDection() {
+    public FaceDetection getFaceDetection() {
         return executor.getFaceDetection();
     }
 

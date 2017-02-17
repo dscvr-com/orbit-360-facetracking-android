@@ -9,8 +9,6 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import com.iam360.motor.connection.BluetoothConnectionReceiver;
@@ -37,12 +35,7 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
         adapter = BluetoothAdapter.getDefaultAdapter();
         dataAdapter = new BluetoothDataAdapter(context, loadData());
         final BluetoothLeScanCallback scanCallback = new BluetoothLeScanCallback();
-        stopScanHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                adapter.getBluetoothLeScanner().stopScan(scanCallback);
-            }
-        }, SCAN_PERIOD);
+        stopScanHandler.postDelayed(() -> adapter.getBluetoothLeScanner().stopScan(scanCallback), SCAN_PERIOD);
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
@@ -50,13 +43,10 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
         filters.add(new ScanFilter.Builder().setServiceUuid(BluetoothMotorControlService.SERVICE_UUID).build());
         adapter.getBluetoothLeScanner().startScan(filters, settings, scanCallback);
         list.setAdapter(dataAdapter);
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                BluetoothDevice device = dataAdapter.getItem(i);
-                adapter.getBluetoothLeScanner().stopScan(scanCallback);
-                connectToDevice(device);
-            }
+        list.setOnItemClickListener((adapterView, view, i, l) -> {
+            BluetoothDevice device = dataAdapter.getItem(i);
+            adapter.getBluetoothLeScanner().stopScan(scanCallback);
+            connectToDevice(device);
         });
         addView(list);
     }

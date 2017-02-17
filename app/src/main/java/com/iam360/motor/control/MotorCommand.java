@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
  * Created by Charlotte on 17.11.2016.
  */
 public class MotorCommand {
-    private static final byte[] EMTY = new byte[0];
+    private static final byte[] EMPTY = new byte[0];
     private byte[] value = new byte[32];
 
     private MotorCommand() {
@@ -30,7 +30,7 @@ public class MotorCommand {
 
     public static MotorCommand moveXY(int stepsX, int stepsY) {
         MotorCommand command = new MotorCommand();
-        byte[] dataX = command.createData(stepsX);
+        byte[] dataX = command.createDataWithoutFullStep(stepsX);
         byte[] dataY = command.createData(stepsY);
         byte[] data = command.mergeArrays(dataX, dataY);
         //func: 0x03 -> x + y motor
@@ -40,7 +40,7 @@ public class MotorCommand {
 
     public static MotorCommand stop() {
         MotorCommand command = new MotorCommand();
-        command.createCommand((byte) 0x04, EMTY);
+        command.createCommand((byte) 0x04, EMPTY);
         return command;
     }
 
@@ -71,24 +71,27 @@ public class MotorCommand {
 
 
     private byte[] createData(int steps) {
+        byte[] data = createDataWithoutFullStep(steps);
+        byte[] newData = new byte[data.length + 1];
+        for (int i = 0; i < data.length; i++) {
+            newData[i] = data[i];
+        }
+        //full stepps
+        newData[data.length] = (byte) 0x00;
+        return newData;
+    }
+
+    private byte[] createDataWithoutFullStep(int steps) {
         byte[] stepsAsArray = getByteArray(steps);
-        byte[] data = new byte[stepsAsArray.length + 3];
+        byte[] data = new byte[stepsAsArray.length + 2];
         for (int i = 0; i < stepsAsArray.length; i++) {
             data[i] = stepsAsArray[i];
         }
         //add Speed
         data[stepsAsArray.length] = (byte) 0x03;
         data[stepsAsArray.length + 1] = (byte) 0xE8;
-        //full stepps
-        data[stepsAsArray.length + 2] = (byte) 0x00;
         return data;
     }
-
-    // 00x02 -> y motor
-    // 00x03 -> beide
-    // x commando ganz zusammen, y commando ganz zusammen
-
-
     private byte[] getByteArray(int steps) {
         return ByteBuffer.allocate(4).putInt(steps).array();
     }

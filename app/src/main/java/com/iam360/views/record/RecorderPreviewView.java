@@ -4,13 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.SurfaceTexture;
+import android.graphics.*;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
+import android.os.*;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
@@ -55,6 +52,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private ImageWrapper imageWrapper = null;
     private FaceTrackingListener dataListener;
     private MediaRecorderWrapper videoRecorder;
+    private List<Rect> rects = new ArrayList<>();
     private Timer timer = new Timer("ImageTime");
     // Callbacks for cam opening - save camera ref and start preview
     private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
@@ -129,6 +127,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         this.activity = ctx;
         this.textureView = this;
         this.videoSize = new Size(720, 1280); //Size we want for stitcher input
+        setWillNotDraw(false);
     }
 
     private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height, Size aspectRatio) {
@@ -184,6 +183,32 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
     public void setPreviewListener(FaceTrackingListener dataListener) {
         this.dataListener = dataListener;
+        dataListener.getFaceDetection().addFaceDetectionResultListener((rects, width, height) -> createRects(rects, width, height));
+
+    }
+
+    private void createRects(List<Rect> rects, int width, int height) {
+        this.rects = rects;
+        new Handler(Looper.getMainLooper()).post(() -> invalidate());
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        //videoSize - >previewSize
+        float scaleX = (float) this.getWidth() / (float) videoSize.getWidth();
+        float scaleY = (float) this.getHeight() / (float) videoSize.getHeight();
+
+
+        for (Rect rect : rects) {
+            Paint paint = new Paint();
+            paint.setColor(Color.BLACK);
+            paint.setStrokeWidth(3);
+            canvas.drawRect(rect.left * scaleX, rect.top * scaleY, rect.right * scaleX, rect.bottom * scaleY, paint);
+            paint.setStrokeWidth(0);
+        }
+
     }
 
     private void startBackgroundThread() {
@@ -435,7 +460,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         TimerTask currentTask = new TimerTask() {
             @Override
             public void run() {
-                dataListener.getFaceDection().addFaceDetectionResultListenerForNonPerm((rects, width, height) -> {
+                dataListener.getFaceDetection().addFaceDetectionResultListenerForNonPerm((rects, width, height) -> {
                     if (rects.size() >= 1) {
                         imageWrapper.takePicture(cameraDevice, surface.getSurface(), rotation, captureListener, backgroundHandler);
                     }

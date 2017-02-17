@@ -21,8 +21,9 @@ import java.util.UUID;
  */
 public class BluetoothMotorControlService {
 
-    public static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("00001000-0000-1000-8000-00805F9B34FB");
-    public static final UUID CHARACTERISTIC_UUID = UUID.fromString("00001001-0000-1000-8000-00805F9B34FB");
+    public static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("69400001-B5A3-F393-E0A9-E50E24DCCA99");
+    public static final UUID CHARACTERISTIC_UUID = UUID.fromString("69400002-B5A3-F393-E0A9-E50E24DCCA99");
+    private static final String TAG = "MotorControl";
     private static final double STEPS_FOR_ONE_ROUND_X = 5111;
     private static final double STEPS_FOR_ONE_ROUND_Y = 15000;
     private static final float EPSILON_TO_MIDDLE = 0.1f;
@@ -118,8 +119,8 @@ public class BluetoothMotorControlService {
             }
 
             if (isFinishedMoving) {
-                //FIXME: should be moveXY(xSteps,ySteps);
-                moveX(xSteps);
+                //Log.i(TAG,"xSteps: " + xSteps + " ySteps: " + ySteps);
+                moveXY(xSteps, ySteps);
                 isFinishedMoving = false;
             }
         } else {

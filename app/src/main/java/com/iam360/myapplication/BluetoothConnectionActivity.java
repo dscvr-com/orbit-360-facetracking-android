@@ -18,7 +18,7 @@ import com.iam360.views.bluetooth.MotorBluetoothConnectorListView;
 public class BluetoothConnectionActivity extends Activity {
 
     private static final int BLUETOOTH_REQUEST = 1;
-    private static final String TAG = "BluetoothActivity";//only 23 chars are allowed7
+    private static final String TAG = "BluetoothActivity";//only 23 chars are allowed
     private static final int BLUETOOTH__LOCATION_REQUEST = 2;
     private BluetoothAdapter adapter;
     private IntentFilter bluetoothBroadcastIntentFilter;
@@ -37,7 +37,6 @@ public class BluetoothConnectionActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(bluetoothConnectionReceiver);
         if (bluetoothConnectorView != null) {
             bluetoothConnectorView.onStop();
         }
@@ -67,7 +66,6 @@ public class BluetoothConnectionActivity extends Activity {
         bluetoothBroadcastIntentFilter = new IntentFilter("com.iam360.bluetooth.BLUETOOTH_CONNECTED");
         bluetoothBroadcastIntentFilter.addAction("com.iam360.bluetooth.BLUETOOTH_DISCONNECTED");
         bluetoothConnectionReceiver = new BluetoothConnectionReceiver();
-        registerReceiver(bluetoothConnectionReceiver, bluetoothBroadcastIntentFilter);
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
             throw new IllegalStateException("No Bluetooth-adapter found");
