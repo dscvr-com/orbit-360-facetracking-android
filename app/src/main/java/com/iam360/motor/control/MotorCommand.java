@@ -13,25 +13,10 @@ public class MotorCommand {
 
     }
 
-    public static MotorCommand moveX(int steps) {
+    public static MotorCommand moveXY(MotorCommandPoint steps, MotorCommandPoint speed) {
         MotorCommand command = new MotorCommand();
-        //func: 0x01 -> x motor
-        command.createCommand((byte) 0x01, command.createData(steps));
-        return command;
-
-    }
-
-    public static MotorCommand moveY(int steps) {
-        MotorCommand command = new MotorCommand();
-        //func: 0x02 -> y motor
-        command.createCommand((byte) 0x02, command.createData(steps));
-        return command;
-    }
-
-    public static MotorCommand moveXY(int stepsX, int stepsY) {
-        MotorCommand command = new MotorCommand();
-        byte[] dataX = command.createDataWithoutFullStep(stepsX);
-        byte[] dataY = command.createData(stepsY);
+        byte[] dataX = command.createDataWithoutFullStep((int) steps.getX(), (int) speed.getX());
+        byte[] dataY = command.createData((int) steps.getY(), (int) speed.getY());
         byte[] data = command.mergeArrays(dataX, dataY);
         //func: 0x03 -> x + y motor
         command.createCommand((byte) 0x03, data);
@@ -70,8 +55,8 @@ public class MotorCommand {
     }
 
 
-    private byte[] createData(int steps) {
-        byte[] data = createDataWithoutFullStep(steps);
+    private byte[] createData(int steps, int speed) {
+        byte[] data = createDataWithoutFullStep(steps, speed);
         byte[] newData = new byte[data.length + 1];
         for (int i = 0; i < data.length; i++) {
             newData[i] = data[i];
@@ -81,19 +66,21 @@ public class MotorCommand {
         return newData;
     }
 
-    private byte[] createDataWithoutFullStep(int steps) {
+    private byte[] createDataWithoutFullStep(int steps, int speed) {
         byte[] stepsAsArray = getByteArray(steps);
         byte[] data = new byte[stepsAsArray.length + 2];
         for (int i = 0; i < stepsAsArray.length; i++) {
             data[i] = stepsAsArray[i];
         }
         //add Speed
-        data[stepsAsArray.length] = (byte) 0x03;
-        data[stepsAsArray.length + 1] = (byte) 0xE8;
+        byte[] speedInArray = getByteArray(speed);
+        data[stepsAsArray.length] = speedInArray[2];
+        data[stepsAsArray.length + 1] = speedInArray[3];
         return data;
     }
-    private byte[] getByteArray(int steps) {
-        return ByteBuffer.allocate(4).putInt(steps).array();
+
+    private byte[] getByteArray(int value) {
+        return ByteBuffer.allocate(4).putInt(value).array();
     }
 
     public byte[] getValue() {

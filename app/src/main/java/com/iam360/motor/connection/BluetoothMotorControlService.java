@@ -8,6 +8,7 @@ import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import com.iam360.motor.control.MotorCommand;
+import com.iam360.motor.control.MotorCommandPoint;
 
 import java.util.List;
 import java.util.Timer;
@@ -26,8 +27,11 @@ public class BluetoothMotorControlService {
     private static final String TAG = "MotorControl";
     private static final double STEPS_FOR_ONE_ROUND_X = 5111;
     private static final double STEPS_FOR_ONE_ROUND_Y = 15000;
-    private static final float EPSILON_TO_MIDDLE = 0.1f;
+    private static final float EPSILON_X_Steps = 10;
+    private static final float EPSILON_Y_Steps = 10;
     private static final int PERIOD = 500;
+    private static final float P = 0.5f;
+    private static final MotorCommandPoint SPEED_FACTOR = new MotorCommandPoint(0.5f, 0.5f);
 
 
     private BluetoothGattService bluetoothService;
@@ -36,6 +40,8 @@ public class BluetoothMotorControlService {
     private float focalLengthInPx;
     private boolean isFinishedMoving = true;
     private Timer timer;
+    private long lastTimeInMillis;
+    private boolean firstRun = true;
 
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
@@ -75,11 +81,6 @@ public class BluetoothMotorControlService {
         return bluetoothService != null;
     }
 
-    public void moveX(int steps) {
-        MotorCommand command = MotorCommand.moveX(steps);
-        sendCommand(command);
-    }
-
     private void sendCommand(MotorCommand command) {
         BluetoothGattCharacteristic characteristic = bluetoothService.getCharacteristic(CHARACTERISTIC_UUID);
         assert (((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) |
@@ -89,43 +90,48 @@ public class BluetoothMotorControlService {
 
     }
 
-    public void moveY(int steps) {
-        MotorCommand command = MotorCommand.moveY(steps);
-        sendCommand(command);
-    }
 
-    public void moveXY(int stepsX, int stepsY) {
-        MotorCommand command = MotorCommand.moveXY(stepsX, stepsY);
+    public void moveXY(MotorCommandPoint steps, MotorCommandPoint speed) {
+        MotorCommand command = MotorCommand.moveXY(steps, speed);
         sendCommand(command);
 
     }
 
     public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) {
+        if (firstRun) {
+            firstRun = false;
+            return;
+        }
+
         if (detectionResult.size() > 0) {
             Rect currentRelevantFace = detectionResult.get(0);
-            int deltaX = (width / 2) - currentRelevantFace.centerX();
-            int deltaY = (height / 2) - currentRelevantFace.centerY();
-            double angX = Math.atan2(deltaX, focalLengthInPx * width);
-            double angY = Math.atan2(deltaY, focalLengthInPx * width);
+            MotorCommandPoint pointOfFace = new MotorCommandPoint(currentRelevantFace.centerX(),
+                    currentRelevantFace.centerY());
 
-            int xSteps = (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI)) * 30;
-            int ySteps = (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI)) * 30;
+            MotorCommandPoint steps = getSteps(width, height, pointOfFace);
+            long currentTime = System.nanoTime();
+
+            long deltaTime = currentTime - lastTimeInMillis;
+            lastTimeInMillis = currentTime;
+            MotorCommandPoint speed = steps.div(deltaTime).abs();
+            speed = speed.mul(SPEED_FACTOR);
+            speed = speed.min(new MotorCommandPoint(1000f, 1000f));
+            speed = speed.max(new MotorCommandPoint(250f, 250f));
 
 
-            if (Math.abs(deltaX) < EPSILON_TO_MIDDLE * width) {
-                isFinishedMoving = true;
+            MotorCommandPoint stepsAbs = steps.abs();
+            if (stepsAbs.getX() > EPSILON_X_Steps || stepsAbs.getY() > EPSILON_Y_Steps)
+                moveXY(steps, speed);
+            else
                 stop();
-                return;
-            }
-
-            if (isFinishedMoving) {
-                //Log.i(TAG,"xSteps: " + xSteps + " ySteps: " + ySteps);
-                moveXY(xSteps, ySteps);
-                isFinishedMoving = false;
-            }
-        } else {
-            stop();
         }
+    }
+
+    private MotorCommandPoint getSteps(int width, int height, MotorCommandPoint pointOfFace) {
+        float deltaX = (width / 2) - pointOfFace.getX();
+        float deltaY = (height / 3) - pointOfFace.getY();
+        MotorCommandPoint steps = new MotorCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
+        return steps.mul(P);
     }
 
     private void stop() {
@@ -134,5 +140,17 @@ public class BluetoothMotorControlService {
 
     public void setFocalLengthInPx(float focalLengthInPx) {
         this.focalLengthInPx = focalLengthInPx;
+    }
+
+    public int getStepsX(int width, float deltaX) {
+        double angX = Math.atan2(deltaX, focalLengthInPx * width);
+        return (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI)) * 30;
+
+    }
+
+    public int getStepsY(int height, float deltaY) {
+        double angY = Math.atan2(deltaY, focalLengthInPx * height);
+        return (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI)) * 30;
+
     }
 }
