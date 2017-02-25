@@ -339,8 +339,14 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
         // TODO - this is different for landscape and portrait.
         // This version holds for portrait. For landscape, you'll have to switch height/width
+
         float scaleX = (float)height / (float)viewWidth;
         float scaleY = (float)width / (float)viewHeight;
+
+        float upscale = Math.min(scaleX, scaleY);
+        scaleX = scaleX / upscale;
+        scaleY = scaleY / upscale;
+
         scale.setScale(scaleX, scaleY);
         float translateX = (0.5f - scaleX / 2.f) * viewWidth;
         float translateY = (0.5f - scaleY / 2.f) * viewHeight;
