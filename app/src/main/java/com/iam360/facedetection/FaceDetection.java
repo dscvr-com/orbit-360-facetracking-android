@@ -30,9 +30,9 @@ public class FaceDetection {
 
     public FaceDetection(Context context) {
         try {
-            InputStream input = context.getResources().openRawResource(R.raw.lbpcascade_frontalface);
+            InputStream input = context.getResources().openRawResource(R.raw.haarcascade_frontalface_default);
             File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
-            File cascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
+            File cascadeFile = new File(cascadeDir, "haarcascade_frontalface_default.xml");
             FileOutputStream out = new FileOutputStream(cascadeFile);
             byte[] buffer = new byte[4096];
             int bytesRead;
