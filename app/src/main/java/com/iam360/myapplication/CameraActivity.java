@@ -42,10 +42,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onPause();
         if (recordPreview != null) {
             recordPreview.onPause();
-            ((BluetoothCameraApplicationContext) getApplicationContext()).setBluetoothService(null);
         }
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

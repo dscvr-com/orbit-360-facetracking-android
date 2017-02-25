@@ -49,6 +49,12 @@ public class BluetoothMotorControlService {
             stop();
         }
 
+        if (gatt == null) {
+            bluetoothService = null;
+            this.gatt = null;
+            return false;
+        }
+
         // set: bluetoothService
         List<BluetoothGattService> services = gatt.getServices();
         Log.i("onServicesDiscovered: ", services.toString());

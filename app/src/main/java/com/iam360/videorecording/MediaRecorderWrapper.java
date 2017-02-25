@@ -29,13 +29,13 @@ public class MediaRecorderWrapper {
     private static final String FORMAT = "faceDetection-%s.mp4";
 
     static {
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90);
+        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 270);
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 270);
+        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 90);
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 270);
+        INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 90);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90);
+        INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 270);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
     }
 
@@ -55,9 +55,9 @@ public class MediaRecorderWrapper {
     public static int getOrientation(int sensorOrientation, int rotation) {
         switch (sensorOrientation) {
             case SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                return DEFAULT_ORIENTATIONS.get(rotation);
-            case SENSOR_ORIENTATION_INVERSE_DEGREES:
                 return INVERSE_ORIENTATIONS.get(rotation);
+            case SENSOR_ORIENTATION_INVERSE_DEGREES:
+                return DEFAULT_ORIENTATIONS.get(rotation);
         }
         return rotation;
     }
