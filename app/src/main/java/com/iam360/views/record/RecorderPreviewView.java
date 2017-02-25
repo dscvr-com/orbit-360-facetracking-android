@@ -13,7 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
-import android.view.SurfaceHolder;
+import android.view.TextureView;
 import android.widget.Toast;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
@@ -45,7 +45,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
     private int sensorOrientation;
     private Size previewSize;
-    private Size videoSize;
+    private Size wannabeVideoSize; // Video size we wish for. This is not the real video size.
     private CodecSurface surface;
     private HandlerThread decoderThread;
     private Handler decoderHandler;
@@ -64,14 +64,14 @@ public class RecorderPreviewView extends AutoFitTextureView {
             startPreview();
             cameraOpenCloseLock.release();
             if (null != textureView) {
-                configureTransform(textureView.getWidth(), textureView.getHeight());
+                configureTransform(previewSize.getWidth(), previewSize.getHeight());
             }
             if (null != dataListener) {
                 dataListener.cameraOpened(cameraDevice);
             }
             if (null == videoRecorder) {
                 try {
-                    videoRecorder = new MediaRecorderWrapper(videoSize, activity, sensorOrientation);
+                    videoRecorder = new MediaRecorderWrapper(previewSize, activity, sensorOrientation);
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
@@ -102,21 +102,27 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
     };
     // Callbacks for surface texture loading - open camera as soon as texture exists
-    private SurfaceHolder.Callback surfaceTextureListener
-            = new SurfaceHolder.Callback() {
+    private TextureView.SurfaceTextureListener surfaceTextureListener
+            = new TextureView.SurfaceTextureListener() {
 
         @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            openCamera(videoSize.getWidth(), videoSize.getHeight());
+        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            openCamera(wannabeVideoSize.getWidth(), wannabeVideoSize.getHeight());
+
         }
 
         @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             configureTransform(width, height);
         }
 
         @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            return false;
+        }
+
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
         }
 
@@ -126,18 +132,20 @@ public class RecorderPreviewView extends AutoFitTextureView {
         super(ctx);
         this.activity = ctx;
         this.textureView = this;
-        this.videoSize = new Size(720, 1280); //Size we want for stitcher input
+        this.wannabeVideoSize = new Size(1280, 960); //Size we want for stitcher input
         setWillNotDraw(false);
     }
 
-    private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height, Size aspectRatio) {
+    private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height) {
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
-        int w = aspectRatio.getWidth();
-        int h = aspectRatio.getHeight();
+
+        // hack hack
+        int w = Math.max(width, height);
+        int h = Math.min(width, height);
         for (Size option : choices) {
-            if (option.getHeight() == option.getWidth() * h / w &&
-                    option.getWidth() >= width && option.getHeight() >= height) {
+            Log.d(TAG, String.format("Choice: %d x %d", option.getWidth(), option.getHeight())) ;
+            if (option.getWidth() >= w && option.getHeight() >= h) {
                 bigEnough.add(option);
             }
         }
@@ -177,7 +185,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         if (textureView.isAvailable()) {
             openCamera(textureView.getWidth(), textureView.getHeight());
         } else {
-            textureView.getHolder().addCallback(surfaceTextureListener);
+            textureView.setSurfaceTextureListener(surfaceTextureListener);
         }
     }
 
@@ -192,13 +200,14 @@ public class RecorderPreviewView extends AutoFitTextureView {
         new Handler(Looper.getMainLooper()).post(() -> invalidate());
     }
 
+/*
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        //videoSize - >previewSize
-        float scaleX = (float) this.getWidth() / (float) videoSize.getWidth();
-        float scaleY = (float) this.getHeight() / (float) videoSize.getHeight();
+        //wannabeVideoSize - >previewSize
+        float scaleX = (float) this.getWidth() / (float) wannabeVideoSize.getWidth();
+        float scaleY = (float) this.getHeight() / (float) wannabeVideoSize.getHeight();
 
 
         for (Rect rect : rects) {
@@ -210,6 +219,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
 
     }
+    */
 
     private void startBackgroundThread() {
         backgroundThread = new HandlerThread("CameraBackground");
@@ -243,7 +253,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     }
 
     private void createDecoderSurface() {
-        surface = new CodecSurface(videoSize.getWidth(), videoSize.getHeight());
+        surface = new CodecSurface(wannabeVideoSize.getWidth(), wannabeVideoSize.getHeight());
         decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
     }
 
@@ -319,6 +329,29 @@ public class RecorderPreviewView extends AutoFitTextureView {
     }
 
     private void configureTransform(int width, int height) {
+        int viewWidth = textureView.getWidth();
+        int viewHeight = textureView.getHeight();
+
+        Log.d(TAG, String.format("Layouting for View: %d x %d, Video: %d x %d.", viewWidth, viewHeight, width, height));
+
+        Matrix scale = new Matrix();
+        Matrix translate = new Matrix();
+
+        // TODO - this is different for landscape and portrait.
+        // This version holds for portrait. For landscape, you'll have to switch height/width
+        float scaleX = (float)height / (float)viewWidth;
+        float scaleY = (float)width / (float)viewHeight;
+        scale.setScale(scaleX, scaleY);
+        float translateX = (0.5f - scaleX / 2.f) * viewWidth;
+        float translateY = (0.5f - scaleY / 2.f) * viewHeight;
+        translate.setTranslate(translateX, translateY);
+
+        Log.d(TAG, String.format("Layouting scale: %f, %f, Translate: %f, %f.", scaleX, scaleY, translateX, translateY));
+
+
+        Matrix transform = new Matrix();
+        transform.setConcat(translate, scale);
+        textureView.setTransform(transform);
         // Do nothing for now, we are locked in portrait anyway.
     }
 
@@ -337,10 +370,10 @@ public class RecorderPreviewView extends AutoFitTextureView {
                         continue;
                     }
                     StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                    previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), width, height, videoSize);
+                    previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), height, width);
                     sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                    textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
-                    configureTransform(width, height);
+                    //textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
+                    configureTransform(previewSize.getWidth(), previewSize.getHeight());
                     if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                         return;
                     }
@@ -365,7 +398,9 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
             previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);//Is This the Point?
 
-            Surface previewSurface = textureView.getHolder().getSurface();
+            SurfaceTexture tex = textureView.getSurfaceTexture();
+            tex.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+            Surface previewSurface = new Surface(tex);
 
             List<Surface> surfaces = new ArrayList<>();
 

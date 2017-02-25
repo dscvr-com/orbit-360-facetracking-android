@@ -12,6 +12,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.RecorderPreviewView;
 
@@ -104,7 +106,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         recordPreview = new RecorderPreviewView(this);
         recordPreview.setPreviewListener(new FaceTrackingListener(this));
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
-        layout.addView(recordPreview);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        layout.addView(recordPreview, params);
         FloatingActionButton videoButton = (FloatingActionButton) findViewById(R.id.camera);
         videoButton.bringToFront();
         videoButton.setOnClickListener(v -> {
