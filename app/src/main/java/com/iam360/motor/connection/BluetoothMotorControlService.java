@@ -11,8 +11,6 @@ import com.iam360.motor.control.MotorCommand;
 import com.iam360.motor.control.MotorCommandPoint;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
 /**
@@ -29,19 +27,18 @@ public class BluetoothMotorControlService {
     private static final double STEPS_FOR_ONE_ROUND_Y = 15000;
     private static final float EPSILON_X_Steps = 10;
     private static final float EPSILON_Y_Steps = 10;
-    private static final int PERIOD = 500;
     private static final float P = 0.5f;
-    private static final MotorCommandPoint SPEED_FACTOR = new MotorCommandPoint(0.5f, 0.5f);
+    private static final MotorCommandPoint SPEED_FACTOR = new MotorCommandPoint(0.5f, 0.5f);//FIXME Android
+    private static final MotorCommandPoint MOVE_BACK_SPEED = new MotorCommandPoint(800f, 800f);
 
 
     private BluetoothGattService bluetoothService;
     private BluetoothGatt gatt;
     //this value has to be multiplied with the width because we don't have the width when we calc this value
     private float focalLengthInPx;
-    private boolean isFinishedMoving = true;
-    private Timer timer;
     private long lastTimeInMillis;
     private boolean firstRun = true;
+    private MotorCommandPoint movedSteps = new MotorCommandPoint(0, 0);
 
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
@@ -70,18 +67,6 @@ public class BluetoothMotorControlService {
         } else {
             this.gatt = gatt;
             this.bluetoothService = correctService;
-            if (timer != null) {
-                timer.cancel();
-            }
-            timer = new Timer();
-            //stop timer if disconnected
-            timer.scheduleAtFixedRate(new TimerTask() {
-
-                @Override
-                public void run() {
-                    isFinishedMoving = true;
-                }
-            }, PERIOD, PERIOD);
             return true;
         }
     }
@@ -102,6 +87,7 @@ public class BluetoothMotorControlService {
 
     public void moveXY(MotorCommandPoint steps, MotorCommandPoint speed) {
         MotorCommand command = MotorCommand.moveXY(steps, speed);
+        movedSteps.add(steps);
         sendCommand(command);
 
     }
@@ -113,9 +99,7 @@ public class BluetoothMotorControlService {
         }
 
         if (detectionResult.size() > 0) {
-            Rect currentRelevantFace = detectionResult.get(0);
-            MotorCommandPoint pointOfFace = new MotorCommandPoint(currentRelevantFace.centerX(),
-                    currentRelevantFace.centerY());
+            MotorCommandPoint pointOfFace = MotorCommandPoint.CreateMiddel(detectionResult);
 
             MotorCommandPoint steps = getSteps(width, height, pointOfFace);
             long currentTime = System.nanoTime();
@@ -142,7 +126,7 @@ public class BluetoothMotorControlService {
         float deltaX = (width / 2) - pointOfFace.getX();
         float deltaY = (height / 3) - pointOfFace.getY();
         MotorCommandPoint steps = new MotorCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
-        return steps.mul(P).mul(-1);
+        return steps.mul(P).mul(0.5f).mul(-1);
     }
 
     private void stop() {
@@ -155,13 +139,23 @@ public class BluetoothMotorControlService {
 
     public int getStepsX(int width, float deltaX) {
         double angX = Math.atan2(deltaX, focalLengthInPx * width);
-        return (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI)) * 30;
+        return (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI));
 
     }
 
     public int getStepsY(int height, float deltaY) {
         double angY = Math.atan2(deltaY, focalLengthInPx * height);
-        return (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI)) * 30;
+        return (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI));
 
+    }
+
+
+    public void moveBack() {
+        moveXY(movedSteps.mul(-1), MOVE_BACK_SPEED);
+        resetSteps();
+    }
+
+    public void resetSteps() {
+        movedSteps = new MotorCommandPoint(0, 0);
     }
 }

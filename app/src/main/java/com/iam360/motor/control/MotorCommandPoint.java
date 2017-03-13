@@ -1,5 +1,9 @@
 package com.iam360.motor.control;
 
+import android.graphics.Rect;
+
+import java.util.Collection;
+
 /**
  * Created by Charlotte on 17.02.2017.
  */
@@ -19,6 +23,18 @@ public class MotorCommandPoint {
         this.p = 1;
         this.x = x;
         this.y = y;
+    }
+
+    public static MotorCommandPoint CreateMiddel(Collection<Rect> rects) {
+        int centerX = 0;
+        int centerY = 0;
+        for (Rect rect : rects) {
+            centerX += rect.centerX();
+            centerY += rect.centerY();
+        }
+        return new MotorCommandPoint(centerX / rects.size(), centerY / rects.size());
+
+
     }
 
     public float getX() {
@@ -44,7 +60,6 @@ public class MotorCommandPoint {
     public MotorCommandPoint mul(float b) {
         return new MotorCommandPoint(p, x * b, y * b);
     }
-
 
     public MotorCommandPoint div(MotorCommandPoint b) {
         return new MotorCommandPoint(p, x / b.x, y / b.y);

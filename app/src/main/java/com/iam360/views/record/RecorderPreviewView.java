@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.*;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.*;
@@ -162,6 +164,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     public void startVideo() {
         if (videoRecorder != null) {
             try {
+                ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().resetSteps();
                 videoRecorder.startRecord();
                 startPreview();
             } catch (CameraAccessException | IOException e) {
@@ -175,6 +178,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             closePreviewSession();
             videoRecorder.stopRecordingVideo();
             videoRecorder = null;
+            ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().moveBack();
             startPreview();
         }
     }
