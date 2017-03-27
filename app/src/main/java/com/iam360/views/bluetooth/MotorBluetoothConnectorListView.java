@@ -65,8 +65,6 @@ public class MotorBluetoothConnectorListView extends FrameLayout {
         } else {
             return new ArrayList<>();
         }
-
-
     }
 
     private class BluetoothLeScanCallback extends ScanCallback {

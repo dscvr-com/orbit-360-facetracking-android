@@ -3,4 +3,7 @@
     <string name="bond">not paired</string>
     <string name="bonded">was paired</string>
     <string name="bonding">paring</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
