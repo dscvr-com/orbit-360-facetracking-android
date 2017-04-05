@@ -1,27 +1,22 @@
 package com.iam360.views.bluetooth;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
-import android.net.Uri;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.iam360.motor.connection.BluetoothConnector;
-import com.iam360.motor.connection.BluetoothMotorControlService;
+import com.iam360.engine.connection.BluetoothConnector;
 import com.iam360.myapplication.R;
-
-import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,6 +28,8 @@ import java.util.ArrayList;
  */
 public class BluetoothConnectionFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
+
+    private static final int BLUETOOTH__LOCATION_REQUEST = 2;
 
     public BluetoothConnectionFragment() {
     }
@@ -67,10 +64,22 @@ public class BluetoothConnectionFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-        findMotor();
+        checkPermissions();
     }
 
-    private void findMotor() {
+    private void checkPermissions() {
+        if (BluetoothAdapter.getDefaultAdapter() != null && BluetoothAdapter.getDefaultAdapter().isEnabled() && ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            findEngine();
+        }else{
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, BLUETOOTH__LOCATION_REQUEST);
+
+        }
+    }
+
+    private void findEngine() {
+
         BluetoothConnector bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext());
         bluetoothConnector.setListener(() -> finishedLoading());
         bluetoothConnector.connect();
@@ -80,7 +89,7 @@ public class BluetoothConnectionFragment extends Fragment {
         ImageView imageView = (ImageView) getView().findViewById(R.id.ConnectionImage);
         imageView.setImageResource(R.drawable.signal_blue);
         //Add and Change Text to view.
-        mListener.onConnected();
+        mListener.connected();
     }
 
     @Override
@@ -90,8 +99,23 @@ public class BluetoothConnectionFragment extends Fragment {
     }
 
     public interface OnFragmentInteractionListener {
-        void onConnected();
+        void connected();
     }
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case BLUETOOTH__LOCATION_REQUEST: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(this.getClass().getSimpleName(), "bluetooth Req");
+                    findEngine();
+                } else {
+                    Log.e(this.getClass().getSimpleName(), "No Bluetooth permission");
+                }
+            }
 
+
+        }
+    }
 
 }

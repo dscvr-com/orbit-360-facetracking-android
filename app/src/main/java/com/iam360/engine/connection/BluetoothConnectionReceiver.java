@@ -1,10 +1,11 @@
-package com.iam360.motor.connection;
+package com.iam360.engine.connection;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import com.iam360.myapplication.BluetoothConnectionActivity;
+
+import com.iam360.myapplication.BluetoothActivity;
 import com.iam360.myapplication.CameraActivity;
 
 /**
@@ -26,7 +27,7 @@ public class BluetoothConnectionReceiver extends BroadcastReceiver {
                 Log.i(TAG, "connected to device");
                 break;
             case DISCONNECTED:
-                context.startActivity(new Intent(context, BluetoothConnectionActivity.class));
+                context.startActivity(new Intent(context, BluetoothActivity.class));
                 Log.i(TAG, "lost connection to device");
                 break;
 

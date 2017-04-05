@@ -2,7 +2,7 @@ package com.iam360.facedetection;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import com.iam360.motor.connection.BluetoothMotorControlService;
+import com.iam360.engine.connection.BluetoothEngineControlService;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 
 import java.util.concurrent.Executor;
@@ -11,7 +11,7 @@ import java.util.concurrent.Executor;
  * Created by Charlotte on 30.11.2016.
  */
 public class SingleThreadWithoutQueueExecutor implements Executor {
-    private final BluetoothMotorControlService motorControlService;
+    private final BluetoothEngineControlService motorControlService;
     private Thread current;
     private FaceDetection faceDetection;
 

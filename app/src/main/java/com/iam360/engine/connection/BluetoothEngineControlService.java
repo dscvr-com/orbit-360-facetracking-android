@@ -1,4 +1,4 @@
-package com.iam360.motor.connection;
+package com.iam360.engine.connection;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -7,8 +7,8 @@ import android.graphics.Rect;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import com.iam360.motor.control.MotorCommand;
-import com.iam360.motor.control.MotorCommandPoint;
+import com.iam360.engine.control.MotorCommand;
+import com.iam360.engine.control.MotorCommandPoint;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +18,7 @@ import java.util.UUID;
  * Can send MotorCommands to the motor
  * Created by Charlotte on 21.11.2016.
  */
-public class BluetoothMotorControlService {
+public class BluetoothEngineControlService {
 
     public static final ParcelUuid SERVICE_UUID = ParcelUuid.fromString("69400001-B5A3-F393-E0A9-E50E24DCCA99");
     public static final UUID CHARACTERISTIC_UUID = UUID.fromString("69400002-B5A3-F393-E0A9-E50E24DCCA99");

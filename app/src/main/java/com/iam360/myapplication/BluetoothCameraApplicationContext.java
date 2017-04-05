@@ -6,7 +6,7 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.util.Log;
-import com.iam360.motor.connection.BluetoothMotorControlService;
+import com.iam360.engine.connection.BluetoothEngineControlService;
 
 /**
  * New Application context which controls the bluetooth connection
@@ -14,7 +14,7 @@ import com.iam360.motor.connection.BluetoothMotorControlService;
  */
 public class BluetoothCameraApplicationContext extends Application {
     private static final String TAG = "ApplicationContext";
-    private BluetoothMotorControlService bluetoothService = new BluetoothMotorControlService();
+    private BluetoothEngineControlService bluetoothService = new BluetoothEngineControlService();
 
 
     public boolean setBluetoothService(BluetoothGatt gatt) {
@@ -25,7 +25,7 @@ public class BluetoothCameraApplicationContext extends Application {
         return bluetoothService.hasBluetoothService();
     }
 
-    public BluetoothMotorControlService getBluetoothService() {
+    public BluetoothEngineControlService getBluetoothService() {
         return bluetoothService;
     }
 

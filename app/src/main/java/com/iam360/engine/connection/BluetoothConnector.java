@@ -1,4 +1,4 @@
-package com.iam360.motor.connection;
+package com.iam360.engine.connection;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.iam360.motor.connection.BluetoothConnectionReceiver.CONNECTED;
-import static com.iam360.motor.connection.BluetoothConnectionReceiver.DISCONNECTED;
+import static com.iam360.engine.connection.BluetoothConnectionReceiver.CONNECTED;
+import static com.iam360.engine.connection.BluetoothConnectionReceiver.DISCONNECTED;
 
 /**
  * Connects the application to a bluetoothdevice
@@ -55,7 +55,7 @@ public class BluetoothConnector extends BroadcastReceiver {
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
         ArrayList<ScanFilter> filters = new ArrayList<>();
-        filters.add(new ScanFilter.Builder().setServiceUuid(BluetoothMotorControlService.SERVICE_UUID).build());
+        filters.add(new ScanFilter.Builder().setServiceUuid(BluetoothEngineControlService.SERVICE_UUID).build());
         adapter.getBluetoothLeScanner().startScan(filters, settings, scanCallback);
     }
 
@@ -72,7 +72,7 @@ public class BluetoothConnector extends BroadcastReceiver {
         List<BluetoothDevice> contactableList = new ArrayList<>();
         for (BluetoothDevice device : bondedDevices) {
             for (ParcelUuid uuid : device.getUuids()) {
-                if (uuid.equals(BluetoothMotorControlService.SERVICE_UUID)) {
+                if (uuid.equals(BluetoothEngineControlService.SERVICE_UUID)) {
                     contactableList.add(device);
                     continue;
                 }

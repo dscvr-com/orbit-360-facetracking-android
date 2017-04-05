@@ -22,6 +22,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
 
+    //FIXME, put this to a initial activity
     static {
         System.loadLibrary("opencv_java3");
     }
@@ -52,7 +53,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (!((BluetoothCameraApplicationContext) this.getApplicationContext()).hasBluetoothConnection()) {
-            startActivity(new Intent(this, BluetoothConnectionActivity.class));/**/
+            startActivity(new Intent(this, BluetoothActivity.class));
         } else {
             requestCameraPermission();
         }

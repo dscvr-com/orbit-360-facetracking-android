@@ -1,9 +1,10 @@
-package com.iam360.views.bluetooth;
+package com.iam360.myapplication;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.iam360.myapplication.R;
+import com.iam360.views.bluetooth.BluetoothConnectionFragment;
 
 public class BluetoothActivity extends AppCompatActivity {
 
@@ -23,6 +24,7 @@ public class BluetoothActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fragment_container, bluetoothFrag).commit();
         }
+
     }
 
 }
