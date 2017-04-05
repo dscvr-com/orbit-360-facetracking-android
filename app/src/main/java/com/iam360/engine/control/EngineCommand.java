@@ -5,16 +5,16 @@ import java.nio.ByteBuffer;
 /**
  * Created by Charlotte on 17.11.2016.
  */
-public class MotorCommand {
+public class EngineCommand {
     private static final byte[] EMPTY = new byte[0];
     private byte[] value = new byte[32];
 
-    private MotorCommand() {
+    private EngineCommand() {
 
     }
 
-    public static MotorCommand moveXY(MotorCommandPoint steps, MotorCommandPoint speed) {
-        MotorCommand command = new MotorCommand();
+    public static EngineCommand moveXY(EngineCommandPoint steps, EngineCommandPoint speed) {
+        EngineCommand command = new EngineCommand();
         byte[] dataX = command.createDataWithoutFullStep((int) steps.getX(), (int) speed.getX());
         byte[] dataY = command.createData((int) steps.getY(), (int) speed.getY());
         byte[] data = command.mergeArrays(dataX, dataY);
@@ -23,8 +23,8 @@ public class MotorCommand {
         return command;
     }
 
-    public static MotorCommand stop() {
-        MotorCommand command = new MotorCommand();
+    public static EngineCommand stop() {
+        EngineCommand command = new EngineCommand();
         command.createCommand((byte) 0x04, EMPTY);
         return command;
     }

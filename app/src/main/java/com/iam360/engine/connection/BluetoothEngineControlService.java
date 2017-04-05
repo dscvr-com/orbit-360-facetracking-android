@@ -7,8 +7,8 @@ import android.graphics.Rect;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import com.iam360.engine.control.MotorCommand;
-import com.iam360.engine.control.MotorCommandPoint;
+import com.iam360.engine.control.EngineCommand;
+import com.iam360.engine.control.EngineCommandPoint;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,8 +28,8 @@ public class BluetoothEngineControlService {
     private static final float EPSILON_X_Steps = 10;
     private static final float EPSILON_Y_Steps = 10;
     private static final float P = 0.5f;
-    private static final MotorCommandPoint SPEED_FACTOR = new MotorCommandPoint(0.5f, 0.5f);//FIXME Android
-    private static final MotorCommandPoint MOVE_BACK_SPEED = new MotorCommandPoint(800f, 800f);
+    private static final EngineCommandPoint SPEED_FACTOR = new EngineCommandPoint(0.5f, 0.5f);//FIXME Android
+    private static final EngineCommandPoint MOVE_BACK_SPEED = new EngineCommandPoint(800f, 800f);
 
 
     private BluetoothGattService bluetoothService;
@@ -38,7 +38,7 @@ public class BluetoothEngineControlService {
     private float focalLengthInPx;
     private long lastTimeInMillis;
     private boolean firstRun = true;
-    private MotorCommandPoint movedSteps = new MotorCommandPoint(0, 0);
+    private EngineCommandPoint movedSteps = new EngineCommandPoint(0, 0);
 
 
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
@@ -75,7 +75,7 @@ public class BluetoothEngineControlService {
         return bluetoothService != null;
     }
 
-    private void sendCommand(MotorCommand command) {
+    private void sendCommand(EngineCommand command) {
         BluetoothGattCharacteristic characteristic = bluetoothService.getCharacteristic(CHARACTERISTIC_UUID);
         assert (((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) |
                 (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0);
@@ -85,8 +85,8 @@ public class BluetoothEngineControlService {
     }
 
 
-    public void moveXY(MotorCommandPoint steps, MotorCommandPoint speed) {
-        MotorCommand command = MotorCommand.moveXY(steps, speed);
+    public void moveXY(EngineCommandPoint steps, EngineCommandPoint speed) {
+        EngineCommand command = EngineCommand.moveXY(steps, speed);
         movedSteps.add(steps);
         sendCommand(command);
 
@@ -99,20 +99,20 @@ public class BluetoothEngineControlService {
         }
 
         if (detectionResult.size() > 0) {
-            MotorCommandPoint pointOfFace = MotorCommandPoint.CreateMiddel(detectionResult);
+            EngineCommandPoint pointOfFace = EngineCommandPoint.CreateMiddel(detectionResult);
 
-            MotorCommandPoint steps = getSteps(width, height, pointOfFace);
+            EngineCommandPoint steps = getSteps(width, height, pointOfFace);
             long currentTime = System.nanoTime();
 
             long deltaTime = currentTime - lastTimeInMillis;
             lastTimeInMillis = currentTime;
-            MotorCommandPoint speed = steps.div(deltaTime).abs();
+            EngineCommandPoint speed = steps.div(deltaTime).abs();
             speed = speed.mul(SPEED_FACTOR);
-            speed = speed.min(new MotorCommandPoint(1000f, 1000f));
-            speed = speed.max(new MotorCommandPoint(250f, 250f));
+            speed = speed.min(new EngineCommandPoint(1000f, 1000f));
+            speed = speed.max(new EngineCommandPoint(250f, 250f));
 
 
-            MotorCommandPoint stepsAbs = steps.abs();
+            EngineCommandPoint stepsAbs = steps.abs();
             if (stepsAbs.getX() > EPSILON_X_Steps || stepsAbs.getY() > EPSILON_Y_Steps)
                 moveXY(steps, speed);
             else
@@ -122,15 +122,15 @@ public class BluetoothEngineControlService {
         }
     }
 
-    private MotorCommandPoint getSteps(int width, int height, MotorCommandPoint pointOfFace) {
+    private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace) {
         float deltaX = (width / 2) - pointOfFace.getX();
         float deltaY = (height / 3) - pointOfFace.getY();
-        MotorCommandPoint steps = new MotorCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
+        EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
         return steps.mul(P).mul(0.5f).mul(-1);
     }
 
     private void stop() {
-        sendCommand(MotorCommand.stop());
+        sendCommand(EngineCommand.stop());
     }
 
     public void setFocalLengthInPx(float focalLengthInPx) {
@@ -156,6 +156,6 @@ public class BluetoothEngineControlService {
     }
 
     public void resetSteps() {
-        movedSteps = new MotorCommandPoint(0, 0);
+        movedSteps = new EngineCommandPoint(0, 0);
     }
 }
