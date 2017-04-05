@@ -14,7 +14,7 @@ import com.iam360.engine.connection.BluetoothEngineControlService;
  */
 public class BluetoothCameraApplicationContext extends Application {
     private static final String TAG = "ApplicationContext";
-    private BluetoothEngineControlService bluetoothService = new BluetoothEngineControlService();
+    private BluetoothEngineControlService bluetoothService = new BluetoothEngineControlService(true);
 
 
     public boolean setBluetoothService(BluetoothGatt gatt) {

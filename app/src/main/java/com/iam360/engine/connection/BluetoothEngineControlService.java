@@ -39,8 +39,11 @@ public class BluetoothEngineControlService {
     private long lastTimeInMillis;
     private boolean firstRun = true;
     private EngineCommandPoint movedSteps = new EngineCommandPoint(0, 0);
+    private boolean stopped = false;
 
-
+    public BluetoothEngineControlService(boolean directStart){
+        stopped = directStart;
+    }
     public boolean setBluetoothGatt(BluetoothGatt gatt) {
         if (gatt == null && this.hasBluetoothService()) {
             stop();
@@ -92,7 +95,17 @@ public class BluetoothEngineControlService {
 
     }
 
+    public void stopTracking(){
+        stopped = true;
+    }
+    public void startTracking(){
+        stopped = false;
+    }
+
     public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) {
+        if(stopped){
+            return;
+        }
         if (firstRun) {
             firstRun = false;
             return;
