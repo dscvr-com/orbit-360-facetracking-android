@@ -35,19 +35,19 @@ public class BluetoothConnector extends BroadcastReceiver {
         this.context = context;
     }
 
-    private void connect() {
+    public void connect() {
         List<BluetoothDevice> bluetoothDevices = searchBondedDevices();
         if (bluetoothDevices.size() > 0) {
             connect(bluetoothDevices.get(0));
             bluetoothDevices.remove(0);
-        }
-        if (bluetoothDevices.size() > 0) {
-            nextDevice = bluetoothDevices;
+            nextDevice.addAll(bluetoothDevices);
+        } else {
+            findLeDevice();
         }
 
     }
 
-    private void searchLeDevice() {
+    private void findLeDevice() {
 
         final BluetoothLeScanCallback scanCallback = new BluetoothLeScanCallback((device -> addDeviceFromScan(device)));
         stopScanHandler.postDelayed(() -> adapter.getBluetoothLeScanner().stopScan(scanCallback), SCAN_PERIOD);
@@ -60,7 +60,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void addDeviceFromScan(BluetoothDevice device) {
-        //TODO
+        nextDevice.add(device);
     }
 
     public void setListener(BluetoothLoadingListener listener) {
@@ -83,7 +83,6 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void connect(BluetoothDevice device) {
-        listener.startLoading();
         device.connectGatt(context, true, new BluetoothConnectionCallback(context));
 
     }
@@ -100,7 +99,7 @@ public class BluetoothConnector extends BroadcastReceiver {
                     connect(nextDevice.get(0));
                     nextDevice.remove(0);
                 } else {
-                    searchLeDevice();
+                    findLeDevice();
                 }
                 break;
 
@@ -108,8 +107,6 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     public interface BluetoothLoadingListener {
-        void startLoading();
-
         void endLoading();
     }
 }

@@ -13,7 +13,6 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.ViewGroup;
 import com.iam360.motor.connection.BluetoothConnectionReceiver;
-import com.iam360.views.bluetooth.MotorBluetoothConnectorListView;
 
 public class BluetoothConnectionActivity extends Activity {
 

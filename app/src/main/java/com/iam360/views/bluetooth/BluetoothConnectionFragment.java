@@ -1,17 +1,27 @@
 package com.iam360.views.bluetooth;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+
+import com.iam360.motor.connection.BluetoothConnector;
+import com.iam360.motor.connection.BluetoothMotorControlService;
 import com.iam360.myapplication.R;
+
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -25,14 +35,12 @@ public class BluetoothConnectionFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     public BluetoothConnectionFragment() {
-        // Required empty public constructor
     }
 
     /**
      * @return A new instance of fragment BluetoothConnectionFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static BluetoothConnectionFragment newInstance(String param1, String param2) {
+    public static BluetoothConnectionFragment newInstance() {
         BluetoothConnectionFragment fragment = new BluetoothConnectionFragment();
         return fragment;
     }
@@ -59,11 +67,20 @@ public class BluetoothConnectionFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-        searchForBluetooth();
+        findMotor();
     }
 
-    private void searchForBluetooth() {
+    private void findMotor() {
+        BluetoothConnector bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext());
+        bluetoothConnector.setListener(() -> finishedLoading());
+        bluetoothConnector.connect();
 
+    }
+    private void finishedLoading() {
+        ImageView imageView = (ImageView) getView().findViewById(R.id.ConnectionImage);
+        imageView.setImageResource(R.drawable.signal_blue);
+        //Add and Change Text to view.
+        mListener.onConnected();
     }
 
     @Override
@@ -72,33 +89,9 @@ public class BluetoothConnectionFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void onConnected();
     }
 
-    private class BluetoothLeScanCallback extends ScanCallback {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            BluetoothDevice device = result.getDevice();
-            Log.i(this.getClass().getCanonicalName(), String.format("Device Found %s %s", device.getName(), device.getAddress()));
-            //dataAdapter.add(device);
-        }
-
-        @Override
-        public void onScanFailed(int errorCode) {
-            Log.e("Scan Failed", "Error Code: " + errorCode);
-        }
-    }
 
 }
