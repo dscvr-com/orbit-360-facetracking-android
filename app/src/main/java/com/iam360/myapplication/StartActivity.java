@@ -3,6 +3,9 @@ package com.iam360.myapplication;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+
+//TODO  work with loading splashscreen first and then this with the same screen but not animated?
+
 public class StartActivity extends AppCompatActivity {
 
     static {
@@ -19,5 +22,6 @@ public class StartActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //FIXME Step here to first view
+
     }
 }

@@ -42,7 +42,8 @@
             </receiver>
         </activity>
         <activity android:name=".BluetoothActivity" />
-        <activity android:name=".StartActivity"></activity>
+        <activity android:name=".StartActivity" />
+        <activity android:name=".ManualActivity"></activity>
     </application>
 
 </manifest>
