@@ -15,11 +15,6 @@ public class ManualActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manual);
-        ViewPager pager = (ViewPager) this.findViewById(R.id.photos_viewpager);
-        PagerAdapter adapter = new ManualFragmentPageAdapter(getSupportFragmentManager());
-        pager.setAdapter(adapter);
 
-        TabLayout tabLayout = (TabLayout) this.findViewById(R.id.tab_layout);
-        tabLayout.setupWithViewPager(pager);
     }
 }

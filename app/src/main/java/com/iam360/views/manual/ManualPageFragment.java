@@ -65,9 +65,13 @@ public class ManualPageFragment extends Fragment {
     }
 
     private void createPageThree(ManualAdapter adapter) {
+        adapter.addTextItem(getContext().getString(R.string.manual_Page_three_p1));
+
     }
 
     private void createPageTwo(ManualAdapter adapter) {
+        adapter.addTextItem(getContext().getString(R.string.manual_Page_two_p1));
+
     }
 
     private void createPageOne(ManualAdapter adapter) {

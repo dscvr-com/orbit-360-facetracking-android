@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string-array name="manual">
+        <item>@drawable/manual1</item>
+        <item>@drawable/manual2</item>
+        <item>@drawable/manual3</item>
+    </string-array>
+</resources>
