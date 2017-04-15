@@ -27,10 +27,8 @@
         <activity
             android:name=".ManualActivity"
             android:theme="@style/AppFullScreenTheme">
-            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
@@ -43,7 +41,9 @@
         </activity>
         <activity android:name=".BluetoothActivity" />
         <activity android:name=".StartActivity" />
-        <activity android:name=".CameraActivity"></activity>
+        <activity
+            android:name=".CameraActivity"
+            android:theme="@style/AppFullScreenTheme"></activity>
     </application>
 
 </manifest>
