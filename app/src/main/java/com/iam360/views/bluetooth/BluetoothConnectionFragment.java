@@ -104,8 +104,9 @@ public class BluetoothConnectionFragment extends Fragment {
     }
 
     private void finishedLoading() {
-        ImageView imageView = (ImageView) getView().findViewById(R.id.ConnectionImage);
-        imageView.setImageResource(R.drawable.signal_blue);
+        // TODO
+        // ImageView imageView = (ImageView) getView().findViewById(R.id.ConnectionImage);
+        //imageView.setImageResource(R.drawable.signal_blue);
         //Add and Change Text to view.
         mListener.connected();
     }
