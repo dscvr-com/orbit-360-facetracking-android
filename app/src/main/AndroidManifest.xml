@@ -39,7 +39,8 @@
                 </intent-filter>
             </receiver>
         </activity>
-        <activity android:name=".BluetoothActivity" />
+        <activity android:name=".BluetoothActivity"
+            android:theme="@style/AppFullScreenTheme"></activity>
         <activity android:name=".StartActivity" />
         <activity
             android:name=".CameraActivity"

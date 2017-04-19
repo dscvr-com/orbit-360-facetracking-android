@@ -1,12 +1,13 @@
 package com.iam360.myapplication;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.iam360.myapplication.R;
 import com.iam360.views.bluetooth.BluetoothConnectionFragment;
 
-public class BluetoothActivity extends AppCompatActivity {
+public class BluetoothActivity extends AppCompatActivity implements BluetoothConnectionFragment.OnFragmentInteractionListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,4 +28,8 @@ public class BluetoothActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void connected() {
+        startActivity(new Intent(this, CameraActivity.class));
+    }
 }

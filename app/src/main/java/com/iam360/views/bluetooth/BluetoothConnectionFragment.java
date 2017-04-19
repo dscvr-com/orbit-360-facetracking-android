@@ -3,6 +3,7 @@ package com.iam360.views.bluetooth;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -27,6 +28,7 @@ import com.iam360.myapplication.R;
  * create an instance of this fragment.
  */
 public class BluetoothConnectionFragment extends Fragment {
+    private static final int BLUETOOTH_REQUEST = 3;
     private OnFragmentInteractionListener mListener;
 
     private static final int BLUETOOTH__LOCATION_REQUEST = 2;
@@ -73,8 +75,12 @@ public class BluetoothConnectionFragment extends Fragment {
                 == PackageManager.PERMISSION_GRANTED) {
             findEngine();
         }else{
+            //FIXME, how to switch on bluetooth from here?
+
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, BLUETOOTH__LOCATION_REQUEST);
 
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
         }
     }
 
@@ -104,11 +110,12 @@ public class BluetoothConnectionFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
-            case BLUETOOTH__LOCATION_REQUEST: {
+            case BLUETOOTH__LOCATION_REQUEST:
+            case BLUETOOTH_REQUEST: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(this.getClass().getSimpleName(), "bluetooth Req");
-                    findEngine();
+                   checkPermissions();
                 } else {
                     Log.e(this.getClass().getSimpleName(), "No Bluetooth permission");
                 }

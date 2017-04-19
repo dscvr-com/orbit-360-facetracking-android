@@ -28,7 +28,8 @@ public class BluetoothConnector extends BroadcastReceiver {
     private final Context context;
     private final Handler stopScanHandler = new Handler();
     private BluetoothLoadingListener listener;
-    private List<BluetoothDevice> nextDevice;
+    private List<BluetoothDevice> nextDevice = new ArrayList<>();
+    private boolean currentlyConnecting = false;
 
     public BluetoothConnector(BluetoothAdapter adapter, Context context) {
         this.adapter = adapter;
@@ -61,6 +62,12 @@ public class BluetoothConnector extends BroadcastReceiver {
 
     private void addDeviceFromScan(BluetoothDevice device) {
         nextDevice.add(device);
+        if(!currentlyConnecting){
+            if (nextDevice.size() > 0) {
+                connect(nextDevice.get(0));
+                nextDevice.remove(0);
+            }
+        }
     }
 
     public void setListener(BluetoothLoadingListener listener) {
@@ -70,7 +77,13 @@ public class BluetoothConnector extends BroadcastReceiver {
     private List<BluetoothDevice> searchBondedDevices() {
         Set<BluetoothDevice> bondedDevices = adapter.getBondedDevices();
         List<BluetoothDevice> contactableList = new ArrayList<>();
+        if(bondedDevices.isEmpty()){
+            return new ArrayList<>();
+        }
         for (BluetoothDevice device : bondedDevices) {
+            if(device.getUuids() == null){
+                continue;
+            }
             for (ParcelUuid uuid : device.getUuids()) {
                 if (uuid.equals(BluetoothEngineControlService.SERVICE_UUID)) {
                     contactableList.add(device);
@@ -83,6 +96,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void connect(BluetoothDevice device) {
+        currentlyConnecting =true;
         device.connectGatt(context, true, new BluetoothConnectionCallback(context));
 
     }
@@ -94,6 +108,7 @@ public class BluetoothConnector extends BroadcastReceiver {
                 listener.endLoading();
                 break;
             case DISCONNECTED:
+                currentlyConnecting = false;
                 listener.endLoading();
                 if (nextDevice.size() > 0) {
                     connect(nextDevice.get(0));
