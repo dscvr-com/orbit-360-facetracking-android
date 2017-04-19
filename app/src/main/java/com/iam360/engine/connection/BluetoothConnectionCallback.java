@@ -15,7 +15,6 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
 
 
     private final Context context;
-
     public BluetoothConnectionCallback(Context context) {
         this.context = context;
     }

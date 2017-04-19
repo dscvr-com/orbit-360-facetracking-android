@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.iam360.engine.connection.BluetoothConnectionReceiver;
 import com.iam360.myapplication.R;
 import com.iam360.views.bluetooth.BluetoothConnectionFragment;
 
 public class BluetoothActivity extends AppCompatActivity implements BluetoothConnectionFragment.OnFragmentInteractionListener {
+    BluetoothConnectionReceiver revciever;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

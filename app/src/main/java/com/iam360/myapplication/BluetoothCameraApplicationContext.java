@@ -2,10 +2,13 @@ package com.iam360.myapplication;
 
 import android.app.Application;
 import android.bluetooth.BluetoothGatt;
+import android.content.IntentFilter;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.util.Log;
+
+import com.iam360.engine.connection.BluetoothConnectionReceiver;
 import com.iam360.engine.connection.BluetoothEngineControlService;
 
 /**
@@ -15,6 +18,10 @@ import com.iam360.engine.connection.BluetoothEngineControlService;
 public class BluetoothCameraApplicationContext extends Application {
     private static final String TAG = "ApplicationContext";
     private BluetoothEngineControlService bluetoothService = new BluetoothEngineControlService(true);
+
+    public BluetoothCameraApplicationContext(){
+        super();
+    }
 
 
     public boolean setBluetoothService(BluetoothGatt gatt) {

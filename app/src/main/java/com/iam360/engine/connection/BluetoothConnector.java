@@ -109,7 +109,6 @@ public class BluetoothConnector extends BroadcastReceiver {
                 break;
             case DISCONNECTED:
                 currentlyConnecting = false;
-                listener.endLoading();
                 if (nextDevice.size() > 0) {
                     connect(nextDevice.get(0));
                     nextDevice.remove(0);
