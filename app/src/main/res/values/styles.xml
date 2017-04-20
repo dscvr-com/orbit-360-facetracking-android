@@ -15,4 +15,8 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
+    <style name="imageButtonWithoutBackground" parent="Base.Widget.AppCompat.ImageButton">
+        <item name="android:background">@color/transparent</item>
+    </style>
+
 </resources>
