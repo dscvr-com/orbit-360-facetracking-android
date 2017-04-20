@@ -23,7 +23,7 @@
     <com.chabbal.slidingdotsplash.SlidingSplashView
         android:id="@+id/manualSplashView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         app:imageResources="@array/manual" />
 
 
