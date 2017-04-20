@@ -2,8 +2,9 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/manual_grey"
     tools:context="com.iam360.myapplication.ManualActivity">
 
     <ImageButton
@@ -11,18 +12,19 @@
         style="@style/imageButtonWithoutBackground"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:layout_marginEnd="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
         android:visibility="visible"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/plus_circle"/>
+        app:srcCompat="@drawable/plus_circle" />
 
     <com.chabbal.slidingdotsplash.SlidingSplashView
         android:id="@+id/manualSplashView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:imageResources="@array/manual"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:imageResources="@array/manual" />
 
 
 </android.support.constraint.ConstraintLayout>
