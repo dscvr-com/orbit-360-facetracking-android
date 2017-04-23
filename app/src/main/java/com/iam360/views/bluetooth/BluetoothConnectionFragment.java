@@ -17,7 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.iam360.engine.connection.BluetoothConnectionReceiver;
+import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothConnector;
 import com.iam360.myapplication.R;
 
@@ -57,21 +57,21 @@ public class BluetoothConnectionFragment extends Fragment {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                if (!bluetoothConnector.hasDevices())
-                    createTurnOnEngineScreen();
+                if (bluetoothConnector!= null && !bluetoothConnector.hasDevices())
+                    getActivity().runOnUiThread(() -> createTurnOnEngineScreen());
             }
         };
         timer = new Timer("notConnecteed");
-        timer.schedule(task, 500);
+        timer.schedule(task, 10000);
         super.onCreate(savedInstanceState);
 
     }
 
     private void createTurnOnEngineScreen() {
         ImageView view = (ImageView) getView().findViewById(R.id.imageBTEngine);
-        view.setImageResource(R.drawable.ORBIT_black);
+        view.setImageResource(R.drawable.orbitblack);
         view = (ImageView) getView().findViewById(R.id.BTText);
-        view.setImageResource(R.drawable.textTurnOnBT);
+        view.setImageResource(R.drawable.bluetooth_alert);
 
     }
 
@@ -117,8 +117,8 @@ public class BluetoothConnectionFragment extends Fragment {
         bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext());
         bluetoothConnector.setListener(() -> finishedLoading());
         IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothConnectionReceiver.CONNECTED);
-        filter.addAction(BluetoothConnectionReceiver.DISCONNECTED);
+        filter.addAction(BluetoothConnectionReciever.CONNECTED);
+        filter.addAction(BluetoothConnectionReciever.DISCONNECTED);
         getContext().registerReceiver(bluetoothConnector, filter);
         bluetoothConnector.connect();
 
@@ -126,9 +126,9 @@ public class BluetoothConnectionFragment extends Fragment {
 
     private void finishedLoading() {
         ImageView view = (ImageView)getView().findViewById(R.id.imageBTEngine);
-        view.setImageResource(R.drawable.ORBIT_color);
+        view.setImageResource(R.drawable.orbitcolor);
         view = (ImageView)getView().findViewById(R.id.BTText);
-        view.setImageResource(R.drawable.BT_connected);
+        view.setImageResource(R.drawable.bluetooth_connected);
         mListener.connected();
     }
 

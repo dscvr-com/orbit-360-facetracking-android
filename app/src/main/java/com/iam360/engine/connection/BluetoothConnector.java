@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.iam360.engine.connection.BluetoothConnectionReceiver.CONNECTED;
-import static com.iam360.engine.connection.BluetoothConnectionReceiver.DISCONNECTED;
+import static com.iam360.engine.connection.BluetoothConnectionReciever.CONNECTED;
+import static com.iam360.engine.connection.BluetoothConnectionReciever.DISCONNECTED;
 
 /**
  * Connects the application to a bluetoothdevice

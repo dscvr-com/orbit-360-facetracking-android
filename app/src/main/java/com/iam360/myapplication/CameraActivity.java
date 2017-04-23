@@ -15,10 +15,9 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 import com.iam360.facedetection.FaceTrackingListener;
-import com.iam360.views.BaseActivity;
 import com.iam360.views.record.RecorderPreviewView;
 
-public class CameraActivity extends BaseActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";

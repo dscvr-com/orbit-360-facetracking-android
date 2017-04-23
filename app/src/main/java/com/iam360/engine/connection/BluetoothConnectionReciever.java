@@ -13,7 +13,7 @@ import com.iam360.myapplication.CameraActivity;
  *
  * Created by Charlotte on 15.11.2016.
  */
-public class BluetoothConnectionReceiver extends BroadcastReceiver {
+public class BluetoothConnectionReciever extends BroadcastReceiver {
 
     public static final String CONNECTED = "com.iam360.bluetooth.BLUETOOTH_CONNECTED";
     public static final String DISCONNECTED = "com.iam360.bluetooth.BLUETOOTH_DISCONNECTED";

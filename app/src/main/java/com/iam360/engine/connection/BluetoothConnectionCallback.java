@@ -30,7 +30,7 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
             case BluetoothProfile.STATE_DISCONNECTED:
                 Log.e("gattCallback", "STATE_DISCONNECTED");
                 ((BluetoothCameraApplicationContext) context.getApplicationContext()).setBluetoothService(null);
-                context.sendBroadcast(new Intent(BluetoothConnectionReceiver.DISCONNECTED));
+                context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
                 break;
             default:
                 Log.e("gattCallback", "STATE_OTHER");
@@ -40,9 +40,9 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         if (((BluetoothCameraApplicationContext) context.getApplicationContext()).setBluetoothService(gatt)) {
-            context.sendBroadcast(new Intent(BluetoothConnectionReceiver.CONNECTED));
+            context.sendBroadcast(new Intent(BluetoothConnectionReciever.CONNECTED));
         } else {
-            context.sendBroadcast(new Intent(BluetoothConnectionReceiver.DISCONNECTED));
+            context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
 
     }

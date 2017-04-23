@@ -1,9 +1,10 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="com.iam360.views.bluetooth.BluetoothConnectionFragment">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context="com.iam360.views.bluetooth.BluetoothConnectionFragment">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -13,39 +14,68 @@
             android:id="@+id/imageBTEngine"
             android:layout_width="308dp"
             android:layout_height="289dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="213dp"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ORBIT_grey"
-            tools:layout_editor_absoluteX="51dp"
-            tools:layout_editor_absoluteY="241dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.494"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/orbitgrey" />
 
         <ImageView
             android:id="@+id/heading"
             android:layout_width="142dp"
             android:layout_height="57dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
             android:scaleType="fitStart"
-            app:srcCompat="@drawable/IACLogo"
-            tools:layout_editor_absoluteX="134dp"
-            tools:layout_editor_absoluteY="16dp" />
+            app:layout_constraintBottom_toTopOf="@+id/HeadingText"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.631"
+            app:srcCompat="@drawable/iaclogo" />
 
         <ImageView
             android:id="@+id/BTText"
             android:layout_width="338dp"
             android:layout_height="153dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="52dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/searching"
-            tools:layout_editor_absoluteX="36dp"
-            tools:layout_editor_absoluteY="562dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.491"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageBTEngine"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/bluettoth_searching" />
 
         <TextView
             android:id="@+id/HeadingText"
             android:layout_width="214dp"
             android:layout_height="64dp"
+            android:layout_marginBottom="38dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="99dp"
             android:text="@string/Heading"
             android:textAlignment="center"
             android:textSize="30sp"
-            tools:layout_editor_absoluteX="98dp"
-            tools:layout_editor_absoluteY="123dp" />
+            app:layout_constraintBottom_toTopOf="@+id/imageBTEngine"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>
