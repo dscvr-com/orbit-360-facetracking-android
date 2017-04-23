@@ -120,6 +120,13 @@ public class BluetoothConnector extends BroadcastReceiver {
         }
     }
 
+    public boolean hasDevices() {
+        if(nextDevice.size() == 0 && !currentlyConnecting){
+            return false;
+        }
+        return true;
+    }
+
     public interface BluetoothLoadingListener {
         void endLoading();
     }

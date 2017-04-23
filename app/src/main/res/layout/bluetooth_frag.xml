@@ -1,21 +1,51 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="com.iam360.views.bluetooth.BluetoothConnectionFragment">
 
-    <TextView
-        android:id="@+id/textView6"
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment"
-        android:visibility="visible" />
+        android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/ConnectionImage"
-        android:layout_width="281dp"
-        android:layout_height="470dp"
-        android:layout_gravity="center"
-        android:src="@drawable/ic_camera_white_24dp" />
+        <ImageView
+            android:id="@+id/imageBTEngine"
+            android:layout_width="308dp"
+            android:layout_height="289dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ORBIT_grey"
+            tools:layout_editor_absoluteX="51dp"
+            tools:layout_editor_absoluteY="241dp" />
 
+        <ImageView
+            android:id="@+id/heading"
+            android:layout_width="142dp"
+            android:layout_height="57dp"
+            android:scaleType="fitStart"
+            app:srcCompat="@drawable/IACLogo"
+            tools:layout_editor_absoluteX="134dp"
+            tools:layout_editor_absoluteY="16dp" />
+
+        <ImageView
+            android:id="@+id/BTText"
+            android:layout_width="338dp"
+            android:layout_height="153dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/searching"
+            tools:layout_editor_absoluteX="36dp"
+            tools:layout_editor_absoluteY="562dp" />
+
+        <TextView
+            android:id="@+id/HeadingText"
+            android:layout_width="214dp"
+            android:layout_height="64dp"
+            android:text="@string/Heading"
+            android:textAlignment="center"
+            android:textSize="30sp"
+            tools:layout_editor_absoluteX="98dp"
+            tools:layout_editor_absoluteY="123dp" />
+
+    </android.support.constraint.ConstraintLayout>
 </FrameLayout>

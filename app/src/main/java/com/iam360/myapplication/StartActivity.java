@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 
 //TODO  work with loading splashscreen first and then this with the same screen but not animated?
+//here load gif
 
 public class StartActivity extends AppCompatActivity {
 

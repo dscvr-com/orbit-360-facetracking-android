@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 
-public class ManualActivity extends AppCompatActivity implements View.OnClickListener{
+import com.iam360.views.BaseActivity;
+
+public class ManualActivity extends BaseActivity implements View.OnClickListener{
     private ImageButton closeButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {

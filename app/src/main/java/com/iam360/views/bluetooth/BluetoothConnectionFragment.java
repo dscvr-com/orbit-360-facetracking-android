@@ -21,6 +21,9 @@ import com.iam360.engine.connection.BluetoothConnectionReceiver;
 import com.iam360.engine.connection.BluetoothConnector;
 import com.iam360.myapplication.R;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -36,6 +39,7 @@ public class BluetoothConnectionFragment extends Fragment {
 
     private static final int BLUETOOTH__LOCATION_REQUEST = 2;
     private BluetoothConnector bluetoothConnector;
+    private Timer timer;
 
     public BluetoothConnectionFragment() {
     }
@@ -50,7 +54,24 @@ public class BluetoothConnectionFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                if (!bluetoothConnector.hasDevices())
+                    createTurnOnEngineScreen();
+            }
+        };
+        timer = new Timer("notConnecteed");
+        timer.schedule(task, 500);
         super.onCreate(savedInstanceState);
+
+    }
+
+    private void createTurnOnEngineScreen() {
+        ImageView view = (ImageView) getView().findViewById(R.id.imageBTEngine);
+        view.setImageResource(R.drawable.ORBIT_black);
+        view = (ImageView) getView().findViewById(R.id.BTText);
+        view.setImageResource(R.drawable.textTurnOnBT);
 
     }
 
@@ -80,7 +101,7 @@ public class BluetoothConnectionFragment extends Fragment {
             findEngine();
         } else {
             if (BluetoothAdapter.getDefaultAdapter() == null || !BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                neededPerms ++;
+                neededPerms++;
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, BLUETOOTH_REQUEST);
             }
@@ -98,16 +119,16 @@ public class BluetoothConnectionFragment extends Fragment {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothConnectionReceiver.CONNECTED);
         filter.addAction(BluetoothConnectionReceiver.DISCONNECTED);
-        getContext().registerReceiver(bluetoothConnector,filter);
+        getContext().registerReceiver(bluetoothConnector, filter);
         bluetoothConnector.connect();
 
     }
 
     private void finishedLoading() {
-        // TODO
-        // ImageView imageView = (ImageView) getView().findViewById(R.id.ConnectionImage);
-        //imageView.setImageResource(R.drawable.signal_blue);
-        //Add and Change Text to view.
+        ImageView view = (ImageView)getView().findViewById(R.id.imageBTEngine);
+        view.setImageResource(R.drawable.ORBIT_color);
+        view = (ImageView)getView().findViewById(R.id.BTText);
+        view.setImageResource(R.drawable.BT_connected);
         mListener.connected();
     }
 
@@ -129,7 +150,7 @@ public class BluetoothConnectionFragment extends Fragment {
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(this.getClass().getSimpleName(), "bluetooth Req");
                 neededPerms--;
-                if(neededPerms == 0){
+                if (neededPerms == 0) {
                     checkPermissions();
                 }
             } else {

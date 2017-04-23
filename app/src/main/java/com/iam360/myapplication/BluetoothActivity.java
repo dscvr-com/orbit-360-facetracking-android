@@ -31,6 +31,5 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothCon
 
     @Override
     public void connected() {
-        startActivity(new Intent(this, CameraActivity.class));
     }
 }
