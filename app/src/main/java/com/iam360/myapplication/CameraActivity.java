@@ -51,7 +51,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_camera);
         if (!((BluetoothCameraApplicationContext) this.getApplicationContext()).hasBluetoothConnection()) {
             startActivity(new Intent(this, BluetoothActivity.class));
         } else {

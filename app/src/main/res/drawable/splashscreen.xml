@@ -7,7 +7,7 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/lauinger"/>
+            android:src="@drawable/firstpage"/>
     </item>
 
 </layer-list>

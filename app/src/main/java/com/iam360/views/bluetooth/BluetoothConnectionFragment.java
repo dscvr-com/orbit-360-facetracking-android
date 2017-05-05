@@ -2,6 +2,7 @@ package com.iam360.views.bluetooth;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -19,6 +20,8 @@ import android.widget.ImageView;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothConnector;
+import com.iam360.engine.control.RemoteButtonListener;
+import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.myapplication.R;
 
 import java.util.Timer;
@@ -32,7 +35,7 @@ import java.util.TimerTask;
  * Use the {@link BluetoothConnectionFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BluetoothConnectionFragment extends Fragment {
+public class BluetoothConnectionFragment extends Fragment implements BluetoothConnector.BluetoothLoadingListenerWithStartConnect {
     private static final int BLUETOOTH_REQUEST = 3;
     private OnFragmentInteractionListener mListener;
     private int neededPerms = 0;
@@ -114,12 +117,12 @@ public class BluetoothConnectionFragment extends Fragment {
     }
 
     private void findEngine() {
-        bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext());
-        bluetoothConnector.setListener(() -> finishedLoading());
+        bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext(), this, new RemoteButtonListener(true,getContext()), new RemoteButtonListener(false, getContext()));
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothConnectionReciever.CONNECTED);
         filter.addAction(BluetoothConnectionReciever.DISCONNECTED);
         getContext().registerReceiver(bluetoothConnector, filter);
+        ((BluetoothCameraApplicationContext)getActivity().getApplicationContext()).setBluetoothConnector(bluetoothConnector);
         bluetoothConnector.connect();
 
     }
@@ -137,6 +140,16 @@ public class BluetoothConnectionFragment extends Fragment {
         super.onDetach();
         getContext().unregisterReceiver(bluetoothConnector);
         mListener = null;
+    }
+
+    @Override
+    public void endLoading(BluetoothGatt gatt) {
+    }
+
+    @Override
+    public void startedToConnect() {
+        finishedLoading();
+
     }
 
     public interface OnFragmentInteractionListener {

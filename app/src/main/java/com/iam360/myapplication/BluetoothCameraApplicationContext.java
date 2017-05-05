@@ -7,6 +7,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.util.Log;
 
+import com.iam360.engine.connection.BluetoothConnector;
 import com.iam360.engine.connection.BluetoothEngineControlService;
 
 /**
@@ -15,23 +16,29 @@ import com.iam360.engine.connection.BluetoothEngineControlService;
  */
 public class BluetoothCameraApplicationContext extends Application {
     private static final String TAG = "ApplicationContext";
-    private BluetoothEngineControlService bluetoothService = new BluetoothEngineControlService(true);
+    private BluetoothConnector connector;
+    private float focalLengthInPx;
 
     public BluetoothCameraApplicationContext(){
         super();
     }
 
 
+    public void setBluetoothConnector(BluetoothConnector connector){
+        this.connector = connector;
+        connector.getBluetoothService().setFocalLengthInPx(focalLengthInPx);
+    }
+
     public boolean setBluetoothService(BluetoothGatt gatt) {
-        return bluetoothService.setBluetoothGatt(gatt);
+        return connector != null && connector.getBluetoothService().setBluetoothGatt(gatt);
     }
 
     public boolean hasBluetoothConnection() {
-        return bluetoothService.hasBluetoothService();
+        return connector != null && connector.getBluetoothService().hasBluetoothService();
     }
 
     public BluetoothEngineControlService getBluetoothService() {
-        return bluetoothService;
+        return connector!= null? connector.getBluetoothService(): null;
     }
 
     public void setFocalLengthInPx(CameraManager cameraManager, String cameraId) {
@@ -42,7 +49,7 @@ public class BluetoothCameraApplicationContext extends Application {
             //array because, if the camera has optical zoom, we get more than one result. This is very unlikely.
             float focalLength = focalLengths[0];
             float sensorWidth = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE).getWidth();
-            bluetoothService.setFocalLengthInPx(focalLength / sensorWidth);
+            this. focalLengthInPx = focalLength / sensorWidth;
         } catch (CameraAccessException e) {
             Log.e(TAG, "error setting focalLength.", e);
         }

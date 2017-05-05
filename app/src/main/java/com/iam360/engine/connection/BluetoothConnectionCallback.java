@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 
 /**
@@ -14,9 +15,18 @@ import com.iam360.myapplication.BluetoothCameraApplicationContext;
 public class BluetoothConnectionCallback extends BluetoothGattCallback {
 
 
+    private final ButtonValueListener bottomButton;
+    private final ButtonValueListener topButton;
+    private BluetoothConnector.BluetoothLoadingListener listener;
+
     private final Context context;
-    public BluetoothConnectionCallback(Context context) {
+
+    public BluetoothConnectionCallback(Context context, BluetoothConnector.BluetoothLoadingListener listener, ButtonValueListener bottomButton, ButtonValueListener topButton) {
+        this.topButton = topButton;
+        this.bottomButton = bottomButton;
+        this.listener = listener;
         this.context = context;
+
     }
 
     @Override
@@ -44,6 +54,9 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
         } else {
             context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
+    }
 
+    public interface ButtonValueListener {
+        void buttomPressed();
     }
 }

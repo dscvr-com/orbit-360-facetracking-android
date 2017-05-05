@@ -2,6 +2,7 @@ package com.iam360.engine.connection;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.BroadcastReceiver;
@@ -27,13 +28,21 @@ public class BluetoothConnector extends BroadcastReceiver {
     private final BluetoothAdapter adapter;
     private final Context context;
     private final Handler stopScanHandler = new Handler();
-    private BluetoothLoadingListener listener;
+    private BluetoothLoadingListenerWithStartConnect listener;
+    private final BluetoothConnectionCallback.ButtonValueListener upperButtomListener;
+    private final BluetoothConnectionCallback.ButtonValueListener lowerButtonListener;
     private List<BluetoothDevice> nextDevice = new ArrayList<>();
     private boolean currentlyConnecting = false;
+    private BluetoothEngineControlService controlService = new BluetoothEngineControlService(true);//FIXME, not directly start perhaps
+    private BluetoothLeScanCallback scanCallback;
 
-    public BluetoothConnector(BluetoothAdapter adapter, Context context) {
+
+    public BluetoothConnector(BluetoothAdapter adapter, Context context,  BluetoothLoadingListenerWithStartConnect listener, BluetoothConnectionCallback.ButtonValueListener upperButtomListener, BluetoothConnectionCallback.ButtonValueListener lowerButtonListener) {
         this.adapter = adapter;
         this.context = context;
+        this.listener = listener;
+        this.upperButtomListener = upperButtomListener;
+        this.lowerButtonListener = lowerButtonListener;
     }
 
     public void connect() {
@@ -50,7 +59,7 @@ public class BluetoothConnector extends BroadcastReceiver {
 
     private void findLeDevice() {
 
-        final BluetoothLeScanCallback scanCallback = new BluetoothLeScanCallback((device -> addDeviceFromScan(device)));
+        scanCallback = new BluetoothLeScanCallback((device -> addDeviceFromScan(device)));
         stopScanHandler.postDelayed(() -> adapter.getBluetoothLeScanner().stopScan(scanCallback), SCAN_PERIOD);
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -68,10 +77,6 @@ public class BluetoothConnector extends BroadcastReceiver {
                 nextDevice.remove(0);
             }
         }
-    }
-
-    public void setListener(BluetoothLoadingListener listener) {
-        this.listener = listener;
     }
 
     private List<BluetoothDevice> searchBondedDevices() {
@@ -97,15 +102,20 @@ public class BluetoothConnector extends BroadcastReceiver {
 
     private void connect(BluetoothDevice device) {
         currentlyConnecting =true;
-        device.connectGatt(context, true, new BluetoothConnectionCallback(context));
+        listener.startedToConnect();
+        device.connectGatt(context, true, new BluetoothConnectionCallback(context, gatt -> afterConnecting(gatt), upperButtomListener, lowerButtonListener));
 
+    }
+
+    private void afterConnecting(BluetoothGatt gatt){
+        controlService.setBluetoothGatt(gatt);
+        listener.endLoading(gatt);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         switch (intent.getAction()) {
             case CONNECTED:
-                listener.endLoading();
                 break;
             case DISCONNECTED:
                 currentlyConnecting = false;
@@ -127,7 +137,20 @@ public class BluetoothConnector extends BroadcastReceiver {
         return true;
     }
 
+    public boolean isConnected() {
+        return controlService.hasBluetoothService();
+    }
+
+    public BluetoothEngineControlService getBluetoothService() {
+        return controlService;
+    }
+
     public interface BluetoothLoadingListener {
-        void endLoading();
+        void endLoading(BluetoothGatt gatt);
+    }
+
+    public interface BluetoothLoadingListenerWithStartConnect extends BluetoothLoadingListener{
+
+        void startedToConnect();
     }
 }
