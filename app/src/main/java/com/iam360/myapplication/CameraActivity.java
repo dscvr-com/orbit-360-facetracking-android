@@ -15,12 +15,14 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 import com.iam360.facedetection.FaceTrackingListener;
+import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 
-public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
+    private boolean isFilmingMode = true;
 
     //FIXME, put this to a initial activity
     static {
@@ -29,6 +31,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     private RecorderPreviewView recordPreview;
     private boolean isFilming = false;
+    private RecorderOverlayFragment overlayFragment;
 
     @Override
     public void onResume() {
@@ -90,30 +93,56 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_CAMERA_PERMISSION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    createCameraView();
-                } else {
-                    Log.e(TAG, "No Camera permission");
-                }
-            }
 
-        }
+        requestCameraPermission();
     }
 
     private void createCameraView() {
+
         recordPreview = new RecorderPreviewView(this);
+        overlayFragment = new RecorderOverlayFragment();
+        overlayFragment.setArguments(getIntent().getExtras());
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.camera_fragment_container, overlayFragment).commit();
         recordPreview.setPreviewListener(new FaceTrackingListener(this));
+
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         layout.addView(recordPreview, params);
-        FloatingActionButton videoButton = (FloatingActionButton) findViewById(R.id.camera);
-        videoButton.bringToFront();
-        videoButton.setOnClickListener(v -> {
+        findViewById(R.id.camera_fragment_container).bringToFront();
+    }
+
+    @Override
+    public void onSettingsClicked() {
+
+    }
+
+    @Override
+    public void onTrackingPointsClicked() {
+
+    }
+
+    @Override
+    public void onTrackingClicked() {
+
+    }
+
+    @Override
+    public void onCameraModeClicked() {
+
+    }
+
+    @Override
+    public void onCameraClicked() {
+
+    }
+
+    @Override
+    public void onRecordingClicked() {
+        if (isFilmingMode) {
             if (isFilming) {
                 Log.i(TAG, "stop video");
                 recordPreview.stopVideo();
@@ -123,10 +152,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 recordPreview.startVideo();
                 isFilming = true;
             }
-        });
-        FloatingActionButton photoButton = (FloatingActionButton) findViewById(R.id.photo);
-        photoButton.setOnClickListener(v -> recordPreview.takePicture());
-        photoButton.bringToFront();
+        } else {
+            recordPreview.takePicture();
+        }
+
     }
 }
 

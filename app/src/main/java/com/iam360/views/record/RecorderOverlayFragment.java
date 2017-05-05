@@ -1,7 +1,6 @@
 package com.iam360.views.record;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -30,6 +29,7 @@ public class RecorderOverlayFragment extends Fragment {
     private ImageButton camera;
     private ImageButton recording;
     private TextView time;
+    private TextView counter;
 
     private OnFragmentInteractionListener mListener;
 
@@ -46,10 +46,41 @@ public class RecorderOverlayFragment extends Fragment {
         trackingPoints = (ImageButton) getView().findViewById(R.id.trackingPoints);
         tracking = (ImageButton) getView().findViewById(R.id.tracking);
         cameraMode = (ImageButton) getView().findViewById(R.id.cameraMode);
-        camera = (ImageButton) getView().findViewById(R.id.camera);
+        camera = (ImageButton) getView().findViewById(R.id.changeCamera);
         recording = (ImageButton) getView().findViewById(R.id.recordingButton);
         time = (TextView) getView().findViewById(R.id.time);
+        counter = (TextView) getView().findViewById(R.id.counter);
+        settings.setOnClickListener(v -> settingsClicked());
+        trackingPoints.setOnClickListener(v -> trackingPointsClicked());
+        cameraMode.setOnClickListener(v -> cameraModeClicked());
+        camera.setOnClickListener(v -> cameraClicked());
+        recording.setOnClickListener(v -> recordingClicked());
+    }
 
+    private void recordingClicked() {
+        //TODO change some view elements
+        mListener.onRecordingClicked();
+    }
+
+    private void cameraClicked() {
+        //TODO change some view elements
+        mListener.onCameraClicked();
+    }
+
+    private void cameraModeClicked() {
+        //TODO change some view elements
+        mListener.onCameraModeClicked();
+    }
+
+    private void trackingPointsClicked() {
+        //TODO change some view elements
+        mListener.onTrackingPointsClicked();
+
+    }
+
+    private void settingsClicked() {
+        //TODO change some view elements
+        mListener.onSettingsClicked();
     }
 
     @Override
@@ -59,12 +90,6 @@ public class RecorderOverlayFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_recorder_overlay, container, false);
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
 
     @Override
     public void onAttach(Context context) {

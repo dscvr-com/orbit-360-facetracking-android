@@ -20,14 +20,20 @@ public class BluetoothConnectionReciever extends BroadcastReceiver {
     private static final String TAG = "BluetoothConnectReceive";
 
     @Override
-    public void onReceive(Context context, Intent intent) {
-        switch (intent.getAction()) {
+    public void onReceive(Context context, Intent i) {
+
+        Intent intent;
+        switch (i.getAction()) {
             case CONNECTED:
-                context.startActivity(new Intent(context, CameraActivity.class));
+                intent = new Intent(context, CameraActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
                 Log.i(TAG, "connected to device");
                 break;
             case DISCONNECTED:
-                context.startActivity(new Intent(context, BluetoothActivity.class));
+                intent = new Intent(context, BluetoothActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
                 Log.i(TAG, "lost connection to device");
                 break;
 
