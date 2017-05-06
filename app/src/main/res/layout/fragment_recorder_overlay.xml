@@ -12,14 +12,14 @@
 
         <ImageView
             android:id="@+id/toolbar1"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="41dp"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@color/manual_grey_transparent"
-            tools:layout_editor_absoluteY="-3dp"
+            tools:layout_editor_absoluteY="-1dp"
             app:layout_constraintVertical_bias="0.0"
             app:layout_constraintHorizontal_bias="0.0" />
 
@@ -36,16 +36,15 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintVertical_bias="0.0"
-            app:srcCompat="@drawable/track_points_grid"
-            tools:layout_editor_absoluteX="451dp" />
+            app:srcCompat="@drawable/track_points_grid" />
 
         <ImageView
             android:id="@+id/toolbar2"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="92dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintLeft_toLeftOf="parent"
 
             app:layout_constraintRight_toRightOf="parent"
@@ -121,8 +120,7 @@
             app:layout_constraintLeft_toRightOf="@+id/time"
             app:layout_constraintRight_toLeftOf="@+id/tracking"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/points_off"
-            tools:layout_editor_absoluteX="341dp" />
+            app:srcCompat="@drawable/points_off" />
 
         <ImageButton
             android:id="@+id/recordingButton"
@@ -156,22 +154,6 @@
             app:layout_constraintRight_toRightOf="parent"
             app:srcCompat="@drawable/cameraicon" />
 
-        <ImageButton
-            android:id="@+id/cameraMode"
-            android:layout_width="46dp"
-            android:layout_height="44dp"
-            android:layout_marginBottom="16dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.091"
-            app:layout_constraintLeft_toLeftOf="@+id/toolbar2"
-            app:layout_constraintRight_toLeftOf="@+id/recordingButton"
-            app:srcCompat="@drawable/video_modus"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:scaleType="fitXY"
-            android:background="?android:attr/selectableItemBackground"/>
 
         <TextView
             android:id="@+id/counter"
@@ -187,6 +169,52 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/toolbar1"
             tools:layout_editor_absoluteX="173dp" />
+
+        <TextView
+            android:id="@+id/textMiddel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/Photo"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            app:layout_constraintHorizontal_bias="0.502"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/toolbar2" />
+
+        <TextView
+            android:id="@+id/textRight"
+            android:layout_width="43dp"
+            android:layout_height="15dp"
+            android:layout_marginBottom="68dp"
+            android:layout_marginLeft="25dp"
+            android:text="@string/Photo"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/textMiddel" />
+
+        <TextView
+            android:id="@+id/textLeft"
+            android:layout_width="41dp"
+            android:layout_height="16dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/Video"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.944"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/textMiddel"
+            app:layout_constraintTop_toTopOf="@+id/toolbar2"
+            app:layout_constraintVertical_bias="0.0" />
 
     </android.support.constraint.ConstraintLayout>
 

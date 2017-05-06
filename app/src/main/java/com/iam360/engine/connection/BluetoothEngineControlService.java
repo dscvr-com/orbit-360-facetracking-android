@@ -97,8 +97,9 @@ public class BluetoothEngineControlService {
 
     }
 
-    public void stopTracking() {
+    public void stopTracking() throws NoBluetoothConnectionException {
         stopped = true;
+        stop();
     }
 
     public void startTracking() {

@@ -32,14 +32,16 @@ public class RecorderOverlayFragment extends Fragment {
     private ImageButton trackingPointsSetting;
     private ImageView trackingPointsGrid;
     private ImageButton tracking;
-    private ImageButton cameraMode;
     private ImageButton camera;
     private ImageButton recording;
     private TextView time;
     private TextView counter;
+    private TextView middle;
+    private TextView left;
+    private TextView right;
 
     private boolean isRecording = false;
-    private boolean isFilmMode = true;
+    private boolean isFilmMode = false;
     private boolean frontCamera = true;
 
 
@@ -60,7 +62,12 @@ public class RecorderOverlayFragment extends Fragment {
             public void run() {
                 i++;
                 String s = String.format("%02d:%02d:%02d", i / 360, (i / 60) % 60, i % 60);
-                getActivity().runOnUiThread(() -> time.setText(s));
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        time.setText(s);
+                    }
+                });
             }
         };
         timer.schedule(task, 0, 1000);
@@ -68,6 +75,24 @@ public class RecorderOverlayFragment extends Fragment {
     public void stopTimer(){
         time.setText("00:00:00");
         task.cancel();
+    }
+
+    public void onSwipeLeft(){
+        if(isFilmMode){
+           isFilmMode = !isFilmMode;
+            left.setVisibility(View.VISIBLE);
+            right.setVisibility(View.INVISIBLE);
+            middle.setText(R.string.Photo);
+        }
+    }
+
+    public void onSwipeRight(){
+        if(!isFilmMode){
+            isFilmMode = !isFilmMode;
+            left.setVisibility(View.INVISIBLE);
+            right.setVisibility(View.VISIBLE);
+            middle.setText(R.string.Video);
+        }
     }
 
     @Override
@@ -85,15 +110,16 @@ public class RecorderOverlayFragment extends Fragment {
         settings = (ImageButton) getView().findViewById(R.id.settings);
         trackingPointsSetting = (ImageButton) getView().findViewById(R.id.trackingPoints);
         tracking = (ImageButton) getView().findViewById(R.id.tracking);
-        cameraMode = (ImageButton) getView().findViewById(R.id.cameraMode);
         camera = (ImageButton) getView().findViewById(R.id.changeCamera);
         recording = (ImageButton) getView().findViewById(R.id.recordingButton);
         trackingPointsGrid = (ImageView) getView().findViewById(R.id.trackingGrid);
+        middle = (TextView) getView().findViewById(R.id.textMiddel);
+        left = (TextView) getView().findViewById(R.id.textLeft);
+        right = (TextView) getView().findViewById(R.id.textRight);
         time = (TextView) getView().findViewById(R.id.time);
         counter = (TextView) getView().findViewById(R.id.counter);
         settings.setOnClickListener(v -> settingsClicked());
         trackingPointsSetting.setOnClickListener(v -> trackingPointsClicked());
-        cameraMode.setOnClickListener(v -> cameraModeClicked());
         camera.setOnClickListener(v -> cameraClicked());
         recording.setOnClickListener(v -> recordingClicked());
         tracking.setOnClickListener(v -> onTrackingClicked());
@@ -112,15 +138,25 @@ public class RecorderOverlayFragment extends Fragment {
         if(!isFilmMode){
             counter.setVisibility(View.VISIBLE);
             timer.schedule(new TimerTask() {
-                int count = 2;
+                int count = 3;
                 @Override
                 public void run() {
                     count --;
                     if(count == 0){
-                        counter.setVisibility(View.INVISIBLE);
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                counter.setVisibility(View.INVISIBLE);
+                            }
+                        });
                         mListener.onRecordingClicked(isFilmMode,false);
                     }else{
-                        getActivity().runOnUiThread(() -> counter.setText(String.valueOf(count)));
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                counter.setText(String.valueOf(count));
+                            }
+                        });
                         this.cancel();
                     }
                 }
@@ -140,18 +176,6 @@ public class RecorderOverlayFragment extends Fragment {
         frontCamera = !frontCamera;
         //TODO change some view elements
         mListener.onCameraClicked(frontCamera);
-    }
-
-    private void cameraModeClicked() {
-        isFilmMode = !isFilmMode;
-        if(isFilmMode){
-            cameraMode.setImageResource(R.drawable.video_modus);
-            time.setVisibility(View.VISIBLE);
-        }else{
-            cameraMode.setImageResource(R.drawable.camera_mode);
-            time.setVisibility(View.INVISIBLE);
-        }
-        mListener.onCameraModeClicked(isFilmMode);
     }
 
     private void trackingPointsClicked() {
@@ -201,8 +225,6 @@ public class RecorderOverlayFragment extends Fragment {
         void onTrackingPointsClicked(boolean isCurrentlyOn);
 
         void onTrackingClicked(boolean isTrackingNowOn);
-
-        void onCameraModeClicked(boolean shouldNowFilm);
 
         void onCameraClicked(boolean frontCamera);
 

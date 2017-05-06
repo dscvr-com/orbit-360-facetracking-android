@@ -8,4 +8,6 @@
     <string name="manual_Page_three_p1">blalabla 3.</string>
     <string name="manual_Page_two_p1">blalabla 2.</string>
     <string name="Heading">ORBIT 360</string>
+    <string name="Video">VIDEO</string>
+    <string name="Photo">PHOTO</string>
 </resources>

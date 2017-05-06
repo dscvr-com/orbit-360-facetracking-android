@@ -17,6 +17,8 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
+
+import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.myapplication.BluetoothCameraApplicationContext;
 import com.iam360.videorecording.ImageWrapper;
@@ -164,7 +166,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
     public void startVideo() {
         if (videoRecorder != null) {
             try {
-                ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().resetSteps();
                 videoRecorder.startRecord();
                 startPreview();
             } catch (CameraAccessException | IOException e) {
@@ -195,13 +196,22 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
     public void setPreviewListener(FaceTrackingListener dataListener) {
         this.dataListener = dataListener;
-        dataListener.getFaceDetection().addFaceDetectionResultListener((rects, width, height) -> createRects(rects, width, height));
-
+        dataListener.getFaceDetection().addFaceDetectionResultListener(new FaceDetection.FaceDetectionResultListener(){
+            @Override
+            public void facesDetected(List<Rect> rects, int width, int height) {
+                createRects(rects, width, height);
+            }
+        });
     }
 
     private void createRects(List<Rect> rects, int width, int height) {
         this.rects = rects;
-        new Handler(Looper.getMainLooper()).post(() -> invalidate());
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                invalidate();
+            }
+        });
     }
 
 /*

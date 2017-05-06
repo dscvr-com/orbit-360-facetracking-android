@@ -8,20 +8,29 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
+import com.iam360.engine.connection.BluetoothConnectionReciever;
+import com.iam360.engine.connection.BluetoothEngineControlService;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 
-public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener {
+public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
+
+    private static final int SWIPE_THRESHOLD = 100;
+    private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+    private GestureDetector gestureDetector;
+
     //FIXME, put this to a initial activity
     static {
         System.loadLibrary("opencv_java3");
@@ -58,6 +67,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         } else {
             requestCameraPermission();
         }
+
+        gestureDetector = new GestureDetector(this, (GestureDetector.OnGestureListener) this);
 
     }
 
@@ -120,9 +131,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onTrackingPointsClicked(boolean b) {
-        if(b){
+        if (b) {
             reactForTouchEvents = true;
-        }else{
+        } else {
             reactForTouchEvents = false;
         }
     }
@@ -130,12 +141,11 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
         if (reactForTouchEvents) {
             ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX(), event.getY());
-            return true;
-        } else {
-            return false;
         }
+        return true;
     }
 
     @Override
@@ -143,13 +153,12 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         if (isTrackingNowOn) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().startTracking();
         } else {
-            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+            try {
+                ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+            } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+                sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            }
         }
-    }
-
-    @Override
-    public void onCameraModeClicked(boolean isFilmingMode) {
-        //FIXME is this interessing for us?
     }
 
     @Override
@@ -173,6 +182,55 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             recordPreview.takePicture();
         }
 
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        boolean result = false;
+        try {
+            float diffY = e2.getY() - e1.getY();
+            float diffX = e2.getX() - e1.getX();
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) {
+                        Log.d(getClass().getSimpleName(), "swipe Right");
+                        overlayFragment.onSwipeRight();
+                    } else {
+                        Log.d(getClass().getSimpleName(), "swipe Left");
+                        overlayFragment.onSwipeLeft();
+                    }
+                    result = true;
+                }
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return result;
     }
 }
 

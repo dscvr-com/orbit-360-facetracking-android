@@ -15,8 +15,12 @@
             android:layout_width="41dp"
             android:layout_height="match_parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@color/manual_grey_transparent"
-            tools:layout_editor_absoluteX="0dp" />
+            tools:layout_editor_absoluteX="0dp"
+            app:layout_constraintVertical_bias="0.0"/>
 
         <ImageView
             android:id="@+id/toolbar2"
@@ -107,21 +111,6 @@
             android:layout_marginEnd="8dp"
             app:layout_constraintHorizontal_bias="0.528" />
 
-        <ImageButton
-            android:id="@+id/cameraMode"
-            android:scaleType="fitXY"
-android:background="?android:attr/selectableItemBackground"
-            android:layout_width="46dp"
-            android:layout_height="44dp"
-            app:srcCompat="@drawable/camera_mode"
-            android:layout_marginRight="8dp"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginLeft="8dp"
-            app:layout_constraintLeft_toLeftOf="@+id/toolbar2"
-            app:layout_constraintBottom_toBottomOf="@+id/toolbar2"
-            android:layout_marginBottom="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
 
         <TextView
             android:id="@+id/counter"
@@ -164,6 +153,65 @@ android:background="?android:attr/selectableItemBackground"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintHorizontal_bias="0.727" />
+
+
+        <TextView
+            android:id="@+id/textMiddel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:rotation="-90"
+            android:text="@string/Photo"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:layout_marginRight="8dp"
+            app:layout_constraintRight_toRightOf="@+id/recordingButton"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintHorizontal_bias="0.791"
+            app:layout_constraintLeft_toRightOf="@+id/counter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="186dp" />
+
+        <TextView
+            android:id="@+id/textRight"
+            android:layout_width="35dp"
+            android:layout_height="12dp"
+            android:layout_marginBottom="36dp"
+            android:rotation="-90"
+            android:text="@string/Photo"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@+id/textMiddel"
+            app:layout_constraintHorizontal_bias="0.716"
+            app:layout_constraintLeft_toRightOf="@+id/counter"
+            app:layout_constraintRight_toRightOf="@+id/toolbar2"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <TextView
+            android:id="@+id/textLeft"
+            android:rotation="-90"
+            android:layout_width="32dp"
+            android:layout_height="12dp"
+            android:text="@string/Video"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/textMiddel"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.158"
+            android:layout_marginRight="8dp"
+            app:layout_constraintRight_toRightOf="@+id/toolbar2"
+            app:layout_constraintLeft_toRightOf="@+id/counter"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintHorizontal_bias="0.737" />
 
     </android.support.constraint.ConstraintLayout>
 
