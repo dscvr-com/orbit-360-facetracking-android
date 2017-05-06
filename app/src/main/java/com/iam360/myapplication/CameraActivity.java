@@ -6,11 +6,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
@@ -22,16 +22,14 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
-    private boolean isFilmingMode = true;
-
     //FIXME, put this to a initial activity
     static {
         System.loadLibrary("opencv_java3");
     }
 
     private RecorderPreviewView recordPreview;
-    private boolean isFilming = false;
     private RecorderOverlayFragment overlayFragment;
+    private boolean reactForTouchEvents = false;
 
     @Override
     public void onResume() {
@@ -117,40 +115,59 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onSettingsClicked() {
-
+        //TODO: settingsPage
     }
 
     @Override
-    public void onTrackingPointsClicked() {
-
+    public void onTrackingPointsClicked(boolean b) {
+        if(b){
+            reactForTouchEvents = true;
+        }else{
+            reactForTouchEvents = false;
+        }
     }
 
     @Override
-    public void onTrackingClicked() {
-
+    public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
+        if (reactForTouchEvents) {
+            ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX(), event.getY());
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
-    public void onCameraModeClicked() {
-
+    public void onTrackingClicked(boolean isTrackingNowOn) {
+        if (isTrackingNowOn) {
+            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().startTracking();
+        } else {
+            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+        }
     }
 
     @Override
-    public void onCameraClicked() {
-
+    public void onCameraModeClicked(boolean isFilmingMode) {
+        //FIXME is this interessing for us?
     }
 
     @Override
-    public void onRecordingClicked() {
-        if (isFilmingMode) {
-            if (isFilming) {
+    public void onCameraClicked(boolean isFrontCamera) {
+        //ChangeCamera ....
+    }
+
+    @Override
+    public void onRecordingClicked(boolean shouldRecord, boolean startRecord) {
+        if (shouldRecord) {
+            if (!startRecord) {
                 Log.i(TAG, "stop video");
                 recordPreview.stopVideo();
-                isFilming = false;
+                overlayFragment.stopTimer();
             } else {
                 Log.i(TAG, "start video");
                 recordPreview.startVideo();
-                isFilming = true;
+                overlayFragment.startTimer();
             }
         } else {
             recordPreview.takePicture();

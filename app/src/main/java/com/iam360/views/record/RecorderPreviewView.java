@@ -178,7 +178,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             closePreviewSession();
             videoRecorder.stopRecordingVideo();
             videoRecorder = null;
-            ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().moveBack();
+            //FIXME((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().moveBack();
             startPreview();
         }
     }
@@ -502,37 +502,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         };
         int rotationOfWindow = activity.getWindowManager().getDefaultDisplay().getRotation();
         int rotation = MediaRecorderWrapper.getOrientation(sensorOrientation, rotationOfWindow);
-        TimerTask currentTask = new TimerTask() {
-            @Override
-            public void run() {
-                dataListener.getFaceDetection().addFaceDetectionResultListenerForNonPerm((rects, width, height) -> {
-                    if (rects.size() >= 1) {
-                        imageWrapper.takePicture(cameraDevice, surface.getSurface(), rotation, captureListener, backgroundHandler);
-                    }
-                });
-            }
-        };
-        timer.schedule(currentTask, DELAY_FOR_IMAGE);
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                currentTask.cancel();
-            }
-        }, DELAY_FOR_IMAGE * 2);
-        showCountDown(DELAY_FOR_IMAGE);
-    }
-
-    private void showCountDown(int millis) {
-        new CountDownTimer(millis, 1000) {
-
-            public void onTick(long millisUntilFinished) {
-                Toast.makeText(getContext(), ((int) (millisUntilFinished / 1000)) + "", Toast.LENGTH_SHORT).show();
-            }
-
-            public void onFinish() {
-                Toast.makeText(getContext(), "0", Toast.LENGTH_SHORT).show();
-            }
-        }.start();
+        imageWrapper.takePicture(cameraDevice, surface.getSurface(), rotation, captureListener, backgroundHandler);
     }
 
 

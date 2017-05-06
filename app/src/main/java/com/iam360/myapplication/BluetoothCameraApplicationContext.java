@@ -29,7 +29,7 @@ public class BluetoothCameraApplicationContext extends Application {
         connector.getBluetoothService().setFocalLengthInPx(focalLengthInPx);
     }
 
-    public boolean setBluetoothService(BluetoothGatt gatt) {
+    public boolean setBluetoothService(BluetoothGatt gatt) throws BluetoothEngineControlService.NoBluetoothConnectionException {
         return connector != null && connector.getBluetoothService().setBluetoothGatt(gatt);
     }
 

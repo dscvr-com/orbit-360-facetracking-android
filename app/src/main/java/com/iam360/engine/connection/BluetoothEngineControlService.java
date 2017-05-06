@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.util.Log;
+
 import com.iam360.engine.control.EngineCommand;
 import com.iam360.engine.control.EngineCommandPoint;
 
@@ -40,11 +41,13 @@ public class BluetoothEngineControlService {
     private boolean firstRun = true;
     private EngineCommandPoint movedSteps = new EngineCommandPoint(0, 0);
     private boolean stopped = false;
+    private static final EngineCommandPoint MAX_VALUE = new EngineCommandPoint(1000f, 1000f);
 
-    public BluetoothEngineControlService(boolean directStart){
-        stopped = directStart;
+    public BluetoothEngineControlService(boolean directStart) {
+        stopped = !directStart;
     }
-    public boolean setBluetoothGatt(BluetoothGatt gatt) {
+
+    public boolean setBluetoothGatt(BluetoothGatt gatt) throws NoBluetoothConnectionException {
         if (gatt == null && this.hasBluetoothService()) {
             stop();
         }
@@ -78,7 +81,8 @@ public class BluetoothEngineControlService {
         return bluetoothService != null;
     }
 
-    private void sendCommand(EngineCommand command) {
+    private void sendCommand(EngineCommand command) throws NoBluetoothConnectionException{
+        if(bluetoothService == null){throw new NoBluetoothConnectionException();}
         BluetoothGattCharacteristic characteristic = bluetoothService.getCharacteristic(CHARACTERISTIC_UUID);
         assert (((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) |
                 (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0);
@@ -86,24 +90,27 @@ public class BluetoothEngineControlService {
         gatt.writeCharacteristic(characteristic);
 
     }
-
-
-    public void moveXY(EngineCommandPoint steps, EngineCommandPoint speed) {
+    public void moveXY(EngineCommandPoint steps, EngineCommandPoint speed) throws NoBluetoothConnectionException{
         EngineCommand command = EngineCommand.moveXY(steps, speed);
         movedSteps.add(steps);
         sendCommand(command);
 
     }
 
-    public void stopTracking(){
+    public void stopTracking() {
         stopped = true;
     }
-    public void startTracking(){
+
+    public void startTracking() {
         stopped = false;
     }
 
-    public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) {
-        if(stopped){
+    public boolean isTracking() {
+        return !stopped;
+    }
+
+    public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) throws NoBluetoothConnectionException {
+        if (stopped) {
             return;
         }
         if (firstRun) {
@@ -121,7 +128,7 @@ public class BluetoothEngineControlService {
             lastTimeInMillis = currentTime;
             EngineCommandPoint speed = steps.div(deltaTime).abs();
             speed = speed.mul(SPEED_FACTOR);
-            speed = speed.min(new EngineCommandPoint(1000f, 1000f));
+            speed = speed.min(MAX_VALUE);
             speed = speed.max(new EngineCommandPoint(250f, 250f));
 
 
@@ -142,7 +149,7 @@ public class BluetoothEngineControlService {
         return steps.mul(P).mul(0.5f).mul(-1);
     }
 
-    private void stop() {
+    private void stop() throws NoBluetoothConnectionException {
         sendCommand(EngineCommand.stop());
     }
 
@@ -163,12 +170,20 @@ public class BluetoothEngineControlService {
     }
 
 
-    public void moveBack() {
+    public void moveBack() throws NoBluetoothConnectionException {
         moveXY(movedSteps.mul(-1), MOVE_BACK_SPEED);
         resetSteps();
     }
 
     public void resetSteps() {
         movedSteps = new EngineCommandPoint(0, 0);
+    }
+
+    public void setTrackingPoint(float x, float y) {
+        //TODO!!!!
+    }
+
+    public class NoBluetoothConnectionException extends Exception{
+
     }
 }

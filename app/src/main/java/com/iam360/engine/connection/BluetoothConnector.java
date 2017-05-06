@@ -33,7 +33,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     private final BluetoothConnectionCallback.ButtonValueListener lowerButtonListener;
     private List<BluetoothDevice> nextDevice = new ArrayList<>();
     private boolean currentlyConnecting = false;
-    private BluetoothEngineControlService controlService = new BluetoothEngineControlService(true);//FIXME, not directly start perhaps
+    private BluetoothEngineControlService controlService = new BluetoothEngineControlService(true);
     private BluetoothLeScanCallback scanCallback;
 
 
@@ -108,7 +108,11 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void afterConnecting(BluetoothGatt gatt){
-        controlService.setBluetoothGatt(gatt);
+        try {
+            controlService.setBluetoothGatt(gatt);
+        } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+            context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+        }
         listener.endLoading(gatt);
     }
 

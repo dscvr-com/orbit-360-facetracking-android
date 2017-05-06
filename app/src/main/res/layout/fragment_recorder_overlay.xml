@@ -12,7 +12,7 @@
 
         <ImageView
             android:id="@+id/toolbar1"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="41dp"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -24,10 +24,25 @@
             app:layout_constraintHorizontal_bias="0.0" />
 
         <ImageView
-            android:id="@+id/toolbar2"
-            android:layout_width="0dp"
-            android:layout_height="92dp"
+            android:id="@+id/trackingGrid"
+            android:layout_width="330dp"
+            android:layout_height="502dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:scaleType="fitXY"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@+id/toolbar2"
+            app:layout_constraintTop_toBottomOf="@+id/time"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/track_points_grid"
+            tools:layout_editor_absoluteX="451dp" />
 
+        <ImageView
+            android:id="@+id/toolbar2"
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
@@ -48,18 +63,17 @@
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:text="00:00:00"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="24sp"
             app:layout_constraintBottom_toBottomOf="@+id/toolbar1"
             app:layout_constraintLeft_toLeftOf="@+id/toolbar1"
-            app:layout_constraintRight_toRightOf="@+id/toolbar1"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintRight_toRightOf="@+id/toolbar1" />
 
         <ImageButton
             android:id="@+id/settings"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_width="26dp"
             android:layout_height="26dp"
             android:layout_marginEnd="8dp"
@@ -67,7 +81,7 @@
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             android:tint="@color/white"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="@+id/toolbar1"
@@ -77,6 +91,7 @@
 
         <ImageButton
             android:id="@+id/tracking"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginEnd="8dp"
@@ -84,7 +99,7 @@
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="4dp"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintLeft_toRightOf="@+id/time"
             app:layout_constraintRight_toRightOf="@+id/toolbar1"
@@ -93,23 +108,25 @@
 
         <ImageButton
             android:id="@+id/trackingPoints"
-            android:layout_width="30dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="38dp"
             android:layout_height="30dp"
             android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="4dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintHorizontal_bias="0.928"
+            android:scaleType="fitXY"
+            app:layout_constraintHorizontal_bias="0.925"
             app:layout_constraintLeft_toRightOf="@+id/time"
             app:layout_constraintRight_toLeftOf="@+id/tracking"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/points_off" />
+            app:srcCompat="@drawable/points_off"
+            tools:layout_editor_absoluteX="341dp" />
 
         <ImageButton
             android:id="@+id/recordingButton"
-            android:layout_width="64dp"
+            android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
@@ -117,6 +134,8 @@
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="@+id/toolbar2"
             app:layout_constraintLeft_toLeftOf="@+id/toolbar2"
             app:layout_constraintRight_toRightOf="parent"
@@ -126,12 +145,13 @@
 
         <ImageButton
             android:id="@+id/changeCamera"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_width="47dp"
             android:layout_height="37dp"
             android:layout_marginBottom="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:srcCompat="@drawable/cameraicon" />
@@ -147,23 +167,25 @@
             app:layout_constraintHorizontal_bias="0.091"
             app:layout_constraintLeft_toLeftOf="@+id/toolbar2"
             app:layout_constraintRight_toLeftOf="@+id/recordingButton"
-            app:srcCompat="@drawable/camera_mode"
+            app:srcCompat="@drawable/video_modus"
             android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            android:scaleType="fitXY"
+            android:background="?android:attr/selectableItemBackground"/>
 
         <TextView
             android:id="@+id/counter"
-            android:visibility="invisible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="3"
-            android:textAlignment="textStart"
+            android:textAlignment="center"
             android:textSize="150sp"
             android:textStyle="bold"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/toolbar2"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar1"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar1"
             tools:layout_editor_absoluteX="173dp" />
 
     </android.support.constraint.ConstraintLayout>
