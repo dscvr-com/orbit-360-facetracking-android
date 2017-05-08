@@ -19,7 +19,9 @@
         android:layout_height="match_parent">
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/closeButton"
+            android:background="?android:attr/selectableItemBackground"
+            android:scaleType="fitXY"
             android:layout_width="40dp"
             android:layout_height="40dp"
             app:srcCompat="@drawable/plus_circle"

@@ -23,7 +23,7 @@ import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 import com.iam360.views.record.RotationFragment;
 
-public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener,RotationFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
+public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener, RotationFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
@@ -69,7 +69,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         } else {
             requestCameraPermission();
         }
-
+        if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
+            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().removeTrackingPoint();
+        }
         gestureDetector = new GestureDetector(this, (GestureDetector.OnGestureListener) this);
 
     }

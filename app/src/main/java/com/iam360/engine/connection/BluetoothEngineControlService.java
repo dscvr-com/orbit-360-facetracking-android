@@ -42,7 +42,7 @@ public class BluetoothEngineControlService {
     private EngineCommandPoint movedSteps = new EngineCommandPoint(0, 0);
     private boolean stopped = false;
     private static final EngineCommandPoint MAX_VALUE = new EngineCommandPoint(1000f, 1000f);
-    private EngineCommandPoint trackingPoint;
+    private EngineCommandPoint trackingPoint = null;
     public BluetoothEngineControlService(boolean directStart) {
         stopped = !directStart;
     }
@@ -189,6 +189,10 @@ public class BluetoothEngineControlService {
 
     public void setTrackingPoint(float x, float y) {
         trackingPoint = new EngineCommandPoint(x,y);
+    }
+
+    public void removeTrackingPoint(){
+        trackingPoint = null;
     }
 
     public class NoBluetoothConnectionException extends Exception{
