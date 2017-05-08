@@ -83,14 +83,18 @@ public class RecorderOverlayFragment extends Fragment {
             left.setVisibility(View.VISIBLE);
             right.setVisibility(View.INVISIBLE);
             middle.setText(R.string.Photo);
-            time.setVisibility(View.INVISIBLE);
+            if (time != null) {
+                time.setVisibility(View.INVISIBLE);
+            }
         }
     }
 
     public void onSwipeRight(){
         if(!isFilmMode){
             isFilmMode = !isFilmMode;
-            time.setVisibility(View.VISIBLE);
+            if(time != null) {
+                time.setVisibility(View.VISIBLE);
+            }
             left.setVisibility(View.INVISIBLE);
             right.setVisibility(View.VISIBLE);
             middle.setText(R.string.Video);
@@ -105,6 +109,11 @@ public class RecorderOverlayFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         initButtons();
     }
 

@@ -21,8 +21,9 @@ import com.iam360.engine.connection.BluetoothEngineControlService;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
+import com.iam360.views.record.RotationFragment;
 
-public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
+public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener,RotationFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
@@ -39,6 +40,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private RecorderPreviewView recordPreview;
     private RecorderOverlayFragment overlayFragment;
     private boolean reactForTouchEvents = false;
+    private RotationFragment splashFrag;
 
     @Override
     public void onResume() {
@@ -163,7 +165,18 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onCameraClicked(boolean isFrontCamera) {
-        //ChangeCamera ....
+        splashFrag = new RotationFragment();
+        splashFrag.setArguments(getIntent().getExtras());
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.camera_fragment_container, splashFrag).commit();
+
+        try {
+            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+        } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+            sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+        }
+
     }
 
     @Override
@@ -231,6 +244,12 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             exception.printStackTrace();
         }
         return result;
+    }
+
+    @Override
+    public void onClosePressed() {
+        getSupportFragmentManager().beginTransaction()
+                .remove(splashFrag).commit();
     }
 }
 
