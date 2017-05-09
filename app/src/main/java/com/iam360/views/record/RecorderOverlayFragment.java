@@ -1,6 +1,7 @@
 package com.iam360.views.record;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -49,6 +50,7 @@ public class RecorderOverlayFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private TimerTask task;
+    private boolean orientationIsLandscape = false;
 
     public RecorderOverlayFragment() {
         // Required empty public constructor
@@ -72,32 +74,21 @@ public class RecorderOverlayFragment extends Fragment {
         };
         timer.schedule(task, 0, 1000);
     }
-    public void stopTimer(){
+
+    public void stopTimer() {
         time.setText("00:00:00");
         task.cancel();
     }
 
-    public void onSwipeLeft(){
-        if(isFilmMode){
-           isFilmMode = !isFilmMode;
-            left.setVisibility(View.VISIBLE);
-            right.setVisibility(View.INVISIBLE);
-            middle.setText(R.string.Photo);
-            if (time != null) {
-                time.setVisibility(View.INVISIBLE);
-            }
+    public void onSwipeLeft() {
+        if (getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            changeToCamera();
         }
     }
 
-    public void onSwipeRight(){
-        if(!isFilmMode){
-            isFilmMode = !isFilmMode;
-            if(time != null) {
-                time.setVisibility(View.VISIBLE);
-            }
-            left.setVisibility(View.INVISIBLE);
-            right.setVisibility(View.VISIBLE);
-            middle.setText(R.string.Video);
+    public void onSwipeRight() {
+        if (getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            changeToVideo();
         }
     }
 
@@ -146,23 +137,24 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void recordingClicked() {
-        if(!isFilmMode){
+        if (!isFilmMode) {
             counter.setVisibility(View.VISIBLE);
             timer.schedule(new TimerTask() {
                 int count = 3;
+
                 @Override
                 public void run() {
-                    count --;
-                    if(count == 0){
+                    count--;
+                    if (count == 0) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 counter.setVisibility(View.INVISIBLE);
                             }
                         });
-                        mListener.onRecordingClicked(isFilmMode,false);
+                        mListener.onRecordingClicked(isFilmMode, false);
                         this.cancel();
-                    }else{
+                    } else {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -172,12 +164,12 @@ public class RecorderOverlayFragment extends Fragment {
                     }
                 }
             }, 1000, 1000);
-        }else{
-            isRecording = isFilmMode? !isRecording : isRecording;
-            mListener.onRecordingClicked(isFilmMode,isRecording && isFilmMode);
-            if(isRecording && isFilmMode){
+        } else {
+            isRecording = isFilmMode != isRecording;
+            mListener.onRecordingClicked(isFilmMode, isRecording && isFilmMode);
+            if (isRecording && isFilmMode) {
                 recording.setImageResource(R.drawable.start);
-            }else{
+            } else {
                 recording.setImageResource(R.drawable.start_photo);
             }
         }
@@ -185,14 +177,13 @@ public class RecorderOverlayFragment extends Fragment {
 
     private void cameraClicked() {
         frontCamera = !frontCamera;
-        //TODO change some view elements
         mListener.onCameraClicked(frontCamera);
     }
 
     private void trackingPointsClicked() {
-        if(trackingPointsGrid.getVisibility() == View.VISIBLE){
+        if (trackingPointsGrid.getVisibility() == View.VISIBLE) {
             trackingPointsGrid.setVisibility(View.INVISIBLE);
-        }else{
+        } else {
             trackingPointsGrid.setVisibility(View.VISIBLE);
         }
         mListener.onTrackingPointsClicked(trackingPointsGrid.getVisibility() != View.VISIBLE);
@@ -228,6 +219,43 @@ public class RecorderOverlayFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public void onSwipeBottom() {
+        if (getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            changeToCamera();
+        }
+    }
+
+    private void changeToCamera() {
+        if (isFilmMode) {
+            isFilmMode = !isFilmMode;
+            left.setVisibility(View.VISIBLE);
+            right.setVisibility(View.INVISIBLE);
+            middle.setText(R.string.Photo);
+            if (time != null) {
+                time.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
+
+    public void onSwipeTop() {
+        if (getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            changeToVideo();
+        }
+    }
+
+    private void changeToVideo() {
+        if (!isFilmMode) {
+            isFilmMode = !isFilmMode;
+            if (time != null) {
+                time.setVisibility(View.VISIBLE);
+            }
+            left.setVisibility(View.INVISIBLE);
+            right.setVisibility(View.VISIBLE);
+            middle.setText(R.string.Video);
+        }
     }
 
     public interface OnFragmentInteractionListener {

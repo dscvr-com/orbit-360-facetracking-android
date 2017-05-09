@@ -40,6 +40,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private final static int EXIT_DECODER = 2;
     private static final int DELAY_FOR_IMAGE = 3000;
     private final Activity activity;
+    private final boolean isFrontCamera;
     private AutoFitTextureView textureView;
     private CameraDevice cameraDevice;
     private CameraCaptureSession previewSession;
@@ -132,12 +133,12 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
     };
 
-    public RecorderPreviewView(Activity ctx) {
+    public RecorderPreviewView(Activity ctx, boolean frontCamera) {
         super(ctx);
         this.activity = ctx;
         this.textureView = this;
+        this.isFrontCamera = frontCamera;
         this.wannabeVideoSize = new Size(1280, 960); //Size we want for stitcher input
-        setWillNotDraw(false);
     }
 
     private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height) {
@@ -179,7 +180,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
             closePreviewSession();
             videoRecorder.stopRecordingVideo();
             videoRecorder = null;
-            //FIXME((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().moveBack();
             startPreview();
         }
     }
@@ -327,7 +327,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    private void closeCamera() {
+    public void closeCamera() {
         try {
             cameraOpenCloseLock.acquire();
             closePreviewSession();
@@ -386,7 +386,10 @@ public class RecorderPreviewView extends AutoFitTextureView {
             for (String cameraId : manager.getCameraIdList()) {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
                 if (characteristics != null) {
-                    if (characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
+                    if (isFrontCamera && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
+                        continue;
+                    }
+                    if (!isFrontCamera && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_BACK) {
                         continue;
                     }
                     StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);

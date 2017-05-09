@@ -1,6 +1,8 @@
 package com.iam360.myapplication;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -10,6 +12,7 @@ import android.os.Bundle;
 
 public class StartActivity extends AppCompatActivity {
 
+    public static final String KEY_MANUAL = "manual";
     static {
         System.loadLibrary("opencv_java3");
     }
@@ -18,7 +21,13 @@ public class StartActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
-        startActivity(new Intent(this, ManualActivity.class));
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        if(sharedPref.contains(KEY_MANUAL)){
+            startActivity(new Intent(this, CameraActivity.class));
+        }else{
+            sharedPref.edit().putBoolean(KEY_MANUAL, true).commit();
+            startActivity(new Intent(this, ManualActivity.class));
+        }
     }
 
     @Override

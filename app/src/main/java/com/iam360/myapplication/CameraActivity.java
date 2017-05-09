@@ -2,8 +2,11 @@ package com.iam360.myapplication;
 
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -31,6 +34,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private static final int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 100;
     private GestureDetector gestureDetector;
+    private static final String KEY_CAMERA_IS_FRONT = "isFrontCamera";
 
     //FIXME, put this to a initial activity
     static {
@@ -72,7 +76,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().removeTrackingPoint();
         }
-        gestureDetector = new GestureDetector(this, (GestureDetector.OnGestureListener) this);
+        gestureDetector = new GestureDetector(this, this);
 
     }
 
@@ -112,18 +116,30 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     private void createCameraView() {
 
-        recordPreview = new RecorderPreviewView(this);
+
         overlayFragment = new RecorderOverlayFragment();
         overlayFragment.setArguments(getIntent().getExtras());
-
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.camera_fragment_container, overlayFragment).commit();
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        createRecorderPreview(sharedPref.getBoolean(KEY_CAMERA_IS_FRONT, true));
+    }
+
+    private void createRecorderPreview(boolean isFrontCamera) {
+        RecorderPreviewView oldView = recordPreview;
+        recordPreview = new RecorderPreviewView(this, isFrontCamera);
         recordPreview.setPreviewListener(new FaceTrackingListener(this));
 
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
+
+        if (oldView != null) {
+            oldView.closeCamera();
+            layout.removeView(oldView);
+            oldView.onPause();
+        }
         layout.addView(recordPreview, params);
         findViewById(R.id.camera_fragment_container).bringToFront();
     }
@@ -135,11 +151,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onTrackingPointsClicked(boolean b) {
-        if (b) {
-            reactForTouchEvents = true;
-        } else {
-            reactForTouchEvents = false;
-        }
+        reactForTouchEvents = b;
     }
 
     @Override
@@ -178,7 +190,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
             sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
-
+        getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).commit();
+        createRecorderPreview(isFrontCamera);
     }
 
     @Override
@@ -241,6 +256,13 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                     }
                     result = true;
                 }
+            } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffY > 0) {
+                    overlayFragment.onSwipeBottom();
+                } else {
+                    overlayFragment.onSwipeTop();
+                }
+                result = true;
             }
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -248,10 +270,12 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         return result;
     }
 
+
     @Override
     public void onClosePressed() {
         getSupportFragmentManager().beginTransaction()
                 .remove(splashFrag).commit();
+        getSupportFragmentManager().beginTransaction().show(overlayFragment).commit();
     }
 }
 
