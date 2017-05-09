@@ -192,7 +192,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         }
         getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).commit();
+        sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
         createRecorderPreview(isFrontCamera);
     }
 

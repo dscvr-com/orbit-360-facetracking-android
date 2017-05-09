@@ -25,7 +25,7 @@ public class StartActivity extends AppCompatActivity {
         if(sharedPref.contains(KEY_MANUAL)){
             startActivity(new Intent(this, CameraActivity.class));
         }else{
-            sharedPref.edit().putBoolean(KEY_MANUAL, true).commit();
+            sharedPref.edit().putBoolean(KEY_MANUAL, true).apply();
             startActivity(new Intent(this, ManualActivity.class));
         }
     }

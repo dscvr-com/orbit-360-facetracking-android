@@ -30,6 +30,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * View for open camera, show it an grab image data
  * Created by emi on 16/06/16.
  */
 public class RecorderPreviewView extends AutoFitTextureView {
@@ -64,7 +65,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
 
         @Override
-        public void onOpened(CameraDevice cameraDevice) {
+        public void onOpened(@NonNull CameraDevice cameraDevice) {
             RecorderPreviewView.this.cameraDevice = cameraDevice;
             startPreview();
             cameraOpenCloseLock.release();
@@ -88,7 +89,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
 
         @Override
-        public void onDisconnected(CameraDevice cameraDevice) {
+        public void onDisconnected(@NonNull  CameraDevice cameraDevice) {
             cameraOpenCloseLock.release();
             cameraDevice.close();
             RecorderPreviewView.this.cameraDevice = null;
@@ -99,7 +100,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
 
         @Override
-        public void onError(CameraDevice cameraDevice, int error) {
+        public void onError(@NonNull CameraDevice cameraDevice, int error) {
             cameraOpenCloseLock.release();
             cameraDevice.close();
             RecorderPreviewView.this.cameraDevice = null;
@@ -389,7 +390,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                     if (isFrontCamera && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
                         continue;
                     }
-                    if (!isFrontCamera && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_BACK) {
+                    if (!isFrontCamera &&  characteristics.get(CameraCharacteristics.LENS_FACING) != null && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_BACK) {
                         continue;
                     }
                     StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
