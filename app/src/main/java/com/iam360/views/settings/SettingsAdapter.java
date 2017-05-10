@@ -10,16 +10,10 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.iam360.myapplication.R;
-import com.iam360.views.settings.SettingsFragment.OnListFragmentInteractionListener;
-import com.iam360.views.settings.dummy.DummyContent.DummyItem;
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
- */
 public class SettingsAdapter extends BaseAdapter {
 
     private final View.OnClickListener[] listeners;
