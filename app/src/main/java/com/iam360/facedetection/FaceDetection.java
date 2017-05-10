@@ -2,7 +2,7 @@ package com.iam360.facedetection;
 
 import android.content.Context;
 import android.util.Log;
-import com.iam360.myapplication.R;
+import com.iam360.facetracking.R;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;

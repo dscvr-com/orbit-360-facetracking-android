@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.iam360.myapplication.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
 
 /**
  * Created by Charlotte on 17.03.2017.

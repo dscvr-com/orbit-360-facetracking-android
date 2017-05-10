@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/splashscreen"
-    tools:context="com.iam360.myapplication.StartActivity">
+    tools:context="com.iam360.facetracking.StartActivity">
 
 </android.support.constraint.ConstraintLayout>
 

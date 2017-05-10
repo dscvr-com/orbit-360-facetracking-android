@@ -7,7 +7,7 @@ import android.support.annotation.NonNull;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothEngineControlService;
-import com.iam360.myapplication.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
 
 import java.util.List;
 import java.util.concurrent.Executor;

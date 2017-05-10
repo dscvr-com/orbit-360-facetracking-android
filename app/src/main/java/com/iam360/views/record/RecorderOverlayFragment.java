@@ -12,8 +12,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.iam360.myapplication.BluetoothCameraApplicationContext;
-import com.iam360.myapplication.R;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.R;
 
 import java.util.Timer;
 import java.util.TimerTask;

@@ -1,4 +1,4 @@
-package com.iam360.myapplication;
+package com.iam360.facetracking;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;

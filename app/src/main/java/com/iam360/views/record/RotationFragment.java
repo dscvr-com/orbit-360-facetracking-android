@@ -2,7 +2,6 @@ package com.iam360.views.record;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -10,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.iam360.myapplication.R;
+import com.iam360.facetracking.R;
 
 import java.util.Timer;
 import java.util.TimerTask;

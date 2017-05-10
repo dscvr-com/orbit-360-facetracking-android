@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.iam360.myapplication.BluetoothActivity;
-import com.iam360.myapplication.CameraActivity;
+import com.iam360.facetracking.BluetoothActivity;
+import com.iam360.facetracking.CameraActivity;
 
 /**
  * class to handle Bluetooth Broadcasts

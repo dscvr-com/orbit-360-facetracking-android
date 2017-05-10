@@ -1,4 +1,4 @@
-package com.iam360.myapplication;
+package com.iam360.facetracking;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.iam360.myapplication", appContext.getPackageName());
+        assertEquals("com.iam360.facetracking", appContext.getPackageName());
     }
 }

@@ -1,4 +1,4 @@
-package com.iam360.myapplication;
+package com.iam360.facetracking;
 
 import android.app.Application;
 import android.bluetooth.BluetoothGatt;

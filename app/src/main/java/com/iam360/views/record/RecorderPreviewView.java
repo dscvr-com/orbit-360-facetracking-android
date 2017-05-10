@@ -20,7 +20,7 @@ import android.widget.Toast;
 
 import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
-import com.iam360.myapplication.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
 import com.iam360.videorecording.ImageWrapper;
 import com.iam360.videorecording.MediaRecorderWrapper;
 

@@ -21,8 +21,8 @@ import android.widget.ImageView;
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothConnector;
 import com.iam360.engine.control.RemoteButtonListener;
-import com.iam360.myapplication.BluetoothCameraApplicationContext;
-import com.iam360.myapplication.R;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.R;
 
 import java.util.Timer;
 import java.util.TimerTask;

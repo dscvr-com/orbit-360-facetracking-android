@@ -9,9 +9,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.iam360.myapplication.CameraActivity;
-import com.iam360.myapplication.ManualActivity;
-import com.iam360.myapplication.R;
+import com.iam360.facetracking.CameraActivity;
+import com.iam360.facetracking.ManualActivity;
+import com.iam360.facetracking.R;
 
 /**
  * A fragment representing a list of Items.
