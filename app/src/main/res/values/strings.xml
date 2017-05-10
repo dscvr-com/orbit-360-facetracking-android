@@ -1,13 +1,7 @@
 <resources>
-    <string name="app_name">FaceTracking</string>
-    <string name="bond">not paired</string>
-    <string name="bonded">was paired</string>
-    <string name="bonding">paring</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="manual_Page_one_p1">blalabla 1.</string>
-    <string name="manual_Page_three_p1">blalabla 3.</string>
-    <string name="manual_Page_two_p1">blalabla 2.</string>
     <string name="Heading">ORBIT 360</string>
     <string name="Video">VIDEO</string>
     <string name="Photo">PHOTO</string>
+    <string name="user_manual">USER GUIDE</string>
+    <string name="Settings">SETTINGS</string>
 </resources>
