@@ -1,6 +1,7 @@
 package com.iam360.views.settings;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -8,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import com.iam360.myapplication.CameraActivity;
+import com.iam360.myapplication.ManualActivity;
 import com.iam360.myapplication.R;
 
 /**
@@ -52,16 +55,17 @@ public class SettingsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_settings_list, container, false);
         ListView settingsList = (ListView) view.findViewById(R.id.settings_list);
         settingsList.setAdapter(new SettingsAdapter(getContext(), new String[]{getResources().getString(R.string.user_manual)},new View.OnClickListener[]{v -> openUserGuide()}));
-        view.findViewById(R.id.manual_close).setOnClickListener(v -> openManual());
+        view.findViewById(R.id.manual_close).setOnClickListener(v -> goBackToCameraView());
         return view;
     }
 
-    private void openManual() {
+    private void goBackToCameraView() {
+        startActivity(new Intent(getContext(), CameraActivity.class));
 
     }
 
     private void openUserGuide() {
-
+        startActivity(new Intent(getContext(), ManualActivity.class));
     }
 
 
