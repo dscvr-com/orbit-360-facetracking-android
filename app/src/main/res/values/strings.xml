@@ -4,4 +4,8 @@
     <string name="Photo">PHOTO</string>
     <string name="user_manual">USER GUIDE</string>
     <string name="Settings">SETTINGS</string>
+
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

@@ -36,10 +36,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private GestureDetector gestureDetector;
     private static final String KEY_CAMERA_IS_FRONT = "isFrontCamera";
 
-    //FIXME, put this to a initial activity
-    static {
-        System.loadLibrary("opencv_java3");
-    }
 
     private RecorderPreviewView recordPreview;
     private RecorderOverlayFragment overlayFragment;
@@ -141,12 +137,14 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             oldView.onPause();
         }
         layout.addView(recordPreview, params);
+        recordPreview.onResume();
         findViewById(R.id.camera_fragment_container).bringToFront();
     }
 
     @Override
     public void onSettingsClicked() {
-        //TODO: settingsPage
+        startActivity(new Intent(this, SettingsActivity.class));
+
     }
 
     @Override
