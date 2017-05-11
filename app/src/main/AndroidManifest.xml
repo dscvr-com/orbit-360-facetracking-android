@@ -68,8 +68,9 @@
 
         <activity
             android:name="com.iam360.facetracking.SettingsActivity"
+            android:theme="@style/FullscreenTheme"
             android:screenOrientation="portrait"
-            android:theme="@style/FullscreenTheme"></activity>
+            ></activity>
     </application>
 
 </manifest>

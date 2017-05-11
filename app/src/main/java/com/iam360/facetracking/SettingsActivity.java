@@ -5,10 +5,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.iam360.views.settings.SettingsFragment;
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- */
 public class SettingsActivity extends AppCompatActivity {
 
 
@@ -30,12 +26,6 @@ public class SettingsActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fragment_container_settings, settingsFrag).commit();
         }
-
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
 
     }
 }

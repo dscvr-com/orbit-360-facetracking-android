@@ -5,13 +5,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.*;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
@@ -23,6 +27,7 @@ import android.widget.Toast;
 import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.facetracking.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.R;
 import com.iam360.videorecording.ImageWrapper;
 import com.iam360.videorecording.MediaRecorderWrapper;
 
@@ -217,26 +222,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
         });
     }
 
-/*
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
 
-        //wannabeVideoSize - >previewSize
-        float scaleX = (float) this.getWidth() / (float) wannabeVideoSize.getWidth();
-        float scaleY = (float) this.getHeight() / (float) wannabeVideoSize.getHeight();
-
-
-        for (Rect rect : rects) {
-            Paint paint = new Paint();
-            paint.setColor(Color.BLACK);
-            paint.setStrokeWidth(3);
-            canvas.drawRect(rect.left * scaleX, rect.top * scaleY, rect.right * scaleX, rect.bottom * scaleY, paint);
-            paint.setStrokeWidth(0);
-        }
-
-    }
-    */
 
     private void startBackgroundThread() {
         backgroundThread = new HandlerThread("CameraBackground");

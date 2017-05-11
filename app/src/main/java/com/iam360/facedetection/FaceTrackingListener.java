@@ -12,8 +12,8 @@ public class FaceTrackingListener implements RecorderPreviewListener {
     public static final String TAG = "FaceTrackingListener";
     private SingleThreadWithoutQueueExecutor executor;
 
-    public FaceTrackingListener(Context context){
-        executor = new SingleThreadWithoutQueueExecutor(context);
+    public FaceTrackingListener(Context context, FaceDetection.FaceDetectionResultListener[] otherListeners){
+        executor = new SingleThreadWithoutQueueExecutor(context, otherListeners);
     }
 
     public FaceDetection getFaceDetection() {

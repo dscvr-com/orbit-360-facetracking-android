@@ -20,7 +20,7 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
     private Thread current;
     private FaceDetection faceDetection;
 
-    public SingleThreadWithoutQueueExecutor(Context context) {
+    public SingleThreadWithoutQueueExecutor(Context context,  FaceDetection.FaceDetectionResultListener[] otherListeners) {
         motorControlService = ((BluetoothCameraApplicationContext
                 ) context.getApplicationContext()).getBluetoothService();
 
@@ -35,6 +35,9 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
                 }
             }
         });
+        for (FaceDetection.FaceDetectionResultListener otherListener : otherListeners) {
+            faceDetection.addFaceDetectionResultListener(otherListener);
+        }
 
     }
 

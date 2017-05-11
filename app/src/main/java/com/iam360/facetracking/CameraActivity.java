@@ -6,12 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -19,10 +21,14 @@ import android.widget.RelativeLayout;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothEngineControlService;
+import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
+import com.iam360.views.record.OverlayCanvasView;
 import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 import com.iam360.views.record.RotationFragment;
+
+import java.util.List;
 
 public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener, RotationFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
 
@@ -39,6 +45,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private RecorderOverlayFragment overlayFragment;
     private boolean reactForTouchEvents = false;
     private RotationFragment splashFrag;
+    private OverlayCanvasView overlayCanvas;
 
     @Override
     public void onResume() {
@@ -116,13 +123,25 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.camera_fragment_container, overlayFragment).commit();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        createDrawView();
         createRecorderPreview(sharedPref.getBoolean(KEY_CAMERA_IS_FRONT, true));
+
+    }
+
+    private void createDrawView() {
+        overlayCanvas = new OverlayCanvasView(this,new Size(1280, 960));
+        ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        layout.addView(overlayCanvas, params);
+
     }
 
     private void createRecorderPreview(boolean isFrontCamera) {
         RecorderPreviewView oldView = recordPreview;
         recordPreview = new RecorderPreviewView(this, isFrontCamera);
-        recordPreview.setPreviewListener(new FaceTrackingListener(this));
+        recordPreview.setPreviewListener(new FaceTrackingListener(this, new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects,width,height)}));
 
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
@@ -136,7 +155,16 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         }
         layout.addView(recordPreview, params);
         recordPreview.onResume();
+
+        overlayCanvas.bringToFront();
         findViewById(R.id.camera_fragment_container).bringToFront();
+    }
+
+    private void drawRects(List<Rect> rects, int width, int height) {
+        if(overlayCanvas!= null){
+            overlayCanvas.setRects(rects);
+        }
+
     }
 
     @Override
