@@ -6,11 +6,12 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.iam360.facetracking.BluetoothActivity;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
 import com.iam360.facetracking.CameraActivity;
 
 /**
  * class to handle Bluetooth Broadcasts
- *
+ * <p>
  * Created by Charlotte on 15.11.2016.
  */
 public class BluetoothConnectionReciever extends BroadcastReceiver {
@@ -31,10 +32,12 @@ public class BluetoothConnectionReciever extends BroadcastReceiver {
                 Log.i(TAG, "connected to device");
                 break;
             case DISCONNECTED:
-                intent = new Intent(context, BluetoothActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-                Log.i(TAG, "lost connection to device");
+                if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo()) {
+                    intent = new Intent(context, BluetoothActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                    Log.i(TAG, "lost connection to device");
+                }
                 break;
 
         }

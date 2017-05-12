@@ -82,7 +82,7 @@ public class BluetoothEngineControlService {
     }
 
     private void sendCommand(EngineCommand command) throws NoBluetoothConnectionException{
-        if(bluetoothService == null){throw new NoBluetoothConnectionException();}
+        if(bluetoothService == null ){throw new NoBluetoothConnectionException();}
         BluetoothGattCharacteristic characteristic = bluetoothService.getCharacteristic(CHARACTERISTIC_UUID);
         assert (((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) |
                 (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) > 0);

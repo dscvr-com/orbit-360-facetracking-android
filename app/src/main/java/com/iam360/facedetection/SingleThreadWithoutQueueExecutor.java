@@ -20,7 +20,7 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
     private Thread current;
     private FaceDetection faceDetection;
 
-    public SingleThreadWithoutQueueExecutor(Context context,  FaceDetection.FaceDetectionResultListener[] otherListeners) {
+    public SingleThreadWithoutQueueExecutor(Context context, FaceDetection.FaceDetectionResultListener[] otherListeners) {
         motorControlService = ((BluetoothCameraApplicationContext
                 ) context.getApplicationContext()).getBluetoothService();
 
@@ -31,7 +31,8 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
                 try {
                     motorControlService.reactOnFaces(rects, width, height);
                 } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-                    context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+                    if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo())
+                        context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
                 }
             }
         });

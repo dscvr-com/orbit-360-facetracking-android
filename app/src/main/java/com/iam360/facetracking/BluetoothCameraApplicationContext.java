@@ -18,13 +18,14 @@ public class BluetoothCameraApplicationContext extends Application {
     private static final String TAG = "ApplicationContext";
     private BluetoothConnector connector;
     private float focalLengthInPx;
+    private boolean demoMode = false;
 
-    public BluetoothCameraApplicationContext(){
+    public BluetoothCameraApplicationContext() {
         super();
     }
 
 
-    public void setBluetoothConnector(BluetoothConnector connector){
+    public void setBluetoothConnector(BluetoothConnector connector) {
         this.connector = connector;
         connector.getBluetoothService().setFocalLengthInPx(focalLengthInPx);
     }
@@ -34,11 +35,11 @@ public class BluetoothCameraApplicationContext extends Application {
     }
 
     public boolean hasBluetoothConnection() {
-        return connector != null && connector.getBluetoothService().hasBluetoothService();
+        return demoMode || connector != null && connector.getBluetoothService().hasBluetoothService();
     }
 
     public BluetoothEngineControlService getBluetoothService() {
-        return connector!= null? connector.getBluetoothService(): null;
+        return connector != null ? connector.getBluetoothService() : null;
     }
 
     public void setFocalLengthInPx(CameraManager cameraManager, String cameraId) {
@@ -49,9 +50,22 @@ public class BluetoothCameraApplicationContext extends Application {
             //array because, if the camera has optical zoom, we get more than one result. This is very unlikely.
             float focalLength = focalLengths[0];
             float sensorWidth = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE).getWidth();
-            this. focalLengthInPx = focalLength / sensorWidth;
+            this.focalLengthInPx = focalLength / sensorWidth;
         } catch (CameraAccessException e) {
             Log.e(TAG, "error setting focalLength.", e);
         }
+    }
+
+    public void setDemoMode() {
+        this.demoMode = true;
+        connector.stop();
+    }
+
+    public void stopDemoMode() {
+        this.demoMode = false;
+    }
+
+    public boolean isInDemo() {
+        return demoMode;
     }
 }

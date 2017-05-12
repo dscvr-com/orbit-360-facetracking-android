@@ -60,7 +60,8 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
                 context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
             }
         } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-            context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo())
+                context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
     }
 

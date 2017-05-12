@@ -129,7 +129,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     private void createDrawView() {
-        overlayCanvas = new OverlayCanvasView(this,new Size(1280, 960));
+        overlayCanvas = new OverlayCanvasView(this, new Size(1280, 960));
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -141,7 +141,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private void createRecorderPreview(boolean isFrontCamera) {
         RecorderPreviewView oldView = recordPreview;
         recordPreview = new RecorderPreviewView(this, isFrontCamera);
-        recordPreview.setPreviewListener(new FaceTrackingListener(this, new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects,width,height)}));
+        recordPreview.setPreviewListener(new FaceTrackingListener(this, new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects, width, height)}));
 
         ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
@@ -161,7 +161,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     private void drawRects(List<Rect> rects, int width, int height) {
-        if(overlayCanvas!= null){
+        if (overlayCanvas != null) {
             overlayCanvas.setRects(rects);
         }
 
@@ -196,110 +196,112 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             try {
                 ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
             } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-                sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                    sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+                }
             }
         }
-    }
 
-    @Override
-    public void onCameraClicked(boolean isFrontCamera) {
-        splashFrag = new RotationFragment();
-        splashFrag.setArguments(getIntent().getExtras());
+        @Override
+        public void onCameraClicked ( boolean isFrontCamera){
+            splashFrag = new RotationFragment();
+            splashFrag.setArguments(getIntent().getExtras());
 
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.camera_fragment_container, splashFrag).commit();
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.camera_fragment_container, splashFrag).commit();
 
-        try {
-            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
-        } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-            sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            try {
+                ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+            } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                    sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            }
+            getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
+            SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+            sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
+            createRecorderPreview(isFrontCamera);
         }
-        getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
-        createRecorderPreview(isFrontCamera);
-    }
 
-    @Override
-    public void onRecordingClicked(boolean shouldRecord, boolean startRecord) {
-        if (shouldRecord) {
-            if (!startRecord) {
-                Log.i(TAG, "stop video");
-                recordPreview.stopVideo();
-                overlayFragment.stopTimer();
+        @Override
+        public void onRecordingClicked ( boolean shouldRecord, boolean startRecord){
+            if (shouldRecord) {
+                if (!startRecord) {
+                    Log.i(TAG, "stop video");
+                    recordPreview.stopVideo();
+                    overlayFragment.stopTimer();
+                } else {
+                    Log.i(TAG, "start video");
+                    recordPreview.startVideo();
+                    overlayFragment.startTimer();
+                }
             } else {
-                Log.i(TAG, "start video");
-                recordPreview.startVideo();
-                overlayFragment.startTimer();
+                recordPreview.takePicture();
             }
-        } else {
-            recordPreview.takePicture();
+
         }
 
-    }
+        @Override
+        public boolean onDown (MotionEvent e){
+            return false;
+        }
 
-    @Override
-    public boolean onDown(MotionEvent e) {
-        return false;
-    }
+        @Override
+        public void onShowPress (MotionEvent e){
 
-    @Override
-    public void onShowPress(MotionEvent e) {
+        }
 
-    }
+        @Override
+        public boolean onSingleTapUp (MotionEvent e){
+            return false;
+        }
 
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-        return false;
-    }
+        @Override
+        public boolean onScroll (MotionEvent e1, MotionEvent e2,float distanceX, float distanceY){
+            return false;
+        }
 
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        return false;
-    }
+        @Override
+        public void onLongPress (MotionEvent e){
 
-    @Override
-    public void onLongPress(MotionEvent e) {
+        }
 
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        boolean result = false;
-        try {
-            float diffY = e2.getY() - e1.getY();
-            float diffX = e2.getX() - e1.getX();
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0) {
-                        Log.d(getClass().getSimpleName(), "swipe Right");
-                        overlayFragment.onSwipeRight();
+        @Override
+        public boolean onFling (MotionEvent e1, MotionEvent e2,float velocityX, float velocityY){
+            boolean result = false;
+            try {
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            Log.d(getClass().getSimpleName(), "swipe Right");
+                            overlayFragment.onSwipeRight();
+                        } else {
+                            Log.d(getClass().getSimpleName(), "swipe Left");
+                            overlayFragment.onSwipeLeft();
+                        }
+                        result = true;
+                    }
+                } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0) {
+                        overlayFragment.onSwipeBottom();
                     } else {
-                        Log.d(getClass().getSimpleName(), "swipe Left");
-                        overlayFragment.onSwipeLeft();
+                        overlayFragment.onSwipeTop();
                     }
                     result = true;
                 }
-            } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                if (diffY > 0) {
-                    overlayFragment.onSwipeBottom();
-                } else {
-                    overlayFragment.onSwipeTop();
-                }
-                result = true;
+            } catch (Exception exception) {
+                exception.printStackTrace();
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            return result;
         }
-        return result;
-    }
 
 
-    @Override
-    public void onClosePressed() {
-        getSupportFragmentManager().beginTransaction()
-                .remove(splashFrag).commit();
-        getSupportFragmentManager().beginTransaction().show(overlayFragment).commit();
+        @Override
+        public void onClosePressed () {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(splashFrag).commit();
+            getSupportFragmentManager().beginTransaction().show(overlayFragment).commit();
+        }
     }
-}
 

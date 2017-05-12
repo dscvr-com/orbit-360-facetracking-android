@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.ParcelUuid;
 
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +39,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     private BluetoothLeScanCallback scanCallback;
 
 
-    public BluetoothConnector(BluetoothAdapter adapter, Context context,  BluetoothLoadingListenerWithStartConnect listener, BluetoothConnectionCallback.ButtonValueListener upperButtomListener, BluetoothConnectionCallback.ButtonValueListener lowerButtonListener) {
+    public BluetoothConnector(BluetoothAdapter adapter, Context context, BluetoothLoadingListenerWithStartConnect listener, BluetoothConnectionCallback.ButtonValueListener upperButtomListener, BluetoothConnectionCallback.ButtonValueListener lowerButtonListener) {
         this.adapter = adapter;
         this.context = context;
         this.listener = listener;
@@ -71,7 +73,7 @@ public class BluetoothConnector extends BroadcastReceiver {
 
     private void addDeviceFromScan(BluetoothDevice device) {
         nextDevice.add(device);
-        if(!currentlyConnecting){
+        if (!currentlyConnecting) {
             if (nextDevice.size() > 0) {
                 connect(nextDevice.get(0));
                 nextDevice.remove(0);
@@ -82,11 +84,11 @@ public class BluetoothConnector extends BroadcastReceiver {
     private List<BluetoothDevice> searchBondedDevices() {
         Set<BluetoothDevice> bondedDevices = adapter.getBondedDevices();
         List<BluetoothDevice> contactableList = new ArrayList<>();
-        if(bondedDevices.isEmpty()){
+        if (bondedDevices.isEmpty()) {
             return new ArrayList<>();
         }
         for (BluetoothDevice device : bondedDevices) {
-            if(device.getUuids() == null){
+            if (device.getUuids() == null) {
                 continue;
             }
             for (ParcelUuid uuid : device.getUuids()) {
@@ -101,17 +103,18 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void connect(BluetoothDevice device) {
-        currentlyConnecting =true;
+        currentlyConnecting = true;
         listener.startedToConnect();
         device.connectGatt(context, true, new BluetoothConnectionCallback(context, gatt -> afterConnecting(gatt), upperButtomListener, lowerButtonListener));
 
     }
 
-    private void afterConnecting(BluetoothGatt gatt){
+    private void afterConnecting(BluetoothGatt gatt) {
         try {
             controlService.setBluetoothGatt(gatt);
         } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-            context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo())
+                context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
         listener.endLoading(gatt);
     }
@@ -135,10 +138,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     public boolean hasDevices() {
-        if(nextDevice.size() == 0 && !currentlyConnecting){
-            return false;
-        }
-        return true;
+        return !(nextDevice.size() == 0 && !currentlyConnecting);
     }
 
     public boolean isConnected() {
@@ -149,11 +149,16 @@ public class BluetoothConnector extends BroadcastReceiver {
         return controlService;
     }
 
+    public void stop() {
+        adapter.getBluetoothLeScanner().stopScan(scanCallback);
+    }
+
+
     public interface BluetoothLoadingListener {
         void endLoading(BluetoothGatt gatt);
     }
 
-    public interface BluetoothLoadingListenerWithStartConnect extends BluetoothLoadingListener{
+    public interface BluetoothLoadingListenerWithStartConnect extends BluetoothLoadingListener {
 
         void startedToConnect();
     }
