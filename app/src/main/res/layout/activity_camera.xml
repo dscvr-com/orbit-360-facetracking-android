@@ -17,5 +17,13 @@
         android:id="@+id/camera_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/camera_fragment_canvas_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/camera_overlay_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

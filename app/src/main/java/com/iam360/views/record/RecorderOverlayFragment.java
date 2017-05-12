@@ -50,7 +50,6 @@ public class RecorderOverlayFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private TimerTask task;
-    private boolean orientationIsLandscape = false;
 
     public RecorderOverlayFragment() {
         // Required empty public constructor
@@ -191,7 +190,6 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void settingsClicked() {
-        //TODO change some view elements
         mListener.onSettingsClicked();
     }
 
@@ -199,7 +197,9 @@ public class RecorderOverlayFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_recorder_overlay, container, false);
+        View inflate = inflater.inflate(R.layout.fragment_recorder_overlay, container, false);
+        inflate.bringToFront();
+        return inflate;
 
     }
 

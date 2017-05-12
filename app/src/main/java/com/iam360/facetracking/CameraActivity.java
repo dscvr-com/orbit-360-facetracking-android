@@ -17,6 +17,7 @@ import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
@@ -121,7 +122,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         overlayFragment = new RecorderOverlayFragment();
         overlayFragment.setArguments(getIntent().getExtras());
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.camera_fragment_container, overlayFragment).commit();
+                .add(R.id.camera_overlay_fragment_container, overlayFragment).commit();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         createDrawView();
         createRecorderPreview(sharedPref.getBoolean(KEY_CAMERA_IS_FRONT, true));
@@ -130,8 +131,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     private void createDrawView() {
         overlayCanvas = new OverlayCanvasView(this, new Size(1280, 960));
-        ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+        FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_canvas_container);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         layout.addView(overlayCanvas, params);
@@ -142,9 +143,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         RecorderPreviewView oldView = recordPreview;
         recordPreview = new RecorderPreviewView(this, isFrontCamera);
         recordPreview.setPreviewListener(new FaceTrackingListener(this, new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects, width, height)}));
-
-        ViewGroup layout = (ViewGroup) findViewById(R.id.activity_camera);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+        FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_container);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
 
@@ -157,12 +157,12 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         recordPreview.onResume();
 
         overlayCanvas.bringToFront();
-        findViewById(R.id.camera_fragment_container).bringToFront();
     }
 
     private void drawRects(List<Rect> rects, int width, int height) {
         if (overlayCanvas != null) {
             overlayCanvas.setRects(rects);
+            runOnUiThread(() -> overlayCanvas.invalidate());
         }
 
     }

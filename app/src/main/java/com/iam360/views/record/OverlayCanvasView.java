@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 import android.util.Size;
 import android.view.View;
 
@@ -20,11 +21,13 @@ public class OverlayCanvasView extends View {
     private final Size wannabeVideoSize;
     private List<Rect> rects = new ArrayList();
 
+    Paint paint = new Paint();
+
     public OverlayCanvasView(Context context, Size wannabeVideoSize) {
         super(context);
+        setWillNotDraw(false);
         this.wannabeVideoSize = wannabeVideoSize;
     }
-
 
 
     public void setRects(List<Rect> rects) {
@@ -33,24 +36,21 @@ public class OverlayCanvasView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
         //wannabeVideoSize - >previewSize
         float scaleX = (float) this.getWidth() / (float) wannabeVideoSize.getWidth();
         float scaleY = (float) this.getHeight() / (float) wannabeVideoSize.getHeight();
 
 
         for (Rect rect : rects) {
-            Paint paint = new Paint();
             paint.setColor(getResources().getColor(R.color.orbitOrange));
             //used depreacted because not deprecated version needs api23 we use minversion 21
             paint.setStrokeWidth(3);
+            paint.setStyle(Paint.Style.STROKE);
             canvas.drawRect(rect.left * scaleX, rect.top * scaleY, rect.right * scaleX, rect.bottom * scaleY, paint);
-            paint.setStrokeWidth(0);
         }
+        super.onDraw(canvas);
 
     }
-
 
 
 }
