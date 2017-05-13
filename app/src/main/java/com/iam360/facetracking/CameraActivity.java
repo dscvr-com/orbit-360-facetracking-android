@@ -155,7 +155,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         }
         layout.addView(recordPreview, params);
         recordPreview.onResume();
-
         overlayCanvas.bringToFront();
     }
 
@@ -198,110 +197,111 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
                 if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
                     sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
-                }
             }
         }
+    }
 
-        @Override
-        public void onCameraClicked ( boolean isFrontCamera){
-            splashFrag = new RotationFragment();
-            splashFrag.setArguments(getIntent().getExtras());
+    @Override
+    public void onCameraClicked(boolean isFrontCamera) {
+        splashFrag = new RotationFragment();
+        splashFrag.setArguments(getIntent().getExtras());
 
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.camera_fragment_container, splashFrag).commit();
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.camera_fragment_container, splashFrag).commit();
 
-            try {
-                ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
-            } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
-                    sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
-            }
-            getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
-            SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-            sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
-            createRecorderPreview(isFrontCamera);
+        try {
+            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+        } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+            if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
+        getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
+        createRecorderPreview(isFrontCamera);
+        splashFrag.getView().bringToFront();
+    }
 
-        @Override
-        public void onRecordingClicked ( boolean shouldRecord, boolean startRecord){
-            if (shouldRecord) {
-                if (!startRecord) {
-                    Log.i(TAG, "stop video");
-                    recordPreview.stopVideo();
-                    overlayFragment.stopTimer();
-                } else {
-                    Log.i(TAG, "start video");
-                    recordPreview.startVideo();
-                    overlayFragment.startTimer();
-                }
+    @Override
+    public void onRecordingClicked(boolean shouldRecord, boolean startRecord) {
+        if (shouldRecord) {
+            if (!startRecord) {
+                Log.i(TAG, "stop video");
+                recordPreview.stopVideo();
+                overlayFragment.stopTimer();
             } else {
-                recordPreview.takePicture();
+                Log.i(TAG, "start video");
+                recordPreview.startVideo();
+                overlayFragment.startTimer();
             }
-
+        } else {
+            recordPreview.takePicture();
         }
 
-        @Override
-        public boolean onDown (MotionEvent e){
-            return false;
-        }
+    }
 
-        @Override
-        public void onShowPress (MotionEvent e){
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
 
-        }
+    @Override
+    public void onShowPress(MotionEvent e) {
 
-        @Override
-        public boolean onSingleTapUp (MotionEvent e){
-            return false;
-        }
+    }
 
-        @Override
-        public boolean onScroll (MotionEvent e1, MotionEvent e2,float distanceX, float distanceY){
-            return false;
-        }
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
 
-        @Override
-        public void onLongPress (MotionEvent e){
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
 
-        }
+    @Override
+    public void onLongPress(MotionEvent e) {
 
-        @Override
-        public boolean onFling (MotionEvent e1, MotionEvent e2,float velocityX, float velocityY){
-            boolean result = false;
-            try {
-                float diffY = e2.getY() - e1.getY();
-                float diffX = e2.getX() - e1.getX();
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0) {
-                            Log.d(getClass().getSimpleName(), "swipe Right");
-                            overlayFragment.onSwipeRight();
-                        } else {
-                            Log.d(getClass().getSimpleName(), "swipe Left");
-                            overlayFragment.onSwipeLeft();
-                        }
-                        result = true;
-                    }
-                } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffY > 0) {
-                        overlayFragment.onSwipeBottom();
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        boolean result = false;
+        try {
+            float diffY = e2.getY() - e1.getY();
+            float diffX = e2.getX() - e1.getX();
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) {
+                        Log.d(getClass().getSimpleName(), "swipe Right");
+                        overlayFragment.onSwipeRight();
                     } else {
-                        overlayFragment.onSwipeTop();
+                        Log.d(getClass().getSimpleName(), "swipe Left");
+                        overlayFragment.onSwipeLeft();
                     }
                     result = true;
                 }
-            } catch (Exception exception) {
-                exception.printStackTrace();
+            } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffY > 0) {
+                    overlayFragment.onSwipeBottom();
+                } else {
+                    overlayFragment.onSwipeTop();
+                }
+                result = true;
             }
-            return result;
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
-
-
-        @Override
-        public void onClosePressed () {
-            getSupportFragmentManager().beginTransaction()
-                    .remove(splashFrag).commit();
-            getSupportFragmentManager().beginTransaction().show(overlayFragment).commit();
-        }
+        return result;
     }
+
+
+    @Override
+    public void onClosePressed() {
+        getSupportFragmentManager().beginTransaction()
+                .remove(splashFrag).commit();
+        getSupportFragmentManager().beginTransaction().show(overlayFragment).commit();
+    }
+}
 

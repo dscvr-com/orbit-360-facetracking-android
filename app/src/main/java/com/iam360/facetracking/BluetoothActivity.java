@@ -38,6 +38,10 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothCon
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
+        if(gestureDetector == null){
+            gestureDetector = new GestureDetector(this, this);
+
+        }
         gestureDetector.onTouchEvent(event);
         return true;
     }

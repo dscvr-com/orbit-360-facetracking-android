@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.iam360.facetracking.R;
@@ -15,14 +16,11 @@ public class SettingsAdapter extends BaseAdapter {
     Context context;
     String[] data;
 
-    private static LayoutInflater inflater = null;
-
     public SettingsAdapter(Context context, String[] data, View.OnClickListener[] listeners) {
         this.context = context;
         this.data = data;
         this.listeners = listeners;
-        inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
     }
 
     @Override
@@ -42,12 +40,13 @@ public class SettingsAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View vi = convertView;
-        if (vi == null)
-            vi = inflater.inflate(R.layout.settings_row, null);
-        TextView text = (TextView) vi.findViewById(R.id.text);
+        if (convertView == null)
+            convertView = ((LayoutInflater) context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.settings_row, parent, false);
+        TextView text = (TextView) convertView.findViewById(R.id.text);
         text.setText(data[position]);
-        vi.setOnClickListener(listeners[position]);
-        return vi;
+        convertView.setOnClickListener(listeners[position]);
+        convertView.bringToFront();
+        return convertView;
     }
 }

@@ -7,7 +7,10 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.iam360.facetracking.CameraActivity;
 import com.iam360.facetracking.ManualActivity;
@@ -19,8 +22,7 @@ import com.iam360.facetracking.R;
  */
 public class SettingsFragment extends Fragment {
 
-    private static final String ARG_COLUMN_COUNT = "column-count";
-    private int mColumnCount = 1;
+    private SettingsAdapter adapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -29,23 +31,10 @@ public class SettingsFragment extends Fragment {
     public SettingsFragment() {
     }
 
-    // TODO: Customize parameter initialization
-    @SuppressWarnings("unused")
-    public static SettingsFragment newInstance(int columnCount) {
-        SettingsFragment fragment = new SettingsFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
-        }
     }
 
     @Override
@@ -53,10 +42,14 @@ public class SettingsFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_settings_list, container, false);
-        ListView settingsList = (ListView) view.findViewById(R.id.settings_list);
-        settingsList.setAdapter(new SettingsAdapter(getContext(), new String[]{getResources().getString(R.string.user_manual)},new View.OnClickListener[]{v -> openUserGuide()}));
-        view.findViewById(R.id.manual_close).setOnClickListener(v -> goBackToCameraView());
+        view.findViewById(R.id.settings_back).setOnClickListener(v -> goBackToCameraView());
+        view.findViewById(R.id.settings_row).setOnClickListener(v -> openUserGuide());
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 
     private void goBackToCameraView() {

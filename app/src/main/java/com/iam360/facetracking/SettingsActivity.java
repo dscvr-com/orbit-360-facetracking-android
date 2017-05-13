@@ -8,24 +8,20 @@ import com.iam360.views.settings.SettingsFragment;
 public class SettingsActivity extends AppCompatActivity {
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_settings);
-        if (findViewById(R.id.fragment_container) != null) {
-            if (savedInstanceState != null) {
-                return;
-            }
-            // Create a new Fragment to be placed in the activity layout
-            SettingsFragment settingsFrag = new SettingsFragment();
-
-            settingsFrag.setArguments(getIntent().getExtras());
-
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment_container_settings, settingsFrag).commit();
+        if (savedInstanceState != null) {
+            return;
         }
+        // Create a new Fragment to be placed in the activity layout
+        SettingsFragment settingsFrag = new SettingsFragment();
 
+        settingsFrag.setArguments(getIntent().getExtras());
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container_settings, settingsFrag).commit();
     }
 }

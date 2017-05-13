@@ -27,8 +27,6 @@ import java.util.TimerTask;
  * to handle interaction events.
  */
 public class RecorderOverlayFragment extends Fragment {
-    //TODO add ui change method which calls listener for each Button
-    //TODO think about how to run the time....
     private ImageButton settings;
     private ImageButton trackingPointsSetting;
     private ImageView trackingPointsGrid;
@@ -37,10 +35,6 @@ public class RecorderOverlayFragment extends Fragment {
     private ImageButton recording;
     private TextView time;
     private TextView counter;
-    private TextView middle;
-    private TextView left;
-    private TextView right;
-
     private boolean isRecording = false;
     private boolean isFilmMode = false;
     private boolean frontCamera = true;
@@ -105,6 +99,16 @@ public class RecorderOverlayFragment extends Fragment {
     public void onResume() {
         super.onResume();
         initButtons();
+        if (isFilmMode) {
+            changeToVideo();
+        } else {
+            changeToCamera();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     private void initButtons() {
@@ -114,9 +118,6 @@ public class RecorderOverlayFragment extends Fragment {
         camera = (ImageButton) getView().findViewById(R.id.changeCamera);
         recording = (ImageButton) getView().findViewById(R.id.recordingButton);
         trackingPointsGrid = (ImageView) getView().findViewById(R.id.trackingGrid);
-        middle = (TextView) getView().findViewById(R.id.textMiddel);
-        left = (TextView) getView().findViewById(R.id.textLeft);
-        right = (TextView) getView().findViewById(R.id.textRight);
         time = (TextView) getView().findViewById(R.id.time);
         counter = (TextView) getView().findViewById(R.id.counter);
         settings.setOnClickListener(v -> settingsClicked());
@@ -230,12 +231,36 @@ public class RecorderOverlayFragment extends Fragment {
     private void changeToCamera() {
         if (isFilmMode) {
             isFilmMode = !isFilmMode;
-            left.setVisibility(View.VISIBLE);
-            right.setVisibility(View.INVISIBLE);
-            middle.setText(R.string.Photo);
+            getLeftText().setVisibility(View.VISIBLE);
+            getRightText().setVisibility(View.INVISIBLE);
+            getMiddelText().setText(R.string.Photo);
             if (time != null) {
                 time.setVisibility(View.INVISIBLE);
             }
+        }
+    }
+
+    private TextView getLeftText() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            return (TextView) getView().findViewById(R.id.textLeftLand);
+        } else {
+            return (TextView) getView().findViewById(R.id.textLeft);
+        }
+    }
+
+    private TextView getMiddelText() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            return (TextView) getView().findViewById(R.id.textMiddelLand);
+        } else {
+            return (TextView) getView().findViewById(R.id.textMiddel);
+        }
+    }
+
+    private TextView getRightText() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            return (TextView) getView().findViewById(R.id.textRightLand);
+        } else {
+            return (TextView) getView().findViewById(R.id.textRight);
         }
     }
 
@@ -252,11 +277,12 @@ public class RecorderOverlayFragment extends Fragment {
             if (time != null) {
                 time.setVisibility(View.VISIBLE);
             }
-            left.setVisibility(View.INVISIBLE);
-            right.setVisibility(View.VISIBLE);
-            middle.setText(R.string.Video);
+            getLeftText().setVisibility(View.INVISIBLE);
+            getRightText().setVisibility(View.VISIBLE);
+            getMiddelText().setText(R.string.Video);
         }
     }
+
 
     public interface OnFragmentInteractionListener {
         void onSettingsClicked();

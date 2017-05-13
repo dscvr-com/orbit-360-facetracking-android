@@ -60,8 +60,9 @@ public class BluetoothConnectionFragment extends Fragment implements BluetoothCo
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                if (bluetoothConnector!= null && !bluetoothConnector.hasDevices())
-                    getActivity().runOnUiThread(() -> createTurnOnEngineScreen());
+                if (bluetoothConnector != null && !bluetoothConnector.hasDevices())
+                    if (getActivity() != null)
+                        getActivity().runOnUiThread(() -> createTurnOnEngineScreen());
             }
         };
         timer = new Timer("notConnecteed");
@@ -117,20 +118,20 @@ public class BluetoothConnectionFragment extends Fragment implements BluetoothCo
     }
 
     private void findEngine() {
-        bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext(), this, new RemoteButtonListener(true,getContext()), new RemoteButtonListener(false, getContext()));
+        bluetoothConnector = new BluetoothConnector(BluetoothAdapter.getDefaultAdapter(), getContext(), this, new RemoteButtonListener(true, getContext()), new RemoteButtonListener(false, getContext()));
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothConnectionReciever.CONNECTED);
         filter.addAction(BluetoothConnectionReciever.DISCONNECTED);
         getContext().registerReceiver(bluetoothConnector, filter);
-        ((BluetoothCameraApplicationContext)getActivity().getApplicationContext()).setBluetoothConnector(bluetoothConnector);
+        ((BluetoothCameraApplicationContext) getActivity().getApplicationContext()).setBluetoothConnector(bluetoothConnector);
         bluetoothConnector.connect();
 
     }
 
     private void finishedLoading() {
-        ImageView view = (ImageView)getView().findViewById(R.id.imageBTEngine);
+        ImageView view = (ImageView) getView().findViewById(R.id.imageBTEngine);
         view.setImageResource(R.drawable.orbitcolor);
-        view = (ImageView)getView().findViewById(R.id.BTText);
+        view = (ImageView) getView().findViewById(R.id.BTText);
         view.setImageResource(R.drawable.bluetooth_connected);
         mListener.connected();
     }
