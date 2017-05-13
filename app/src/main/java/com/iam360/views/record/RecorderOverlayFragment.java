@@ -128,42 +128,21 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void onTrackingClicked() {
+        changeTracking();
+        mListener.onTrackingClicked(!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking());
+    }
+
+    private void changeTracking() {
         if (!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking()) {
             tracking.setImageResource(R.drawable.tracking_on);
         } else {
             tracking.setImageResource(R.drawable.tracking_off);
         }
-        mListener.onTrackingClicked(!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking());
     }
 
     private void recordingClicked() {
         if (!isFilmMode) {
-            counter.setVisibility(View.VISIBLE);
-            timer.schedule(new TimerTask() {
-                int count = 3;
-
-                @Override
-                public void run() {
-                    count--;
-                    if (count == 0) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                counter.setVisibility(View.INVISIBLE);
-                            }
-                        });
-                        mListener.onRecordingClicked(isFilmMode, false);
-                        this.cancel();
-                    } else {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                counter.setText(String.valueOf(count));
-                            }
-                        });
-                    }
-                }
-            }, 1000, 1000);
+            takePicture();
         } else {
             isRecording = isFilmMode != isRecording;
             mListener.onRecordingClicked(isFilmMode, isRecording && isFilmMode);
@@ -173,6 +152,37 @@ public class RecorderOverlayFragment extends Fragment {
                 recording.setImageResource(R.drawable.start_photo);
             }
         }
+    }
+
+    private void takePicture() {
+        counter.setVisibility(View.VISIBLE);
+        timer.schedule(new TimerTask() {
+            int count = 3;
+
+            @Override
+            public void run() {
+                count--;
+                if (count == 0) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            counter.setVisibility(View.INVISIBLE);
+                            changeTracking();
+                        }
+                    });
+                    mListener.onRecordingClicked(isFilmMode, false);
+                    this.cancel();
+                } else {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tracking.setImageResource(R.drawable.tracking_off);
+                            counter.setText(String.valueOf(count));
+                        }
+                    });
+                }
+            }
+        }, 1000, 1000);
     }
 
     private void cameraClicked() {
