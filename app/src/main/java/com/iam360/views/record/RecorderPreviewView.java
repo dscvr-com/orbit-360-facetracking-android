@@ -469,6 +469,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
                 }
 
                 @Override
+
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
                     Log.e(TAG, "Camera configure failed.");
                 }
@@ -499,7 +500,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
             Log.w(TAG, "Locking Exposure.");
             previewBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
             previewBuilder.set(CaptureRequest.CONTROL_AWB_LOCK, true);
-            previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
             previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
             previewSession.stopRepeating();
             previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
