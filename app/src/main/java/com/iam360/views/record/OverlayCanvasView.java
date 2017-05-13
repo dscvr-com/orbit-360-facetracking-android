@@ -37,7 +37,7 @@ public class OverlayCanvasView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         //wannabeVideoSize - >previewSize
-        float scaleX = (float) this.getWidth() / (float) wannabeVideoSize.getWidth();
+        float scaleX = (float) (this.getWidth()) / (float) wannabeVideoSize.getWidth();
         float scaleY = (float) this.getHeight() / (float) wannabeVideoSize.getHeight();
 
 

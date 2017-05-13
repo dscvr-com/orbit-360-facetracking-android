@@ -117,12 +117,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     private void createCameraView() {
-
-
         overlayFragment = new RecorderOverlayFragment();
-        overlayFragment.setArguments(getIntent().getExtras());
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.camera_overlay_fragment_container, overlayFragment).commit();
+                .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         createDrawView();
         createRecorderPreview(sharedPref.getBoolean(KEY_CAMERA_IS_FRONT, true));
@@ -219,7 +216,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
         createRecorderPreview(isFrontCamera);
-        splashFrag.getView().bringToFront();
+        if (splashFrag != null && splashFrag.isInLayout()) splashFrag.getView().bringToFront();
     }
 
     @Override
