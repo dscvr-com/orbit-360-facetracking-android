@@ -30,6 +30,7 @@ public class OverlayCanvasView extends View {
     }
 
 
+
     public void setRects(List<Rect> rects) {
         this.rects = rects;
     }
