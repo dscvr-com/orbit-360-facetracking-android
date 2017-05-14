@@ -2,12 +2,15 @@ package com.iam360.engine.connection;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
 import com.iam360.facetracking.BluetoothCameraApplicationContext;
+
+import java.util.Arrays;
 
 /**
  * Created by Charlotte on 17.03.2017.
@@ -63,6 +66,18 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
         } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
             if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo())
                 context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+        }
+    }
+
+    @Override
+    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        Log.d(getClass().getSimpleName(), "characteristic changed");
+        if (characteristic.getUuid().equals(BluetoothEngineControlService.RESPONSE_UUID)) {
+            if (Arrays.equals(characteristic.getValue(), BluetoothEngineControlService.BOTTOMBUTTON)) {
+                bottomButton.buttomPressed();
+            } else if (Arrays.equals(characteristic.getValue(), BluetoothEngineControlService.TOPBUTTON)) {
+                topButton.buttomPressed();
+            }
         }
     }
 
