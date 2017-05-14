@@ -54,7 +54,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private RotationFragment splashFrag;
     private OverlayCanvasView overlayCanvas;
     public static final String KEY_TRACKING = "isTracking";
-    private SharedPreferences sharedPref;
 
     @Override
     public void onResume() {
@@ -206,7 +205,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onTrackingClicked(boolean isTrackingNowOn) {
-        sharedPref.edit().putBoolean(KEY_TRACKING, isTrackingNowOn).commit();
+        getSharedPreferences().edit().putBoolean(KEY_TRACKING, isTrackingNowOn).commit();
         if (isTrackingNowOn) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().startTracking();
         } else {
@@ -217,6 +216,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                     sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
             }
         }
+    }
+
+    private SharedPreferences getSharedPreferences() {
+        return getPreferences(Context.MODE_PRIVATE);
     }
 
     @Override
@@ -234,8 +237,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
         getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
-        sharedPref = getPreferences(Context.MODE_PRIVATE);
-        sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
+        getSharedPreferences().edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
         createRecorderPreview(isFrontCamera);
         if (splashFrag != null && splashFrag.isInLayout()) splashFrag.getView().bringToFront();
     }

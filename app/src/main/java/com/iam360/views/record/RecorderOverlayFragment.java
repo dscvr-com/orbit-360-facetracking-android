@@ -136,12 +136,12 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void onTrackingClicked() {
-        changeTracking();
         mListener.onTrackingClicked(!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking());
+        changeTracking();
     }
 
     private void changeTracking() {
-        if (!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking()) {
+        if (((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking()) {
             tracking.setImageResource(R.drawable.tracking_on);
         } else {
             tracking.setImageResource(R.drawable.tracking_off);

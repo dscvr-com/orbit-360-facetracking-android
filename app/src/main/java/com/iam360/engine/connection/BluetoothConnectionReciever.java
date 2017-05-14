@@ -20,6 +20,11 @@ public class BluetoothConnectionReciever extends BroadcastReceiver {
     public static final String DISCONNECTED = "com.iam360.bluetooth.BLUETOOTH_DISCONNECTED";
     private static final String TAG = "BluetoothConnectReceive";
 
+    public BluetoothConnectionReciever(){
+        super();
+    }
+
+
     @Override
     public void onReceive(Context context, Intent i) {
 
@@ -29,7 +34,7 @@ public class BluetoothConnectionReciever extends BroadcastReceiver {
                 intent = new Intent(context, CameraActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
-                Log.i(TAG, "connected to device");
+                Log.d(TAG, "connected to device");
                 break;
             case DISCONNECTED:
                 if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo()) {
