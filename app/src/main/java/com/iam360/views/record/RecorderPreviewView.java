@@ -331,27 +331,32 @@ public class RecorderPreviewView extends AutoFitTextureView {
         Matrix rotate = new Matrix();
         Matrix vscale = new Matrix();
 
+        float vScaleX = 1;
+        float vScaleY = 1;
+
         float aspect = (float)videoWidth / (float)videoHeight;
         switch(((WindowManager)getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation()) {
             case Surface.ROTATION_0:
-                rotate.setRotate(0, videoWidth / 2, videoHeight / 2);
+                rotate.setRotate(0, viewWidth / 2, viewHeight / 2);
                 break;
             case Surface.ROTATION_90:
-                rotate.setRotate(-90, videoHeight / 2, videoWidth / 2);
+                rotate.setRotate(-90, viewWidth / 2, viewHeight / 2);
                 //viewWidth = textureView.getHeight();
                 //viewHeight = textureView.getWidth();
-                vscale.setScale((float)videoHeight / (float)videoWidth, (float)videoWidth / (float)videoHeight);
+                vScaleX = (float)videoHeight / (float)videoWidth;
+                vScaleY = (float)videoWidth / (float)videoHeight;
                 videoWidth = height;
                 videoHeight = width;
                 break;
             case Surface.ROTATION_180:
-                rotate.setRotate(-180, videoHeight / 2, videoWidth / 2);
+                rotate.setRotate(-180, viewWidth / 2, viewHeight / 2);
                 break;
             case Surface.ROTATION_270:
-                rotate.setRotate(-270, videoHeight / 2, videoWidth / 2);
+                rotate.setRotate(-270, viewWidth / 2, viewHeight / 2);
                 //viewWidth = textureView.getHeight();
                 //viewHeight = textureView.getWidth();
-                vscale.setScale((float)videoHeight / (float)videoWidth, (float)videoWidth / (float)videoHeight);
+                vScaleX = (float)videoHeight / (float)videoWidth;
+                vScaleY = (float)videoWidth / (float)videoHeight;
                 videoWidth = height;
                 videoHeight = width;
                 break;
@@ -365,12 +370,12 @@ public class RecorderPreviewView extends AutoFitTextureView {
         float upscale = Math.min(scaleX, scaleY);
 
         Log.d(TAG, String.format("Upscale: %f.", upscale));
-        scaleX = scaleX / upscale;
-        scaleY = scaleY / upscale;
+        scaleX = vScaleX * scaleX / upscale;
+        scaleY = vScaleY * scaleY / upscale;
 
         scale.setScale(scaleX, scaleY);
-        float translateX = (0.5f - scaleX / 2.f) * viewWidth;
-        float translateY = (0.5f - scaleY / 2.f) * viewHeight;
+        float translateX = (0.5f - scaleX / 2.f) * videoWidth;
+        float translateY = (0.5f - scaleY / 2.f) * videoHeight;
         translate.setTranslate(translateX, translateY);
 
         Log.d(TAG, String.format("Layouting scale: %f, %f, Translate: %f, %f.", scaleX, scaleY, translateX, translateY));
@@ -379,10 +384,10 @@ public class RecorderPreviewView extends AutoFitTextureView {
         Matrix transform = new Matrix();
         transform.setConcat(transform, rotate);
         transform.setConcat(transform, vscale);
-        transform.setConcat(transform, scale);
         transform.setConcat(transform, translate);
+        transform.setConcat(transform, scale);
        //transform.set(rotate);
-     //   transform.setConcat(scale, transform);
+       // transform.setConcat(scale, transform);
         textureView.setTransform(transform);
         // Do nothing for now, we are locked in portrait anyway.
     }

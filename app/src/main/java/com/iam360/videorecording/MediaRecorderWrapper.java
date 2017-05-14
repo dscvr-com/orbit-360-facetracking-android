@@ -96,6 +96,10 @@ public class MediaRecorderWrapper {
         recorder.start();
     }
 
+    // Note(ej):
+    // Create surface needs to configure the media recorder once, so the surface
+    // has the correct size for the capture session.
+    // In all other cases, the media recorder is configured whenever the video is started.
     public void createSurface(int initialOrientation) throws IOException {
         surface = MediaCodec.createPersistentInputSurface();
         setUpMediaRecorder(initialOrientation);
@@ -109,24 +113,28 @@ public class MediaRecorderWrapper {
     }
 
     private void setUpMediaRecorder(int orientation) throws IOException {
-
         recorder.setInputSurface(surface);
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         recorder.setVideoEncodingBitRate(10000000);
         recorder.setVideoFrameRate(30);
-        recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        recorder.setVideoEncoder(MediaRecorder.VideoEncoder.MPEG_4_SP);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         recorder.setOrientationHint(orientation);
         recorder.setVideoSize(size.getWidth(), size.getHeight());
-        currentFile = getVideoAbsolutePath();
+        recorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
+            @Override
+            public void onError(MediaRecorder mr, int what, int extra) {
+                Log.e(TAG, "Video Recorder Error: " + what + ", " + extra);
+            }
+        });
+        currentFile = getTemporaryPath();
 
         Log.d(TAG, "Writing video: " + currentFile.getAbsolutePath());
         recorder.setOutputFile(currentFile.getAbsolutePath());
         recorder.prepare();
-
-        prepared = true;
+        recorder.start();
     }
 
     public static File getVideoAbsolutePath() {

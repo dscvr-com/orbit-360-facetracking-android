@@ -123,5 +123,6 @@ public class FaceDetection {
     }
 
     public interface NonPermanentFaceDetectionResultListener extends FaceDetectionResultListener {
+
     }
 }
