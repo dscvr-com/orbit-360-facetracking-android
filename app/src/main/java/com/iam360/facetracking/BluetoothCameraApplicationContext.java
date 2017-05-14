@@ -2,6 +2,8 @@ package com.iam360.facetracking;
 
 import android.app.Application;
 import android.bluetooth.BluetoothGatt;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
@@ -58,7 +60,10 @@ public class BluetoothCameraApplicationContext extends Application {
 
     public void setDemoMode() {
         this.demoMode = true;
-        connector.stop();
+        if (connector != null) {
+            connector.stop();
+        }
+
     }
 
     public void stopDemoMode() {

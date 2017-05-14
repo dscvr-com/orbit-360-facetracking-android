@@ -33,13 +33,19 @@ import java.util.List;
 
 public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener, RotationFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
 
+    static {
+        System.loadLibrary("opencv_java3");
+    }
+
+
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String TAG = "CameraActivity";
 
     private static final int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 100;
     private GestureDetector gestureDetector;
-    private static final String KEY_CAMERA_IS_FRONT = "isFrontCamera";
+    public static final String KEY_CAMERA_IS_FRONT = "isFrontCamera";
+    public static final String KEY_FILM_MODE = "isFilmMode";
 
 
     private RecorderPreviewView recordPreview;
@@ -47,6 +53,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private boolean reactForTouchEvents = false;
     private RotationFragment splashFrag;
     private OverlayCanvasView overlayCanvas;
+    public static final String KEY_TRACKING = "isTracking";
+    private SharedPreferences sharedPref;
 
     @Override
     public void onResume() {
@@ -123,6 +131,18 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         createDrawView();
         createRecorderPreview(sharedPref.getBoolean(KEY_CAMERA_IS_FRONT, true));
+        BluetoothEngineControlService bluetoothService = ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService();
+        if (sharedPref.getBoolean(KEY_TRACKING, true)) {
+            bluetoothService.startTracking();
+        } else {
+            try {
+                bluetoothService.stopTracking();
+            } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+
+                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                    sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            }
+        }
 
     }
 
@@ -186,6 +206,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onTrackingClicked(boolean isTrackingNowOn) {
+        sharedPref.edit().putBoolean(KEY_TRACKING, isTrackingNowOn).commit();
         if (isTrackingNowOn) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().startTracking();
         } else {
@@ -213,7 +234,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
         }
         getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
         sharedPref.edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
         createRecorderPreview(isFrontCamera);
         if (splashFrag != null && splashFrag.isInLayout()) splashFrag.getView().bringToFront();
@@ -300,5 +321,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 .remove(splashFrag).commit();
         getSupportFragmentManager().beginTransaction().show(overlayFragment).commit();
     }
+
 }
 
