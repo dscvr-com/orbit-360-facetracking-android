@@ -134,7 +134,8 @@ public class MediaRecorderWrapper {
         Log.d(TAG, "Writing video: " + currentFile.getAbsolutePath());
         recorder.setOutputFile(currentFile.getAbsolutePath());
         recorder.prepare();
-        recorder.start();
+
+        prepared = true;
     }
 
     public static File getVideoAbsolutePath() {

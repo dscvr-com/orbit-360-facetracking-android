@@ -16,7 +16,9 @@ import android.util.Log;
 import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
@@ -50,6 +52,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onResume() {
+        Log.d(TAG, "Camera View onPause");
         super.onResume();
         if (recordPreview != null) {
             recordPreview.onResume();
@@ -60,6 +63,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onPause() {
+        Log.d(TAG, "Camera View onResume");
         super.onPause();
         if (recordPreview != null) {
             recordPreview.onPause();
@@ -139,7 +143,28 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private void createRecorderPreview(boolean isFrontCamera) {
         RecorderPreviewView oldView = recordPreview;
         recordPreview = new RecorderPreviewView(this, isFrontCamera);
-        recordPreview.setPreviewListener(new FaceTrackingListener(this, new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects, width, height)}));
+
+        int orientation = 0;
+
+        switch(((WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation()) {
+            case Surface.ROTATION_0:
+            case Surface.ROTATION_180:
+                 orientation = 0;
+                break;
+            case Surface.ROTATION_90:
+                orientation = 90;
+                break;
+            case Surface.ROTATION_270:
+                orientation = 270;
+                break;
+        }
+
+
+        recordPreview.setPreviewListener(
+                new FaceTrackingListener(
+                        this,
+                        new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects, width, height)},
+                        orientation));
         FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_container);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

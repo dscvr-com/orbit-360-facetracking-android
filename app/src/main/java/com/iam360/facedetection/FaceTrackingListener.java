@@ -11,9 +11,11 @@ import com.iam360.views.record.RecorderPreviewListener;
 public class FaceTrackingListener implements RecorderPreviewListener {
     public static final String TAG = "FaceTrackingListener";
     private SingleThreadWithoutQueueExecutor executor;
+    private int orientation;
 
-    public FaceTrackingListener(Context context, FaceDetection.FaceDetectionResultListener[] otherListeners){
+    public FaceTrackingListener(Context context, FaceDetection.FaceDetectionResultListener[] otherListeners, int orientation){
         executor = new SingleThreadWithoutQueueExecutor(context, otherListeners);
+        this.orientation = orientation;
     }
 
     public FaceDetection getFaceDetection() {
@@ -22,7 +24,7 @@ public class FaceTrackingListener implements RecorderPreviewListener {
 
     @Override
     public void imageDataReady(final byte[] data, final int width, final int height, Bitmap.Config colorFormat) {
-        executor.addFaceDetection(data, width, height);
+        executor.addFaceDetection(data, width, height, orientation);
     }
 
     @Override

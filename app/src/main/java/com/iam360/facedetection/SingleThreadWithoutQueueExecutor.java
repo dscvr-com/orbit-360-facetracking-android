@@ -54,8 +54,8 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
         }
     }
 
-    public void addFaceDetection(byte[] data, final int width, final int height) {
-        this.execute(new FaceDetectionRunnable(data, width, height));
+    public void addFaceDetection(byte[] data, final int width, final int height, final int orientation) {
+        this.execute(new FaceDetectionRunnable(data, width, height, orientation));
     }
 
     private class FaceDetectionRunnable implements Runnable {
@@ -64,16 +64,18 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
         private final int height;
         private final int width;
         private final byte[] data;
+        private final int orientation;
 
-        public FaceDetectionRunnable(byte[] data, final int width, final int height) {
+        public FaceDetectionRunnable(byte[] data, final int width, final int height, final int orientation) {
             this.data = data;
             this.width = width;
             this.height = height;
+            this.orientation = orientation;
         }
 
         @Override
         public void run() {
-            faceDetection.detect(data, height, width);
+            faceDetection.detect(data, height, width, orientation);
         }
     }
 }

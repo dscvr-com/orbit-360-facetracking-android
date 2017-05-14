@@ -49,7 +49,6 @@ public class OverlayCanvasView extends View {
             canvas.drawRect(rect.left * scaleX, rect.top * scaleY, rect.right * scaleX, rect.bottom * scaleY, paint);
         }
         super.onDraw(canvas);
-
     }
 
 

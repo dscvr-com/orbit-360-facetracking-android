@@ -84,7 +84,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
         @Override
         public void onDisconnected(@NonNull  CameraDevice cameraDevice) {
-            Log.d(TAG, "Camera device error disconnected");
+            Log.d(TAG, "Camera device disconnected");
             cameraOpenCloseLock.release();
             cameraDevice.close();
             RecorderPreviewView.this.cameraDevice = null;
@@ -310,6 +310,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
             cameraOpenCloseLock.acquire();
             closeSession();
             if (null != cameraDevice) {
+                Log.d(TAG, "Closing camera");
                 cameraDevice.close();
                 cameraDevice = null;
             }
@@ -460,7 +461,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
             previewBuilder.addTarget(previewSurface);
             previewBuilder.addTarget(surface.getSurface());
-            previewBuilder.addTarget(videoRecorder.getSurface());
+           // previewBuilder.addTarget(videoRecorder.getSurface());
 
             cameraDevice.createCaptureSession(sessionSurfaces, new CameraCaptureSession.StateCallback() {
                 @Override

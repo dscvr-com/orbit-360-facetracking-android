@@ -3,6 +3,8 @@ package com.iam360.facedetection;
 import android.content.Context;
 import android.util.Log;
 import com.iam360.facetracking.R;
+
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -66,8 +68,8 @@ public class FaceDetection {
         return resultListeners.remove(listener);
     }
 
-    public void detect(byte[] data, int height, int width) {
-        Mat grey = getGreyMat(data, height, width);
+    public void detect(byte[] data, int height, int width, int orientation) {
+        Mat grey = getGreyMat(data, height, width, orientation);
         int scale = makeSmaller(grey);
 
         MatOfRect resultMatOfRect = new MatOfRect();
@@ -109,11 +111,22 @@ public class FaceDetection {
         return scale;
     }
 
-    private Mat getGreyMat(byte[] data, int height, int width) {
+    private Mat getGreyMat(byte[] data, int height, int width, int orientation) {
         Mat rgba = new Mat(height, width, CvType.CV_8UC4);
         Mat grey = new Mat(height, width, CvType.CV_8UC1);
+
         rgba.put(0, 0, data);
         Imgproc.cvtColor(rgba, grey, Imgproc.COLOR_RGBA2GRAY);
+
+        if (orientation == 270) {
+            Core.transpose(grey, grey);
+            Core.flip(grey, grey, 1);
+        }
+        if (orientation == 90) {
+            Core.transpose(grey, grey);
+            Core.flip(grey, grey, 0);
+        }
+
         Imgproc.equalizeHist(grey, grey);
         return grey;
     }
