@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.camera2.CameraAccessException;
+import android.media.MediaCodec;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -27,6 +30,7 @@ public class MediaRecorderWrapper {
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
     private static final String TAG = "MediaRecorderWrapper";
     private static final String FORMAT = "faceDetection-%s.mp4";
+    private boolean prepared;
 
     static {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 270);
@@ -41,18 +45,19 @@ public class MediaRecorderWrapper {
 
     private MediaRecorder recorder;
     private Size size;
-    private Activity activity;
-    private File nextVideoFile;
-    private int sensorOrientation;
+    private Context context;
+    private Surface surface;
 
-    public MediaRecorderWrapper(Size size, Activity activity, int sensorOrientation) throws IOException {
+    private File currentFile;
+
+    public MediaRecorderWrapper(Size size, Context context) {
         this.size = size;
-        this.activity = activity;
-        this.sensorOrientation = sensorOrientation;
-        setUpMediaRecorder();
+        this.context = context;
+        this.recorder = new MediaRecorder();
+        this.prepared = false;
     }
 
-    public static int getOrientation(int sensorOrientation, int rotation) {
+    public static int sensorToMediaOrientation(int sensorOrientation, int rotation) {
         switch (sensorOrientation) {
             case SENSOR_ORIENTATION_DEFAULT_DEGREES:
                 return INVERSE_ORIENTATIONS.get(rotation);
@@ -67,48 +72,77 @@ public class MediaRecorderWrapper {
     }
 
     public Surface getSurface() {
-        return recorder.getSurface();
+        return surface;
     }
 
-    public void startRecord() throws CameraAccessException, IOException {
-        recorder.start();
-    }
-
-    public void stopRecordingVideo() {
+    public void stopRecording(File videoFile) {
         // Stop recording
         recorder.stop();
         recorder.reset();
-        addImageToGallery(nextVideoFile, activity);
-        if (null != activity) {
-            Toast.makeText(activity, "Video saved: " + nextVideoFile.getAbsolutePath(),
+        prepared = false;
+        currentFile.renameTo(videoFile);
+        addImageToGallery(videoFile, context);
+        if (null != context) {
+            Toast.makeText(context, "Video saved: " + videoFile.getAbsolutePath(),
                     Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Video saved: " + nextVideoFile.getAbsolutePath());
+            Log.d(TAG, "Video saved: " + videoFile.getAbsolutePath());
         }
     }
 
-    private void setUpMediaRecorder() throws IOException {
-        recorder = new MediaRecorder();
-        recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-        recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-        if (nextVideoFile == null) {
-            nextVideoFile = getVideoAbsolutePath();
+    public void startRecording(int orientation) throws IOException, CameraAccessException {
+        if(!prepared) {
+            setUpMediaRecorder(orientation);
         }
-        recorder.setOutputFile(nextVideoFile.getAbsolutePath());
+        recorder.start();
+    }
+
+    public void createSurface(int initialOrientation) throws IOException {
+        surface = MediaCodec.createPersistentInputSurface();
+        setUpMediaRecorder(initialOrientation);
+    }
+
+    public void destroySurface() {
+        recorder.reset();
+        surface.release();
+
+        surface = null;
+    }
+
+    private void setUpMediaRecorder(int orientation) throws IOException {
+
+        recorder.setInputSurface(surface);
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         recorder.setVideoEncodingBitRate(10000000);
         recorder.setVideoFrameRate(30);
-        recorder.setVideoSize(size.getHeight(), size.getWidth());
         recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        int orientation = getOrientation(sensorOrientation, activity.getWindowManager().getDefaultDisplay().getRotation());
         recorder.setOrientationHint(orientation);
+        recorder.setVideoSize(size.getWidth(), size.getHeight());
+        currentFile = getVideoAbsolutePath();
+
+        Log.d(TAG, "Writing video: " + currentFile.getAbsolutePath());
+        recorder.setOutputFile(currentFile.getAbsolutePath());
         recorder.prepare();
 
+        prepared = true;
     }
 
-    public File getVideoAbsolutePath() {
+    public static File getVideoAbsolutePath() {
         File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
         return new File(dir, String.format(FORMAT, System.currentTimeMillis()));
 
+    }
+    private File getTemporaryPath() {
+        File dir = context.getCacheDir();
+        return new File(dir, String.format(FORMAT, System.currentTimeMillis()));
+    }
+
+    @Override
+    public void finalize() {
+        if(surface != null) {
+            throw new Error("MediaRecorderWrapper moved out of scope, but surface was not destroyed.");
+        }
     }
 }

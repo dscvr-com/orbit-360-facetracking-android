@@ -23,57 +23,41 @@ public class ImageWrapper {
     private static final String TAG = "ImageWrapper";
     private final Context context;
     private final CameraManager manager;
-    public CameraCaptureSession session;
 
     //keep this because of garbage Collector
     private Surface surface;
     private ImageReader reader;
 
-    public ImageWrapper(Context context) {
+    public ImageWrapper(Context context, Size size) {
         this.context = context;
         manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+        reader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.JPEG, 1);
+        surface = reader.getSurface();
+    }
+
+    public Surface getSurface() {
+        return surface;
     }
 
 
-    public void takePicture(CameraDevice device, Surface previewSurface, int rotation, CameraCaptureSession.CaptureCallback callback, Handler backgroundHandler) {
+    public CaptureRequest createPictureRequest(CameraDevice device, File file, int rotation, Handler backgroundHandler) {
         try {
-            ArrayList<Surface> surfaces = new ArrayList<>();
-            surfaces.add(previewSurface);
-            Size size = getSize(device);
-            reader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.JPEG, 1);
-            surface = reader.getSurface();
             final CaptureRequest.Builder captureBuilder = device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(surface);
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            surfaces.add(surface);
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-            final File file = getFile();
+
             ImageReader.OnImageAvailableListener readerListener = new ImageListener(file, context);
             reader.setOnImageAvailableListener(readerListener, backgroundHandler);
-            device.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
-
-                @Override
-                public void onConfigured(@NonNull CameraCaptureSession session) {
-                    ImageWrapper.this.session = session;
-                    try {
-                        session.capture(captureBuilder.build(), callback, backgroundHandler);
-
-                    } catch (CameraAccessException e) {
-                        Log.e(TAG, "Error with camera callback", e);
-                    }
-                }
-
-                @Override
-                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                }
-            }, backgroundHandler);
+            return captureBuilder.build();
         } catch (CameraAccessException e) {
             Log.e(TAG, "Error with camera access.", e);
+            return null;
         }
     }
 
 
-    private File getFile() {
+    public static File getFile() {
         File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), DIR_NAME);
         if (!dir.exists()) {
             dir.mkdir();
