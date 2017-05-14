@@ -53,6 +53,8 @@
                 <action android:name="com.iam360.bluetooth.BLUETOOTH_DISCONNECTED" />
             </intent-filter>
         </receiver>
+        <receiver android:name="com.iam360.engine.control.ButtomReciever" />
+
         <activity
             android:name="com.iam360.facetracking.SettingsActivity"
             android:screenOrientation="portrait"

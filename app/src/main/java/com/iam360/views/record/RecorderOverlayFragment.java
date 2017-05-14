@@ -135,7 +135,7 @@ public class RecorderOverlayFragment extends Fragment {
         changeTracking();
     }
 
-    private void onTrackingClicked() {
+    public void onTrackingClicked() {
         mListener.onTrackingClicked(!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking());
         changeTracking();
     }
@@ -148,7 +148,7 @@ public class RecorderOverlayFragment extends Fragment {
         }
     }
 
-    private void recordingClicked() {
+    public void recordingClicked() {
         if (!isFilmMode()) {
             takePicture();
         } else {

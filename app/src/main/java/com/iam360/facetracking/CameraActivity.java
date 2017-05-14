@@ -24,6 +24,7 @@ import android.widget.RelativeLayout;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothEngineControlService;
+import com.iam360.engine.control.ButtomReciever;
 import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.OverlayCanvasView;
@@ -55,6 +56,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private boolean reactForTouchEvents = false;
     private RotationFragment splashFrag;
     private OverlayCanvasView overlayCanvas;
+    private ButtomReciever buttomReciever;
     public static final String KEY_TRACKING = "isTracking";
 
     @Override
@@ -89,8 +91,17 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().removeTrackingPoint();
         }
+        buttomReciever = new ButtomReciever(() -> remoteTrackingClicked(), () -> remoteRecordingClicked() );
         gestureDetector = new GestureDetector(this, this);
 
+    }
+
+    private void remoteRecordingClicked() {
+        overlayFragment.recordingClicked();
+    }
+
+    private void remoteTrackingClicked() {
+        overlayFragment.onTrackingClicked();
     }
 
 
