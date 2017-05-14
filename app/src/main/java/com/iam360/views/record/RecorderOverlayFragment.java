@@ -1,6 +1,7 @@
 package com.iam360.views.record;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.iam360.facetracking.BluetoothCameraApplicationContext;
+import com.iam360.facetracking.CameraActivity;
 import com.iam360.facetracking.R;
 
 import java.util.Timer;
@@ -36,14 +38,13 @@ public class RecorderOverlayFragment extends Fragment {
     private TextView time;
     private TextView counter;
     private boolean isRecording = false;
-    private boolean isFilmMode = false;
-    private boolean frontCamera = true;
 
 
     private Timer timer = new Timer("recordingTimer");
 
     private OnFragmentInteractionListener mListener;
     private TimerTask task;
+    private SharedPreferences sharedPref;
 
     public RecorderOverlayFragment() {
         // Required empty public constructor
@@ -88,6 +89,11 @@ public class RecorderOverlayFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+    }
+
+    private boolean isFilmMode(){
+        return sharedPref.getBoolean(CameraActivity.KEY_FILM_MODE, false);
     }
 
     @Override
@@ -99,7 +105,7 @@ public class RecorderOverlayFragment extends Fragment {
     public void onResume() {
         super.onResume();
         initButtons();
-        if (isFilmMode) {
+        if (isFilmMode()) {
             changeToVideo();
         } else {
             changeToCamera();
@@ -125,15 +131,17 @@ public class RecorderOverlayFragment extends Fragment {
         camera.setOnClickListener(v -> cameraClicked());
         recording.setOnClickListener(v -> recordingClicked());
         tracking.setOnClickListener(v -> onTrackingClicked());
+        setFilmMode(isFilmMode());
+        changeTracking();
     }
 
     private void onTrackingClicked() {
-        changeTracking();
         mListener.onTrackingClicked(!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking());
+        changeTracking();
     }
 
     private void changeTracking() {
-        if (!((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking()) {
+        if (((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking()) {
             tracking.setImageResource(R.drawable.tracking_on);
         } else {
             tracking.setImageResource(R.drawable.tracking_off);
@@ -141,12 +149,12 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void recordingClicked() {
-        if (!isFilmMode) {
+        if (!isFilmMode()) {
             takePicture();
         } else {
-            isRecording = isFilmMode != isRecording;
-            mListener.onRecordingClicked(isFilmMode, isRecording && isFilmMode);
-            if (isRecording && isFilmMode) {
+            isRecording = isFilmMode() != isRecording;
+            mListener.onRecordingClicked(isFilmMode(), isRecording && isFilmMode());
+            if (isRecording && isFilmMode()) {
                 recording.setImageResource(R.drawable.start);
             } else {
                 recording.setImageResource(R.drawable.start_photo);
@@ -170,7 +178,7 @@ public class RecorderOverlayFragment extends Fragment {
                             changeTracking();
                         }
                     });
-                    mListener.onRecordingClicked(isFilmMode, false);
+                    mListener.onRecordingClicked(isFilmMode(), false);
                     this.cancel();
                 } else {
                     getActivity().runOnUiThread(new Runnable() {
@@ -186,8 +194,8 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void cameraClicked() {
-        frontCamera = !frontCamera;
-        mListener.onCameraClicked(frontCamera);
+        sharedPref.edit().putBoolean(CameraActivity.KEY_FILM_MODE, !isFilmMode()).commit();
+        mListener.onCameraClicked(isFilmMode());
     }
 
     private void trackingPointsClicked() {
@@ -239,8 +247,8 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void changeToCamera() {
-        if (isFilmMode) {
-            isFilmMode = !isFilmMode;
+        if (isFilmMode()) {
+            sharedPref.edit().putBoolean(CameraActivity.KEY_FILM_MODE, !isFilmMode()).commit();
             getLeftText().setVisibility(View.VISIBLE);
             getRightText().setVisibility(View.INVISIBLE);
             getMiddelText().setText(R.string.Photo);
@@ -282,8 +290,8 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void changeToVideo() {
-        if (!isFilmMode) {
-            isFilmMode = !isFilmMode;
+        if (!isFilmMode()) {
+            sharedPref.edit().putBoolean(CameraActivity.KEY_FILM_MODE, !isFilmMode()).commit();
             if (time != null) {
                 time.setVisibility(View.VISIBLE);
             }
@@ -291,6 +299,14 @@ public class RecorderOverlayFragment extends Fragment {
             getRightText().setVisibility(View.VISIBLE);
             getMiddelText().setText(R.string.Video);
         }
+    }
+
+    public void setFilmMode(boolean filmMode) {
+       if(filmMode){
+           changeToVideo();
+       }else{
+           changeToCamera();
+       }
     }
 
 

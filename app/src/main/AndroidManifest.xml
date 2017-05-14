@@ -31,24 +31,11 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-
-                <receiver android:name="com.iam360.engine.connection.BluetoothConnectionReciever">
-                    <intent-filter>
-                        <action android:name="com.iam360.bluetooth.BLUETOOTH_CONNECTED" />
-                        <action android:name="com.iam360.bluetooth.BLUETOOTH_DISCONNECTED" />
-                    </intent-filter>
-                </receiver>
             </intent-filter>
         </activity>
         <activity
             android:name="com.iam360.facetracking.CameraActivity"
             android:theme="@style/AppFullScreenTheme">
-            <receiver android:name="com.iam360.engine.connection.BluetoothConnectionReciever">
-                <intent-filter>
-                    <action android:name="com.iam360.bluetooth.BLUETOOTH_CONNECTED" />
-                    <action android:name="com.iam360.bluetooth.BLUETOOTH_DISCONNECTED" />
-                </intent-filter>
-            </receiver>
         </activity>
         <activity
             android:name="com.iam360.facetracking.ManualActivity"
@@ -58,14 +45,14 @@
             android:name="com.iam360.facetracking.BluetoothActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppFullScreenTheme">
-
-            <receiver android:name="com.iam360.engine.connection.BluetoothConnectionReciever">
-                <intent-filter>
-                    <action android:name="com.iam360.bluetooth.BLUETOOTH_CONNECTED" />
-                </intent-filter>
-            </receiver>
         </activity>
 
+        <receiver android:name="com.iam360.engine.connection.BluetoothConnectionReciever">
+            <intent-filter>
+                <action android:name="com.iam360.bluetooth.BLUETOOTH_CONNECTED" />
+                <action android:name="com.iam360.bluetooth.BLUETOOTH_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
         <activity
             android:name="com.iam360.facetracking.SettingsActivity"
             android:screenOrientation="portrait"

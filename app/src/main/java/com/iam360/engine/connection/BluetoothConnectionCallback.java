@@ -54,6 +54,7 @@ public class BluetoothConnectionCallback extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         try {
+            Log.d(getClass().getSimpleName(), "onServiceDiscovered!");
             if (((BluetoothCameraApplicationContext) context.getApplicationContext()).setBluetoothService(gatt)) {
                 context.sendBroadcast(new Intent(BluetoothConnectionReciever.CONNECTED));
             } else {
