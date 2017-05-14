@@ -195,7 +195,7 @@
             android:textSize="10sp"
             android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/textMiddelLand"
-            app:layout_constraintHorizontal_bias="0.774"
+            app:layout_constraintHorizontal_bias="0.796"
             app:layout_constraintLeft_toRightOf="@+id/counter"
             app:layout_constraintRight_toRightOf="parent" />
 
