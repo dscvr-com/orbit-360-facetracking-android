@@ -4,6 +4,7 @@ package com.iam360.facetracking;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
@@ -26,6 +27,8 @@ import android.widget.RelativeLayout;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothEngineControlService;
+import com.iam360.engine.control.ButtomReciever;
+import com.iam360.engine.control.RemoteButtonListener;
 import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
 import com.iam360.views.record.OverlayCanvasView;
@@ -57,7 +60,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private boolean reactForTouchEvents = false;
     private RotationFragment splashFrag;
     private OverlayCanvasView overlayCanvas;
+    private ButtomReciever buttomReciever;
     public static final String KEY_TRACKING = "isTracking";
+    private IntentFilter filter;
 
     @Override
     public void onResume() {
@@ -65,8 +70,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onResume();
         if (recordPreview != null) {
             recordPreview.onResume();
-
         }
+        this.registerReceiver(buttomReciever, filter);
 
     }
 
@@ -77,6 +82,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         if (recordPreview != null) {
             recordPreview.onPause();
         }
+        unregisterReceiver(buttomReciever);
     }
 
     @Override
@@ -91,8 +97,20 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().removeTrackingPoint();
         }
+        filter = new IntentFilter();
+        filter.addAction(RemoteButtonListener.UPPER_BUTTON_PRESSED);
+        filter.addAction(RemoteButtonListener.LOWER_BUTTON_PRESSED);
+        buttomReciever = new ButtomReciever(() -> remoteRecordingClicked() , () -> remoteTrackingClicked());
         gestureDetector = new GestureDetector(this, this);
 
+    }
+
+    private void remoteRecordingClicked() {
+        overlayFragment.recordingClicked();
+    }
+
+    private void remoteTrackingClicked() {
+        overlayFragment.onTrackingClicked();
     }
 
 
