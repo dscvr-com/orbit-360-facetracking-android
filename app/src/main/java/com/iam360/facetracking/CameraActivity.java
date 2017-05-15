@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -59,7 +61,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onResume() {
-        Log.d(TAG, "Camera View onPause");
+        Log.d(TAG, "Camera View onResume");
         super.onResume();
         if (recordPreview != null) {
             recordPreview.onResume();
@@ -70,7 +72,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onPause() {
-        Log.d(TAG, "Camera View onResume");
+        Log.d(TAG, "Camera View onPause");
         super.onPause();
         if (recordPreview != null) {
             recordPreview.onPause();
@@ -150,7 +152,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     private void createDrawView() {
-        overlayCanvas = new OverlayCanvasView(this, new Size(1280, 960));
+        overlayCanvas = new OverlayCanvasView(this, new Matrix());
         FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_canvas_container);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -182,7 +184,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         recordPreview.setPreviewListener(
                 new FaceTrackingListener(
                         this,
-                        new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects, width, height)},
+                        new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects)},
                         orientation));
         FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_container);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -199,8 +201,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         overlayCanvas.bringToFront();
     }
 
-    private void drawRects(List<Rect> rects, int width, int height) {
+    private void drawRects(List<RectF> rects) {
         if (overlayCanvas != null) {
+            Matrix inv = new Matrix();
+            overlayCanvas.setTransform(recordPreview.getTransform());
             overlayCanvas.setRects(rects);
             runOnUiThread(() -> overlayCanvas.invalidate());
         }

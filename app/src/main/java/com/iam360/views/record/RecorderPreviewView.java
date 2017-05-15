@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
 import android.hardware.camera2.params.StreamConfigurationMap;
@@ -59,7 +60,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
     private ImageWrapper imageWrapper = null;
     private FaceTrackingListener dataListener;
     private MediaRecorderWrapper videoRecorder;
-    private List<Rect> rects = new ArrayList<>();
     private Timer timer = new Timer("ImageTime");
     // Callbacks for cam opening - save camera ref and start preview
     private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
@@ -105,6 +105,11 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
 
     };
+
+    public void setPreviewListener(FaceTrackingListener dataListener) {
+        this.dataListener = dataListener;
+    }
+
     // Callbacks for surface texture loading - open camera as soon as texture exists
     private TextureView.SurfaceTextureListener surfaceTextureListener
             = new TextureView.SurfaceTextureListener() {
@@ -117,7 +122,7 @@ public class RecorderPreviewView extends AutoFitTextureView {
 
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-            configureTransform(width, height);
+            //configureTransform(width, height);
         }
 
         @Override
@@ -191,28 +196,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    public void setPreviewListener(FaceTrackingListener dataListener) {
-        this.dataListener = dataListener;
-        dataListener.getFaceDetection().addFaceDetectionResultListener(new FaceDetection.FaceDetectionResultListener(){
-            @Override
-            public void facesDetected(List<Rect> rects, int width, int height) {
-                createRects(rects, width, height);
-            }
-        });
-    }
-
-    private void createRects(List<Rect> rects, int width, int height) {
-        this.rects = rects;
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                invalidate();
-            }
-        });
-    }
-
-
-
     private void startBackgroundThread() {
         backgroundThread = new HandlerThread("CameraBackground");
         backgroundThread.start();
@@ -240,12 +223,12 @@ public class RecorderPreviewView extends AutoFitTextureView {
             }
 
         };
-
-        decoderHandler.obtainMessage(START_DECODER).sendToTarget();
     }
 
     private void createDecoderSurface() {
-        surface = new CodecSurface(wannabeVideoSize.getWidth(), wannabeVideoSize.getHeight());
+        // TODO: Use proper size here
+        // TODO: Configure proper transform.
+        surface = new CodecSurface(previewSize.getHeight(), previewSize.getWidth());
         decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
     }
 
@@ -321,76 +304,46 @@ public class RecorderPreviewView extends AutoFitTextureView {
         }
     }
 
-    private void configureTransform(int width, int height) {
-        int videoWidth = width;
-        int videoHeight = height;
+    private void configureTransform(int inWidth, int inHeight) {
+        int height = inWidth;
+        int width = inHeight;
+
         int viewWidth = textureView.getWidth();
         int viewHeight = textureView.getHeight();
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
 
-        Matrix scale = new Matrix();
-        Matrix translate = new Matrix();
-        Matrix rotate = new Matrix();
-        Matrix vscale = new Matrix();
+        Matrix matrix = new Matrix();
+        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
+        RectF bufferRect = new RectF(0, 0, width, height);
 
-        float vScaleX = 1;
-        float vScaleY = 1;
+        float centerX = viewRect.centerX();
+        float centerY = viewRect.centerY();
 
-        float aspect = (float)videoWidth / (float)videoHeight;
-        switch(((WindowManager)getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation()) {
-            case Surface.ROTATION_0:
-                rotate.setRotate(0, viewWidth / 2, viewHeight / 2);
-                break;
-            case Surface.ROTATION_90:
-                rotate.setRotate(-90, viewWidth / 2, viewHeight / 2);
-                //viewWidth = textureView.getHeight();
-                //viewHeight = textureView.getWidth();
-                vScaleX = (float)videoHeight / (float)videoWidth;
-                vScaleY = (float)videoWidth / (float)videoHeight;
-                videoWidth = height;
-                videoHeight = width;
-                break;
-            case Surface.ROTATION_180:
-                rotate.setRotate(-180, viewWidth / 2, viewHeight / 2);
-                break;
-            case Surface.ROTATION_270:
-                rotate.setRotate(-270, viewWidth / 2, viewHeight / 2);
-                //viewWidth = textureView.getHeight();
-                //viewHeight = textureView.getWidth();
-                vScaleX = (float)videoHeight / (float)videoWidth;
-                vScaleY = (float)videoWidth / (float)videoHeight;
-                videoWidth = height;
-                videoHeight = width;
-                break;
+        bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
+        matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+
+        float[] vals = new float[9];
+        matrix.getValues(vals);
+
+        float scale = Math.max(
+                (float) viewHeight / height,
+                (float) viewWidth  / width);
+
+        matrix.postScale(scale, scale, centerX, centerY);
+
+        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+        } else if (Surface.ROTATION_180 == rotation) {
+            matrix.postRotate(180, centerX, centerY);
         }
 
-        Log.d(TAG, String.format("Layouting for View: %d x %d, Video: %d x %d.", viewWidth, viewHeight, videoWidth, videoHeight));
+        textureView.setTransform(matrix);
+    }
 
-        float scaleX = (float)videoHeight / (float)viewWidth;
-        float scaleY = (float)videoWidth / (float)viewHeight;
-
-        float upscale = Math.min(scaleX, scaleY);
-
-        Log.d(TAG, String.format("Upscale: %f.", upscale));
-        scaleX = vScaleX * scaleX / upscale;
-        scaleY = vScaleY * scaleY / upscale;
-
-        scale.setScale(scaleX, scaleY);
-        float translateX = (0.5f - scaleX / 2.f) * videoWidth;
-        float translateY = (0.5f - scaleY / 2.f) * videoHeight;
-        translate.setTranslate(translateX, translateY);
-
-        Log.d(TAG, String.format("Layouting scale: %f, %f, Translate: %f, %f.", scaleX, scaleY, translateX, translateY));
-
-
-        Matrix transform = new Matrix();
-        transform.setConcat(transform, rotate);
-        transform.setConcat(transform, vscale);
-        transform.setConcat(transform, translate);
-        transform.setConcat(transform, scale);
-       //transform.set(rotate);
-       // transform.setConcat(scale, transform);
-        textureView.setTransform(transform);
-        // Do nothing for now, we are locked in portrait anyway.
+    public Matrix getTransform() {
+        Matrix m = new Matrix();
+        textureView.getTransform(m);
+        return m;
     }
 
     private void openCamera(int width, int height) {
@@ -412,6 +365,9 @@ public class RecorderPreviewView extends AutoFitTextureView {
                     }
                     StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                     previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), height, width);
+
+                    decoderHandler.obtainMessage(START_DECODER).sendToTarget();
+
                     sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                     //textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
                     configureTransform(previewSize.getWidth(), previewSize.getHeight());
@@ -557,32 +513,6 @@ public class RecorderPreviewView extends AutoFitTextureView {
             Log.e(TAG, "Error on setting picture capture request", e);
         }
 
-
-        //mCaptureSession.stopRepeating();
-       // mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
-
-        /*
-        final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
-            @Override
-            public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                super.onCaptureCompleted(session, request, result);
-                try {
-                    imageWrapper.session.stopRepeating();
-                    imageWrapper.session.abortCaptures();
-                    imageWrapper.session.close();
-                } catch (CameraAccessException e) {
-                    Log.e(TAG, "Error on closing Preview Session", e);
-                } catch (IllegalStateException e) {
-                    Log.w(TAG, "Error on closing Preview Session", e);
-                }
-                Toast.makeText(getContext(), "Saved Image", Toast.LENGTH_SHORT).show();
-                startSession();
-            }
-        };
-        closeSession();
-        Log.d(TAG, "Preview session closed.");
-        imageWrapper.takePicture(cameraDevice, rotation, captureListener, backgroundHandler);
-        */
     }
 
 

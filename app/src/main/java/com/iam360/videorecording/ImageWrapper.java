@@ -64,17 +64,4 @@ public class ImageWrapper {
         }
         return new File(dir, String.format(FACEDETECTION_FILENAME, System.currentTimeMillis()));
     }
-
-    private Size getSize(CameraDevice device) throws CameraAccessException {
-        CameraCharacteristics characteristics = manager.getCameraCharacteristics(device.getId());
-        Size[] jpegSizes;
-        jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
-        int width = 640;
-        int height = 480;
-        if (jpegSizes != null && 0 < jpegSizes.length) {
-            width = jpegSizes[0].getWidth();
-            height = jpegSizes[0].getHeight();
-        }
-        return new Size(width, height);
-    }
 }

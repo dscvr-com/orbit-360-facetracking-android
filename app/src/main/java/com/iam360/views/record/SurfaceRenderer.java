@@ -50,12 +50,16 @@ class SurfaceRenderer {
     private int muSTMatrixHandle;
     private int maPositionHandle;
     private int maTextureHandle;
-    public SurfaceRenderer() {
+    private float targetWidth;
+    private float targetHeight;
+    public SurfaceRenderer(int targetWidth, int targetHeight) {
         mTriangleVertices = ByteBuffer.allocateDirect(
                 mTriangleVerticesData.length * FLOAT_SIZE_BYTES)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         mTriangleVertices.put(mTriangleVerticesData).position(0);
         Matrix.setIdentityM(mSTMatrix, 0);
+        this.targetHeight = targetHeight;
+        this.targetWidth = targetWidth;
     }
     public int getTextureId() {
         return mTextureID;
@@ -71,8 +75,9 @@ class SurfaceRenderer {
             mSTMatrix[13] = 1.0f - mSTMatrix[13];
         }
         // (optional) clear to green so we can see if we're failing to set pixels
-        // GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        // GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        // End optional
         GLES20.glUseProgram(mProgram);
         checkGlError("glUseProgram");
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
@@ -90,6 +95,12 @@ class SurfaceRenderer {
         GLES20.glEnableVertexAttribArray(maTextureHandle);
         checkGlError("glEnableVertexAttribArray maTextureHandle");
         Matrix.setIdentityM(mMVPMatrix, 0);
+
+        if(targetWidth > targetHeight) {
+            Matrix.scaleM(mMVPMatrix, 0, targetHeight / targetWidth, 1, 1);
+        } else if (targetWidth < targetHeight) {
+            Matrix.scaleM(mMVPMatrix, 0, 1, targetWidth / targetHeight, 1);
+        }
         GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
         GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, mSTMatrix, 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);

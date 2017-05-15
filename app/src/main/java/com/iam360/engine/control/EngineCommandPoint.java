@@ -1,6 +1,7 @@
 package com.iam360.engine.control;
 
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 import java.util.Collection;
 
@@ -25,10 +26,10 @@ public class EngineCommandPoint {
         this.y = y;
     }
 
-    public static EngineCommandPoint CreateMiddel(Collection<Rect> rects) {
+    public static EngineCommandPoint CreateMiddel(Collection<RectF> rects) {
         int centerX = 0;
         int centerY = 0;
-        for (Rect rect : rects) {
+        for (RectF rect : rects) {
             centerX += rect.centerX();
             centerY += rect.centerY();
         }

@@ -61,7 +61,7 @@ public class CodecSurface
      * Creates interconnected instances of TextureRender, SurfaceTexture, and Surface.
      */
     private void setup() {
-        mTextureRender = new SurfaceRenderer();
+        mTextureRender = new SurfaceRenderer(mWidth, mHeight);
         mTextureRender.surfaceCreated();
         if (VERBOSE) Log.d(TAG, "textureID=" + mTextureRender.getTextureId());
         mSurfaceTexture = new SurfaceTexture(mTextureRender.getTextureId());

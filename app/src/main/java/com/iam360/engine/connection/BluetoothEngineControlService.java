@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -110,7 +111,7 @@ public class BluetoothEngineControlService {
         return !stopped;
     }
 
-    public void reactOnFaces(@NonNull List<Rect> detectionResult, int width, int height) throws NoBluetoothConnectionException {
+    public void reactOnFaces(@NonNull List<RectF> detectionResult, int width, int height) throws NoBluetoothConnectionException {
         if (stopped) {
             return;
         }

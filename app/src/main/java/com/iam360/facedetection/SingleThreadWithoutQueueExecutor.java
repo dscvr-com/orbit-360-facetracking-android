@@ -3,6 +3,7 @@ package com.iam360.facedetection;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
@@ -27,7 +28,7 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
         faceDetection = new FaceDetection(context);
         faceDetection.addFaceDetectionResultListener(new FaceDetection.FaceDetectionResultListener() {
             @Override
-            public void facesDetected(List<Rect> rects, int width, int height) {
+            public void facesDetected(List<RectF> rects, int width, int height) {
                 try {
                     motorControlService.reactOnFaces(rects, width, height);
                 } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
@@ -75,7 +76,7 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
 
         @Override
         public void run() {
-            faceDetection.detect(data, height, width, orientation);
+            faceDetection.detect(data, width, height, orientation);
         }
     }
 }

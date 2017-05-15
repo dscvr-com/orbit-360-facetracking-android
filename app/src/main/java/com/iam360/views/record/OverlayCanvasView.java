@@ -2,8 +2,10 @@ package com.iam360.views.record;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
@@ -18,35 +20,39 @@ import java.util.List;
  */
 
 public class OverlayCanvasView extends View {
-    private final Size wannabeVideoSize;
-    private List<Rect> rects = new ArrayList();
+    private Matrix transform;
+    private List<RectF> rects = new ArrayList();
 
     Paint paint = new Paint();
 
-    public OverlayCanvasView(Context context, Size wannabeVideoSize) {
+    public OverlayCanvasView(Context context, Matrix transform) {
         super(context);
         setWillNotDraw(false);
-        this.wannabeVideoSize = wannabeVideoSize;
+        this.transform = transform;
     }
 
 
-    public void setRects(List<Rect> rects) {
+    public void setRects(List<RectF> rects) {
         this.rects = rects;
+    }
+
+    public void setTransform(Matrix transform) {
+        this.transform = transform;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //wannabeVideoSize - >previewSize
-        float scaleX = (float) (this.getWidth()) / (float) wannabeVideoSize.getWidth();
-        float scaleY = (float) this.getHeight() / (float) wannabeVideoSize.getHeight();
 
-
-        for (Rect rect : rects) {
+        for (RectF rect : rects) {
             paint.setColor(getResources().getColor(R.color.orbitOrange));
             //used depreacted because not deprecated version needs api23 we use minversion 21
             paint.setStrokeWidth(3);
             paint.setStyle(Paint.Style.STROKE);
-            canvas.drawRect(rect.left * scaleX, rect.top * scaleY, rect.right * scaleX, rect.bottom * scaleY, paint);
+
+            RectF res = new RectF();
+            transform.mapRect(res, rect);
+            Log.d("RECT", "x: " + res.centerX() + " y: " + res.centerY());
+            canvas.drawRect(rect, paint);
         }
         super.onDraw(canvas);
     }

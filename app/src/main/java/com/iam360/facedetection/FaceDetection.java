@@ -1,6 +1,9 @@
 package com.iam360.facedetection;
 
 import android.content.Context;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.os.Environment;
 import android.util.Log;
 import com.iam360.facetracking.R;
 
@@ -9,6 +12,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -68,8 +72,12 @@ public class FaceDetection {
         return resultListeners.remove(listener);
     }
 
-    public void detect(byte[] data, int height, int width, int orientation) {
-        Mat grey = getGreyMat(data, height, width, orientation);
+    public void detect(byte[] data, int width, int height, int orientation) {
+
+        //Log.d("GET DATA", "w: " + width + ", h: " + height);
+        Mat grey = getGreyMat(data, width, height, orientation);
+
+
         int scale = makeSmaller(grey);
 
         MatOfRect resultMatOfRect = new MatOfRect();
@@ -78,7 +86,7 @@ public class FaceDetection {
 
     }
 
-    private void informListeners(List<android.graphics.Rect> rects, int width, int height) {
+    private void informListeners(List<android.graphics.RectF> rects, int width, int height) {
         for (FaceDetectionResultListener listener : resultListeners) {
             listener.facesDetected(rects, width, height);
         }
@@ -91,13 +99,12 @@ public class FaceDetection {
         }
     }
 
-    private List<android.graphics.Rect> resizeAndReformatFaces(List<Rect> rects, int scale) {
-        List<android.graphics.Rect> resultsResized = new ArrayList<>(rects.size());
-        android.graphics.Rect result;
+    private List<android.graphics.RectF> resizeAndReformatFaces(List<Rect> rects, float scale) {
+        List<android.graphics.RectF> resultsResized = new ArrayList<>(rects.size());
         for (Rect face : rects) {
-            result = new android.graphics.Rect(face.x * scale, face.y * scale,
-                    (face.x + face.width) * scale, (face.y + face.height) * scale);
-            resultsResized.add(result);
+            RectF res = new RectF(face.x * scale, face.y * scale, (face.x + face.width) * scale, (face.y + face.height) * scale);
+
+            resultsResized.add(res);
         }
         return resultsResized;
     }
@@ -111,7 +118,7 @@ public class FaceDetection {
         return scale;
     }
 
-    private Mat getGreyMat(byte[] data, int height, int width, int orientation) {
+    private Mat getGreyMat(byte[] data, int width, int height, int orientation) {
         Mat rgba = new Mat(height, width, CvType.CV_8UC4);
         Mat grey = new Mat(height, width, CvType.CV_8UC1);
 
@@ -127,12 +134,22 @@ public class FaceDetection {
             Core.flip(grey, grey, 0);
         }
 
+        /*
+        // Writes debug images:
+        Imgcodecs.imwrite(
+                new File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString(),
+                        System.currentTimeMillis() + ".jpg").getAbsolutePath(),
+                grey
+        );
+        */
+
         Imgproc.equalizeHist(grey, grey);
         return grey;
     }
 
     public interface FaceDetectionResultListener {
-        void facesDetected(List<android.graphics.Rect> rects, int width, int height);
+        void facesDetected(List<android.graphics.RectF> rects, int width, int height);
     }
 
     public interface NonPermanentFaceDetectionResultListener extends FaceDetectionResultListener {
