@@ -1,4 +1,4 @@
-package com.iam360.views.record;
+package com.iam360.views.record.engine;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;

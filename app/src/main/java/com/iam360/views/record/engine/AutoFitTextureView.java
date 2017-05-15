@@ -1,10 +1,6 @@
-package com.iam360.views.record;
+package com.iam360.views.record.engine;
 import android.content.Context;
-import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.TextureView;
 
 /**

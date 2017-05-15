@@ -1,529 +1,130 @@
 package com.iam360.views.record;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.*;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.os.*;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
-import android.view.TextureView;
-import android.view.WindowManager;
-import android.widget.Toast;
 
-import com.iam360.facedetection.FaceDetection;
 import com.iam360.facedetection.FaceTrackingListener;
-import com.iam360.facetracking.BluetoothCameraApplicationContext;
-import com.iam360.videorecording.ImageWrapper;
-import com.iam360.videorecording.MediaRecorderWrapper;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import com.iam360.views.record.engine.ImageRecorder;
+import com.iam360.views.record.engine.InMemoryImageProvider;
+import com.iam360.views.record.engine.RecorderPreviewViewBase;
+import com.iam360.views.record.engine.SurfaceProvider;
+import com.iam360.views.record.engine.VideoRecorder;
 
 /**
- * View for open camera, show it an grab image data
- * Created by emi on 16/06/16.
+ * Created by Emi on 15/05/2017.
  */
-public class RecorderPreviewView extends AutoFitTextureView {
 
-    private static final String TAG = "RecordPreviewView";
-    private final static int START_DECODER = 0;
-    private final static int FETCH_FRAME = 1;
-    private final static int EXIT_DECODER = 2;
-    private static final int DELAY_FOR_IMAGE = 3000;
-    private final Activity activity;
-    private final boolean isFrontCamera;
-    private AutoFitTextureView textureView;
-    private CameraDevice cameraDevice;
-    private CameraCaptureSession previewSession;
-    private CaptureRequest.Builder previewBuilder;
-    private HandlerThread backgroundThread;
-    private Handler backgroundHandler;
-    private Semaphore cameraOpenCloseLock = new Semaphore(1);
-    private int sensorOrientation;
-    private Size previewSize;
-    private Size wannabeVideoSize; // Video size we wish for. This is not the real video size.
-    private CodecSurface surface;
-    private HandlerThread decoderThread;
-    private Handler decoderHandler;
-    private ImageWrapper imageWrapper = null;
+public class RecorderPreviewView extends RecorderPreviewViewBase {
+
+    private static final String TAG = "RecorderPreviewView";
+    private ImageRecorder imageRecorder;
+    private VideoRecorder videoRecorder;
+    private InMemoryImageProvider inMemoryRecorder;
     private FaceTrackingListener dataListener;
-    private MediaRecorderWrapper videoRecorder;
-    private Timer timer = new Timer("ImageTime");
-    // Callbacks for cam opening - save camera ref and start preview
-    private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
+    private boolean isFrontCamera;
 
+    public RecorderPreviewView(Activity context, boolean isFrontCamera) {
+        super(context);
 
-        @Override
-        public void onOpened(@NonNull CameraDevice cameraDevice) {
-            Log.d(TAG, "Camera device opened");
-            RecorderPreviewView.this.cameraDevice = cameraDevice;
-            startSession();
-            cameraOpenCloseLock.release();
-            if (null != textureView) {
-                configureTransform(previewSize.getWidth(), previewSize.getHeight());
-            }
-            if (null != dataListener) {
-                dataListener.cameraOpened(cameraDevice);
-            }
-            CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
-            ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(manager, cameraDevice.getId());
+        imageRecorder = new ImageRecorder(context);
+        videoRecorder = new VideoRecorder(context, 90);
+        inMemoryRecorder = new InMemoryImageProvider();
 
-        }
+        this.isFrontCamera = isFrontCamera;
+    }
 
-        @Override
-        public void onDisconnected(@NonNull  CameraDevice cameraDevice) {
-            Log.d(TAG, "Camera device disconnected");
-            cameraOpenCloseLock.release();
-            cameraDevice.close();
-            RecorderPreviewView.this.cameraDevice = null;
-            if (null != dataListener) {
-                dataListener.cameraClosed(cameraDevice);
-            }
-            videoRecorder.destroySurface();
-            imageWrapper = null;
-            videoRecorder = null;
-        }
+    @Override
+    protected Size calculatePreviewSize(StreamConfigurationMap map, Size[] supportedPreviewSizes, Size viewSize) {
+        // TODO
+        return RecorderPreviewViewBase.chooseOptimalPreviewSize(supportedPreviewSizes, viewSize.getWidth(), viewSize.getHeight());
+    }
 
-        @Override
-        public void onError(@NonNull CameraDevice cameraDevice, int error) {
-            Log.e(TAG, "Camera device error: " + error);
-            cameraOpenCloseLock.release();
-            cameraDevice.close();
-            RecorderPreviewView.this.cameraDevice = null;
-        }
+    @Override
+    protected boolean canUseCamera(CameraCharacteristics characteristics) {
+        return isFrontCamera == (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT);
+    }
 
-    };
+    @Override
+    protected SurfaceProvider[] createSurfacesProviders() {
+        return new SurfaceProvider[] { imageRecorder, videoRecorder, inMemoryRecorder };
+    }
+
+    @Override
+    public CaptureRequest.Builder setupPreviewSession(CameraDevice device, Surface previewSurface) throws CameraAccessException {
+        CaptureRequest.Builder builder = super.setupPreviewSession(device, previewSurface);
+        builder.addTarget(videoRecorder.getSurface());
+        builder.addTarget(inMemoryRecorder.getSurface());
+        return builder;
+    }
+
+    @Override
+    protected void onSessionCreated(CameraCaptureSession currentSession) {
+        super.onSessionCreated(currentSession);
+        inMemoryRecorder.startFrameFetching(dataListener);
+    }
+
+    @Override
+    protected void onSessionDestroying(CameraCaptureSession currentSession) {
+        super.onSessionDestroying(currentSession);
+        inMemoryRecorder.stopFrameFetching();
+    }
 
     public void setPreviewListener(FaceTrackingListener dataListener) {
         this.dataListener = dataListener;
     }
 
-    // Callbacks for surface texture loading - open camera as soon as texture exists
-    private TextureView.SurfaceTextureListener surfaceTextureListener
-            = new TextureView.SurfaceTextureListener() {
-
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            openCamera(wannabeVideoSize.getWidth(), wannabeVideoSize.getHeight());
-
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-            //configureTransform(width, height);
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            return false;
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-        }
-
-    };
-
-    public RecorderPreviewView(Activity ctx, boolean frontCamera) {
-        super(ctx);
-        this.activity = ctx;
-        this.textureView = this;
-        this.isFrontCamera = frontCamera;
-        this.wannabeVideoSize = new Size(1280, 960); //Size we want for stitcher input
-    }
-
-    private static Size chooseOptimalPreviewSize(Size[] choices, int width, int height) {
-        // Collect the supported resolutions that are at least as big as the preview Surface
-        List<Size> bigEnough = new ArrayList<>();
-
-        // hack hack
-        int w = Math.max(width, height);
-        int h = Math.min(width, height);
-        for (Size option : choices) {
-            Log.d(TAG, String.format("Choice: %d x %d", option.getWidth(), option.getHeight())) ;
-            if (option.getWidth() >= w && option.getHeight() >= h) {
-                bigEnough.add(option);
-            }
-        }
-
-        // Pick the smallest of those, assuming we found any
-        if (bigEnough.size() > 0) {
-            return Collections.min(bigEnough, new CompareSizesByArea());
-        } else {
-            Log.e(TAG, "Couldn't find any suitable preview size");
-            return choices[0];
+    @Override
+    protected void onCameraOpenend(CameraDevice device) {
+        super.onCameraOpenend(device);
+        if (null != dataListener) {
+            dataListener.cameraOpened(cameraDevice);
         }
     }
 
-    public void startVideo() {
-        if (videoRecorder != null) {
-            try {
-                int rotationOfWindow = activity.getWindowManager().getDefaultDisplay().getRotation();
-                int rotation = MediaRecorderWrapper.sensorToMediaOrientation(sensorOrientation, rotationOfWindow);
-                videoRecorder.startRecording(rotation);
-            } catch (CameraAccessException | IOException e) {
-                Log.e(TAG, "Error starting record", e);
-            }
+    @Override
+    protected void onCameraClosed(CameraDevice device) {
+        super.onCameraClosed(device);
+        if (null != dataListener) {
+            dataListener.cameraClosed(cameraDevice);
         }
     }
 
-    public void stopVideo() {
-        if (videoRecorder != null) {
-            videoRecorder.stopRecording(MediaRecorderWrapper.getVideoAbsolutePath());
-        }
-    }
-
-    // To be called from parent activity
+    @Override
     public void onResume() {
-        startBackgroundThread();
-        if (textureView.isAvailable()) {
-            openCamera(textureView.getWidth(), textureView.getHeight());
-        } else {
-            textureView.setSurfaceTextureListener(surfaceTextureListener);
-        }
+        Log.d(TAG, "onResume");
+        inMemoryRecorder.startBackgroundThread();
+        super.onResume();
     }
 
-    private void startBackgroundThread() {
-        backgroundThread = new HandlerThread("CameraBackground");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
-
-        decoderThread = new HandlerThread("CameraDecoder");
-        decoderThread.start();
-        this.decoderHandler = new Handler(decoderThread.getLooper()) {
-            @Override
-            public void handleMessage(Message msg) {
-                if (msg.what == START_DECODER) {
-                    createDecoderSurface();
-                    // So I have no idea what we wait for. So we just wait.
-                    try {
-                        Thread.sleep(2500, 0);
-                    } catch (InterruptedException e) {
-                        Log.i(TAG, e.getMessage());
-                    }
-                } else if (msg.what == FETCH_FRAME) {
-                    fetchFrame();
-                } else if (msg.what == EXIT_DECODER) {
-                    destroyDecoderSurface();
-                }
-
-            }
-
-        };
-    }
-
-    private void createDecoderSurface() {
-        // TODO: Use proper size here
-        // TODO: Configure proper transform.
-        surface = new CodecSurface(previewSize.getHeight(), previewSize.getWidth());
-        decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
-    }
-
-    private void destroyDecoderSurface() {
-        surface.release();
-        surface = null;
-    }
-
-    private void fetchFrame() {
-        if (surface == null) {
-            return;
-        }
-        try {
-            if (dataListener != null) {
-                if (surface.awaitNewImage()) {
-                    surface.drawImage(false);
-                    dataListener.imageDataReady(surface.fetchPixels(), surface.mWidth, surface.mHeight, CodecSurface.colorFormat);
-                }
-            } else {
-                Log.e(TAG, "Fetch frame failed");
-                Thread.sleep(10, 0);
-            }
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            // Do nothing
-        }
-        decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
-    }
-
-    // To be called from parent activity
+    @Override
     public void onPause() {
-        stopBackgroundThread();
-        closeCamera();
-    }
-
-    public void stopPreviewFeed() {
-        stopBackgroundThread();
-        closeCamera();
-    }
-
-    private void stopBackgroundThread() {
-        if (backgroundThread == null)
-            return;
-        backgroundThread.quitSafely();
+        Log.d(TAG, "onPause");
+        super.onPause();
         try {
-            backgroundThread.join();
-            backgroundThread = null;
-            backgroundHandler = null;
-            decoderHandler.obtainMessage(EXIT_DECODER).sendToTarget();
-            decoderThread.quitSafely();
-            decoderThread.join();
-            decoderThread = null;
-            backgroundHandler = null;
+            inMemoryRecorder.stopBackgroundThread();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-    }
-
-    public void closeCamera() {
-        try {
-            cameraOpenCloseLock.acquire();
-            closeSession();
-            if (null != cameraDevice) {
-                Log.d(TAG, "Closing camera");
-                cameraDevice.close();
-                cameraDevice = null;
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera closing.");
-        } finally {
-            cameraOpenCloseLock.release();
-        }
-    }
-
-    private void configureTransform(int inWidth, int inHeight) {
-        int height = inWidth;
-        int width = inHeight;
-
-        int viewWidth = textureView.getWidth();
-        int viewHeight = textureView.getHeight();
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-
-        Matrix matrix = new Matrix();
-        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, width, height);
-
-        float centerX = viewRect.centerX();
-        float centerY = viewRect.centerY();
-
-        bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-        matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
-
-        float[] vals = new float[9];
-        matrix.getValues(vals);
-
-        float scale = Math.max(
-                (float) viewHeight / height,
-                (float) viewWidth  / width);
-
-        matrix.postScale(scale, scale, centerX, centerY);
-
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
-        }
-
-        textureView.setTransform(matrix);
-    }
-
-    public Matrix getTransform() {
-        Matrix m = new Matrix();
-        textureView.getTransform(m);
-        return m;
-    }
-
-    private void openCamera(int width, int height) {
-        CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
-        try {
-            Log.d(TAG, "tryAcquire");
-            if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                throw new RuntimeException("Time out waiting to lock camera opening.");
-            }
-
-            for (String cameraId : manager.getCameraIdList()) {
-                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                if (characteristics != null) {
-                    if (isFrontCamera && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_FRONT) {
-                        continue;
-                    }
-                    if (!isFrontCamera &&  characteristics.get(CameraCharacteristics.LENS_FACING) != null && characteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_BACK) {
-                        continue;
-                    }
-                    StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                    previewSize = chooseOptimalPreviewSize(map.getOutputSizes(SurfaceTexture.class), height, width);
-
-                    decoderHandler.obtainMessage(START_DECODER).sendToTarget();
-
-                    sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                    //textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
-                    configureTransform(previewSize.getWidth(), previewSize.getHeight());
-                    if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    manager.openCamera(cameraId, stateCallback, null);
-                    break;
-
-                }
-            }
-
-        } catch (CameraAccessException | NullPointerException | InterruptedException e) {
-            Log.e(TAG, e.getMessage(), e);
-        }
-    }
-
-    // Starts the preview, if all necassary parts are there.
-    private void startSession() {
-        if (null == cameraDevice || !textureView.isAvailable() || null == previewSize) {
-            return;
-        }
-        try {
-            closeSession();
-
-            // TODO: Feel free to use a proper size here
-            imageWrapper = new ImageWrapper(getContext(), previewSize);
-            videoRecorder = new MediaRecorderWrapper(previewSize, activity);
-
-            int rotationOfWindow = activity.getWindowManager().getDefaultDisplay().getRotation();
-            int rotation = MediaRecorderWrapper.sensorToMediaOrientation(sensorOrientation, rotationOfWindow);
-
-            videoRecorder.createSurface(rotation);
-
-            previewBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);//Is This the Point?
-
-            SurfaceTexture tex = textureView.getSurfaceTexture();
-            tex.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
-            Surface previewSurface = new Surface(tex);
-
-            List<Surface> sessionSurfaces = new ArrayList<>();
-
-            sessionSurfaces.add(previewSurface);
-            sessionSurfaces.add(imageWrapper.getSurface());
-            sessionSurfaces.add(surface.getSurface());
-            sessionSurfaces.add(videoRecorder.getSurface());
-
-            previewBuilder.addTarget(previewSurface);
-            previewBuilder.addTarget(surface.getSurface());
-           // previewBuilder.addTarget(videoRecorder.getSurface());
-
-            cameraDevice.createCaptureSession(sessionSurfaces, new CameraCaptureSession.StateCallback() {
-                @Override
-                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-                    Log.d(TAG, "Camera configure succeeded");
-                    previewSession = cameraCaptureSession;
-                    beginPreview();
-                }
-
-                @Override
-
-                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-                    Log.e(TAG, "Camera configure failed.");
-                }
-            }, backgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Problem with the camera: ", e);
-        } catch (IOException e) {
-            Log.e(TAG, "Problem with the video output: ", e);
-        }
-    }
-
-    private void beginPreview() {
-        if (null == cameraDevice) {
-            return;
-        }
-        try {
-            previewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            previewSession.stopRepeating();
-            previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Problem with the camera: ", e);
-        }
-    }
-
-    public void lockExposure() {
-        if (null == cameraDevice) {
-            return;
-        }
-        try {
-            Log.w(TAG, "Locking Exposure.");
-            previewBuilder.set(CaptureRequest.CONTROL_AE_LOCK, true);
-            previewBuilder.set(CaptureRequest.CONTROL_AWB_LOCK, true);
-            previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
-            previewSession.stopRepeating();
-            previewSession.setRepeatingRequest(previewBuilder.build(), null, backgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "camera Error: ", e);
-        }
-    }
-
-    private void closeSession() {
-        if (previewSession != null) {
-            try {
-                previewSession.stopRepeating();
-                previewSession.abortCaptures();
-                previewSession.close();
-            } catch (CameraAccessException e) {
-                Log.e(TAG, "Error on closing Preview Session", e);
-            } catch (IllegalStateException e) {
-                Log.w(TAG, "Error on closing Preview Session", e);
-            }
-            previewSession = null;
         }
     }
 
     public void takePicture() {
-        if (null == cameraDevice) {
-            Log.e(TAG, "cameraDevice is null");
-            return;
-        }
-        int rotationOfWindow = activity.getWindowManager().getDefaultDisplay().getRotation();
-        int rotation = MediaRecorderWrapper.sensorToMediaOrientation(sensorOrientation, rotationOfWindow);
-        final CaptureRequest request = imageWrapper.createPictureRequest(cameraDevice, ImageWrapper.getFile(), rotation, backgroundHandler);
-
-        CameraCaptureSession.CaptureCallback callback
-                = new CameraCaptureSession.CaptureCallback() {
-
-            @Override
-            public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                           @NonNull CaptureRequest request,
-                                           @NonNull TotalCaptureResult result) {
-
-                Toast.makeText(getContext(), "Saved Image", Toast.LENGTH_SHORT).show();
-                beginPreview();
-            }
-        };
-
-        try {
-            previewSession.stopRepeating();
-            previewSession.capture(request, callback, backgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Error on setting picture capture request", e);
-        }
 
     }
 
+    public void startVideo() {
 
-    static class CompareSizesByArea implements Comparator<Size> {
+    }
 
-        @Override
-        public int compare(Size lhs, Size rhs) {
-            // We cast here to ensure the multiplications won't overflow
-            return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
-                    (long) rhs.getWidth() * rhs.getHeight());
-        }
+    public void stopVideo() {
 
     }
 }

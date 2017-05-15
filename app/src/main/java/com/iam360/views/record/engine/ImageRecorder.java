@@ -1,45 +1,77 @@
-package com.iam360.videorecording;
+package com.iam360.views.record.engine;
 
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.*;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
 import java.io.File;
-import java.util.ArrayList;
 
 /**
  * Created by Charlotte on 21.12.2016.
  */
-public class ImageWrapper {
+public class ImageRecorder implements SurfaceProvider {
     public static final String FACEDETECTION_FILENAME = "faceDetection_%s.jpg";
     public static final String DIR_NAME = "FaceDetection";
-    private static final String TAG = "ImageWrapper";
+    private static final String TAG = "ImageRecorder";
     private final Context context;
-    private final CameraManager manager;
 
     //keep this because of garbage Collector
     private Surface surface;
     private ImageReader reader;
 
-    public ImageWrapper(Context context, Size size) {
+    public ImageRecorder(Context context) {
         this.context = context;
-        manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        reader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.JPEG, 1);
-        surface = reader.getSurface();
     }
 
+    @Override
+    public Size[] getOutputSizes(StreamConfigurationMap map) {
+        return map.getOutputSizes(ImageReader.class);
+    }
+
+    @Override
     public Surface getSurface() {
         return surface;
     }
 
+    @Override
+    public void createSurface(Size size, SurfaceProviderCallback callback) {
+        if(this.surface != null) {
+            throw new IllegalStateException("Surface already created.");
+        }
+        if(callback == null) {
+            throw new IllegalArgumentException("No callback given");
+        }
 
+        reader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.JPEG, 1);
+        surface = reader.getSurface();
+        callback.SurfaceReady(this, surface, size);
+    }
+
+    @Override
+    public void destroySurface(SurfaceProviderCallback callback) {
+        if(this.surface == null) {
+            throw new IllegalStateException("Surface not created.");
+        }
+        if(callback == null) {
+            throw new IllegalArgumentException("No callback given");
+        }
+
+        reader.close();
+        surface.release();
+
+        reader = null;
+        surface = null;
+        callback.SurfaceDestroyed(this);
+    }
+
+    // TODO: THis does not belong here.
     public CaptureRequest createPictureRequest(CameraDevice device, File file, int rotation, Handler backgroundHandler) {
         try {
             final CaptureRequest.Builder captureBuilder = device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);

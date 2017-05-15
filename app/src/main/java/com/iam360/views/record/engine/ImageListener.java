@@ -1,4 +1,4 @@
-package com.iam360.videorecording;
+package com.iam360.views.record.engine;
 
 import android.content.Context;
 import android.media.Image;
@@ -34,7 +34,7 @@ public class ImageListener implements ImageReader.OnImageAvailableListener {
             byte[] bytes = new byte[buffer.capacity()];
             buffer.get(bytes);
             save(bytes);
-            MediaRecorderWrapper.addImageToGallery(file, context);
+            VideoRecorder.addImageToGallery(file, context);
         } catch (IOException e) {
             Log.e(TAG, "Problem reading Image", e);
         } finally {

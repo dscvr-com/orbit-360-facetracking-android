@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,14 +15,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothEngineControlService;
@@ -63,9 +60,11 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private ButtomReciever buttomReciever;
     public static final String KEY_TRACKING = "isTracking";
     private IntentFilter filter;
+    private boolean active;
 
     @Override
     public void onResume() {
+        active = true;
         Log.d(TAG, "Camera View onResume");
         super.onResume();
         if (recordPreview != null) {
@@ -77,12 +76,13 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onPause() {
+        active = false;
+        unregisterReceiver(buttomReciever);
         Log.d(TAG, "Camera View onPause");
         super.onPause();
         if (recordPreview != null) {
             recordPreview.onPause();
         }
-        unregisterReceiver(buttomReciever);
     }
 
     @Override
@@ -102,6 +102,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         filter.addAction(RemoteButtonListener.LOWER_BUTTON_PRESSED);
         buttomReciever = new ButtomReciever(() -> remoteRecordingClicked() , () -> remoteTrackingClicked());
         gestureDetector = new GestureDetector(this, this);
+        active = false;
 
     }
 
@@ -180,7 +181,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     private void createRecorderPreview(boolean isFrontCamera) {
-        RecorderPreviewView oldView = recordPreview;
+        // TODO.
         recordPreview = new RecorderPreviewView(this, isFrontCamera);
 
         int orientation = 0;
@@ -209,20 +210,15 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
 
-        if (oldView != null) {
-            oldView.closeCamera();
-            layout.removeView(oldView);
-            oldView.onPause();
-        }
         layout.addView(recordPreview, params);
-        recordPreview.onResume();
         overlayCanvas.bringToFront();
     }
 
     private void drawRects(List<RectF> rects) {
         if (overlayCanvas != null) {
-            Matrix inv = new Matrix();
-            overlayCanvas.setTransform(recordPreview.getTransform());
+            Matrix mat = new Matrix();
+            recordPreview.getTransform(mat);
+            overlayCanvas.setTransform(mat);
             overlayCanvas.setRects(rects);
             runOnUiThread(() -> overlayCanvas.invalidate());
         }
@@ -285,7 +281,13 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         }
         getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
         getSharedPreferences().edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
+
+        FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_container);
+        layout.removeView(recordPreview);
+        recordPreview.onPause();
+
         createRecorderPreview(isFrontCamera);
+        recordPreview.onResume();
         if (splashFrag != null && splashFrag.isInLayout()) splashFrag.getView().bringToFront();
     }
 

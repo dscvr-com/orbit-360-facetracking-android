@@ -1,9 +1,10 @@
-package com.iam360.videorecording;
+package com.iam360.views.record.engine;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaCodec;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -23,12 +24,12 @@ import java.io.IOException;
  * Class to manage the MediaRecorder, to record videos.
  * Created by Charlotte on 22.11.2016.
  */
-public class MediaRecorderWrapper {
+public class VideoRecorder implements SurfaceProvider {
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
     private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
-    private static final String TAG = "MediaRecorderWrapper";
+    private static final String TAG = "VideoRecorder";
     private static final String FORMAT = "faceDetection-%s.mp4";
     private boolean prepared;
 
@@ -47,14 +48,17 @@ public class MediaRecorderWrapper {
     private Size size;
     private Context context;
     private Surface surface;
+    private boolean recording;
 
     private File currentFile;
+    private int initialOrientation;
 
-    public MediaRecorderWrapper(Size size, Context context) {
-        this.size = size;
+    public VideoRecorder(Context context, int initialOrientation) {
         this.context = context;
         this.recorder = new MediaRecorder();
         this.prepared = false;
+        this.initialOrientation = initialOrientation;
+        this.recording = false;
     }
 
     public static int sensorToMediaOrientation(int sensorOrientation, int rotation) {
@@ -71,45 +75,89 @@ public class MediaRecorderWrapper {
         context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
     }
 
+    @Override
+    public Size[] getOutputSizes(StreamConfigurationMap map) {
+        return map.getOutputSizes(MediaCodec.class);
+    }
+
+    @Override
     public Surface getSurface() {
         return surface;
     }
 
-    public void stopRecording(File videoFile) {
-        // Stop recording
-        recorder.stop();
+    @Override
+    public void createSurface(Size size, SurfaceProviderCallback callback) {
+        if(this.surface != null) {
+            throw new IllegalStateException("Surface already created.");
+        }
+        if(callback == null) {
+            throw new IllegalArgumentException("No callback given");
+        }
+
+        this.size = size;
+
+        surface = MediaCodec.createPersistentInputSurface();
+        try {
+            setUpMediaRecorder(initialOrientation);
+            callback.SurfaceReady(this, surface, size);
+        } catch (IOException e) {
+            callback.Error(e.getMessage());
+            destroySurface(callback);
+        }
+    }
+
+    @Override
+    public void destroySurface(SurfaceProviderCallback callback) {
+        if(this.surface == null) {
+            throw new IllegalStateException("Surface not created.");
+        }
+        if(callback == null) {
+            throw new IllegalArgumentException("No callback given");
+        }
+
         recorder.reset();
-        prepared = false;
-        currentFile.renameTo(videoFile);
+        surface.release();
+        callback.SurfaceDestroyed(this);
+
+        surface = null;
+    }
+
+    public void stopRecording(File videoFile) {
+        if(this.surface == null) {
+            throw new IllegalStateException("Surface not created.");
+        }
+        if(!this.recording) {
+            throw new IllegalStateException("Recorder is not running");
+        }
+
+        // Stop recording
+        this.recorder.stop();
+        this.recorder.reset();
+        this.prepared = false;
+        this.currentFile.renameTo(videoFile);
         addImageToGallery(videoFile, context);
         if (null != context) {
+            // TODO: This needs to be handled via callback
             Toast.makeText(context, "Video saved: " + videoFile.getAbsolutePath(),
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + videoFile.getAbsolutePath());
         }
+        this.recording = false;
     }
 
     public void startRecording(int orientation) throws IOException, CameraAccessException {
-        if(!prepared) {
+        if(this.surface == null) {
+            throw new IllegalStateException("Surface not created.");
+        }
+        if(this.recording) {
+            throw new IllegalStateException("Recorder is already running");
+        }
+
+        if(!this.prepared) {
             setUpMediaRecorder(orientation);
         }
-        recorder.start();
-    }
-
-    // Note(ej):
-    // Create surface needs to configure the media recorder once, so the surface
-    // has the correct size for the capture session.
-    // In all other cases, the media recorder is configured whenever the video is started.
-    public void createSurface(int initialOrientation) throws IOException {
-        surface = MediaCodec.createPersistentInputSurface();
-        setUpMediaRecorder(initialOrientation);
-    }
-
-    public void destroySurface() {
-        recorder.reset();
-        surface.release();
-
-        surface = null;
+        this.recorder.start();
+        this.recording = true;
     }
 
     private void setUpMediaRecorder(int orientation) throws IOException {
@@ -151,7 +199,7 @@ public class MediaRecorderWrapper {
     @Override
     public void finalize() {
         if(surface != null) {
-            throw new Error("MediaRecorderWrapper moved out of scope, but surface was not destroyed.");
+            throw new Error("VideoRecorder moved out of scope, but surface was not destroyed.");
         }
     }
 }
