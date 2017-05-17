@@ -6,8 +6,11 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
@@ -18,6 +21,8 @@ import com.iam360.views.record.engine.InMemoryImageProvider;
 import com.iam360.views.record.engine.RecorderPreviewViewBase;
 import com.iam360.views.record.engine.SurfaceProvider;
 import com.iam360.views.record.engine.VideoRecorder;
+
+import java.io.IOException;
 
 /**
  * Created by Emi on 15/05/2017.
@@ -50,18 +55,25 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
 
     @Override
     protected boolean canUseCamera(CameraCharacteristics characteristics) {
-        return isFrontCamera == (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT);
+        // Odd comparison because of odd terminology
+        return isFrontCamera != (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT);
     }
 
     @Override
     protected SurfaceProvider[] createSurfacesProviders() {
-        return new SurfaceProvider[] { imageRecorder, videoRecorder, inMemoryRecorder };
+
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "createSurfaceProviders");
+        return new SurfaceProvider[] {  imageRecorder,/* videoRecorder, */inMemoryRecorder };
     }
 
     @Override
     public CaptureRequest.Builder setupPreviewSession(CameraDevice device, Surface previewSurface) throws CameraAccessException {
+
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "setupPreviewSession");
         CaptureRequest.Builder builder = super.setupPreviewSession(device, previewSurface);
-        builder.addTarget(videoRecorder.getSurface());
+        //builder.addTarget(videoRecorder.getSurface());
         builder.addTarget(inMemoryRecorder.getSurface());
         return builder;
     }
@@ -100,6 +112,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
 
     @Override
     public void onResume() {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "onResume");
         inMemoryRecorder.startBackgroundThread();
         super.onResume();
@@ -107,6 +120,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
 
     @Override
     public void onPause() {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "onPause");
         super.onPause();
         try {
@@ -117,14 +131,54 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
     }
 
     public void takePicture() {
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "takePicture");
+        int rotationOfWindow = context.getWindowManager().getDefaultDisplay().getRotation();
+        int rotation = VideoRecorder.sensorToMediaOrientation(sensorOrientation, rotationOfWindow);
 
+        CaptureRequest.Builder builder = imageRecorder.createPictureRequest(cameraDevice, ImageRecorder.getFile(), rotation, backgroundHandler);
+
+        try {
+            super.setCaptureRequest(builder, new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+
+                    Log.d(TAG, Thread.currentThread().getName());
+                    Log.d(TAG, "pictureDone");
+                    startPreview();
+                }
+
+                @Override
+                public void onCaptureFailed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull CaptureFailure failure) {
+
+                    Log.d(TAG, Thread.currentThread().getName());
+                    Log.e(TAG, "Error during capturing " + failure.getReason());
+                }
+            });
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     public void startVideo() {
 
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "startVideo");
+        int rotationOfWindow = context.getWindowManager().getDefaultDisplay().getRotation();
+        int rotation = VideoRecorder.sensorToMediaOrientation(sensorOrientation, rotationOfWindow);
+        try {
+            videoRecorder.startRecording(rotation);
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+        } catch (CameraAccessException e) {
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     public void stopVideo() {
 
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "stopVideo");
+        videoRecorder.stopRecording(VideoRecorder.getVideoAbsolutePath());
     }
 }

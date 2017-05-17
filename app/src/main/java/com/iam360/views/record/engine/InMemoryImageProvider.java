@@ -54,18 +54,23 @@ public class InMemoryImageProvider implements SurfaceProvider {
             @Override
             public void handleMessage(Message msg) {
                 if (msg.what == START_DECODER) {
+                    Log.d(TAG, Thread.currentThread().getName());
+                    Log.d(TAG, "Create codec surface");
                     codecSurface = new CodecSurface(size.getWidth(), size.getHeight());
 
                     SurfaceProviderCallback c = callback;
                     callback = null;
                     c.SurfaceReady(InMemoryImageProvider.this, codecSurface.getSurface(), size);
                 } else if (msg.what == FETCH_FRAME) {
+                   // Log.d(TAG, Thread.currentThread().getName());
+                    //Log.d(TAG, "Fetch frame await.");
                     if(codecSurface != null) {
                         try {
                             if (codecSurface.awaitNewImage()) {
                                 codecSurface.drawImage(false);
                                 dataListener.imageDataReady(codecSurface.fetchPixels(), codecSurface.mWidth,
                                         codecSurface.mHeight, CodecSurface.colorFormat);
+                                //Log.d(TAG, "Fetch frame done");
                             } else {
                                 Log.e(TAG, "Fetch frame failed");
                                 Thread.sleep(10, 0);
@@ -82,6 +87,8 @@ public class InMemoryImageProvider implements SurfaceProvider {
                         Log.d(TAG, "Codec surface is gone. Exiting looper.");
                     }
                 } else if (msg.what == EXIT_DECODER) {
+                    Log.d(TAG, Thread.currentThread().getName());
+                    Log.d(TAG, "Destroying decoder.");
                     codecSurface.release();
                     codecSurface = null;
                     SurfaceProviderCallback c = callback;
@@ -125,9 +132,11 @@ public class InMemoryImageProvider implements SurfaceProvider {
         if(callback == null) {
             throw new IllegalArgumentException("No callback given");
         }
-        decoderHandler.obtainMessage(START_DECODER).sendToTarget();
+
         this.callback = callback;
         this.size = size;
+
+        decoderHandler.obtainMessage(START_DECODER).sendToTarget();
    }
 
     @Override
@@ -149,6 +158,8 @@ public class InMemoryImageProvider implements SurfaceProvider {
     }
 
     public void startFrameFetching(RecorderPreviewListener dataListener) {
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "Start frame fetching message...");
         if(decoderHandler == null) {
             throw new IllegalStateException("Background thread not started");
         }
@@ -170,6 +181,8 @@ public class InMemoryImageProvider implements SurfaceProvider {
         decoderHandler.obtainMessage(FETCH_FRAME).sendToTarget();
     }
     public void stopFrameFetching() {
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "Stop frame fetching message...");
         if(!running) {
             throw new IllegalStateException("Not running");
         }
@@ -177,6 +190,8 @@ public class InMemoryImageProvider implements SurfaceProvider {
     }
 
     public void stopBackgroundThread() throws InterruptedException {
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "Stop background thread...");
         if(decoderHandler == null) {
             throw new IllegalStateException("Background thread not started");
         }
@@ -197,6 +212,7 @@ public class InMemoryImageProvider implements SurfaceProvider {
 
         decoderThread = null;
         decoderHandler = null;
+        Log.d(TAG, "Background thread stopped...");
 
     }
 }

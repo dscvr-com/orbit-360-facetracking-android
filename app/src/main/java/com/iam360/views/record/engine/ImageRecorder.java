@@ -72,7 +72,7 @@ public class ImageRecorder implements SurfaceProvider {
     }
 
     // TODO: THis does not belong here.
-    public CaptureRequest createPictureRequest(CameraDevice device, File file, int rotation, Handler backgroundHandler) {
+    public CaptureRequest.Builder createPictureRequest(CameraDevice device, File file, int rotation, Handler backgroundHandler) {
         try {
             final CaptureRequest.Builder captureBuilder = device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(surface);
@@ -81,7 +81,7 @@ public class ImageRecorder implements SurfaceProvider {
 
             ImageReader.OnImageAvailableListener readerListener = new ImageListener(file, context);
             reader.setOnImageAvailableListener(readerListener, backgroundHandler);
-            return captureBuilder.build();
+            return captureBuilder;
         } catch (CameraAccessException e) {
             Log.e(TAG, "Error with camera access.", e);
             return null;

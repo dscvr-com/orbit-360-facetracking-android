@@ -161,7 +161,6 @@ public class VideoRecorder implements SurfaceProvider {
     }
 
     private void setUpMediaRecorder(int orientation) throws IOException {
-        recorder.setInputSurface(surface);
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -177,10 +176,18 @@ public class VideoRecorder implements SurfaceProvider {
                 Log.e(TAG, "Video Recorder Error: " + what + ", " + extra);
             }
         });
+        recorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+            @Override
+            public void onInfo(MediaRecorder mr, int what, int extra) {
+                Log.e(TAG, "Video Recorder Info: " + what + ", " + extra);
+            }
+        });
         currentFile = getTemporaryPath();
 
         Log.d(TAG, "Writing video: " + currentFile.getAbsolutePath());
         recorder.setOutputFile(currentFile.getAbsolutePath());
+        recorder.setInputSurface(surface);
+
         recorder.prepare();
 
         prepared = true;

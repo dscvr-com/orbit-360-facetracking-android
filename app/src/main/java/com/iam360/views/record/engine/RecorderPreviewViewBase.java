@@ -37,18 +37,20 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
-    private static final String TAG = "RecordPreviewView";
+    private static final String TAG = "RecorderPreviewViewBase";
 
     protected CameraDevice cameraDevice;
-    private HandlerThread backgroundThread;
-    private Handler backgroundHandler;
+    protected HandlerThread backgroundThread;
+    protected Handler backgroundHandler;
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
     private SurfaceProvider[] externalRenderTargets;
     private boolean[] externalRenderTargetReady;
     private Object syncRoot;
     private Surface previewSurface;
     protected CameraCaptureSession currentSession;
-    private Activity context;
+    protected Activity context;
+    protected int sensorOrientation;
+    protected Size previewSize;
 
 
     public RecorderPreviewViewBase(Activity context) {
@@ -72,6 +74,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         public void onOpened(@NonNull CameraDevice cameraDevice) {
 
             synchronized (syncRoot) {
+                Log.d(TAG, Thread.currentThread().getName());
                 Log.d(TAG, "Camera device opened");
                 // We can start the capture session here
                 cameraOpenCloseLock.release();
@@ -89,8 +92,8 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         @Override
         public void onDisconnected(@NonNull  CameraDevice cameraDevice) {
             // We close the camera device
-            // and end.
             synchronized (syncRoot) {
+                Log.d(TAG, Thread.currentThread().getName());
                 Log.d(TAG, "Camera device disconnected");
                 cameraOpenCloseLock.release();
                 cameraDevice.close();
@@ -100,9 +103,20 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         }
 
         @Override
+        public void onClosed(@NonNull CameraDevice camera) {
+            super.onClosed(camera);
+            Log.d(TAG, Thread.currentThread().getName());
+            Log.d(TAG, "Camera device closed");
+            cameraOpenCloseLock.release();
+            RecorderPreviewViewBase.this.cameraDevice = null;
+            onCameraClosed(cameraDevice);
+        }
+
+        @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
             synchronized (syncRoot) {
                 // :(
+                Log.d(TAG, Thread.currentThread().getName());
                 Log.e(TAG, "Camera device error: " + error);
                 cameraOpenCloseLock.release();
                 cameraDevice.close();
@@ -115,6 +129,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     private SurfaceProvider.SurfaceProviderCallback externalSurfaceCallback = new SurfaceProvider.SurfaceProviderCallback() {
         @Override
         public void SurfaceReady(SurfaceProvider sender, Surface surface, Size size) {
+            Log.d(TAG, Thread.currentThread().getName());
             Log.d(TAG, "Surface Ready: " + sender.getClass().getName());
             synchronized (syncRoot) {
                 externalRenderTargetReady[Arrays.asList(externalRenderTargets).indexOf(sender)] = true;
@@ -126,6 +141,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
         @Override
         public void SurfaceDestroyed(SurfaceProvider sender) {
+            Log.d(TAG, Thread.currentThread().getName());
             Log.d(TAG, "Surface destroyed: " + sender.getClass().getName());
             synchronized (syncRoot) {
                 externalRenderTargetReady[Arrays.asList(externalRenderTargets).indexOf(sender)] = false;
@@ -140,6 +156,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
     private void startSession() {
 
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "Starting Session");
         if(!cameraReady() || !allSurfacesReady()) {
             throw new IllegalStateException("Not ready for initialization");
@@ -162,6 +179,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
             CameraCaptureSession.StateCallback callback = new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
+                    Log.d(TAG, Thread.currentThread().getName());
                     Log.d(TAG, "Session configured");
                     currentSession = session;
                     onSessionCreated(currentSession);
@@ -170,6 +188,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                    Log.d(TAG, Thread.currentThread().getName());
                     Log.e(TAG, "Session config failed");
                 }
             };
@@ -185,6 +204,10 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     public void onResume() {
+
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "onResume");
+
         startBackgroundThread();
         if (this.isAvailable()) {
             getSupportedSizesAndStartCamera(this.getWidth(), this.getHeight());
@@ -195,6 +218,10 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
     // To be called from parent activity
     public void onPause() {
+
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "onPause");
+
         closeSession();
         closeExternalSurfaces();
         closeCamera();
@@ -202,6 +229,9 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     protected void closeExternalSurfaces() {
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "closeExternalSurfaces");
+
         for(SurfaceProvider target : externalRenderTargets) {
             if(externalRenderTargetReady[Arrays.asList(externalRenderTargets).indexOf(target)]) {
                 target.destroySurface(externalSurfaceCallback);
@@ -213,9 +243,11 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         try {
             cameraOpenCloseLock.acquire();
             if (null != cameraDevice) {
+                Log.d(TAG, Thread.currentThread().getName());
                 Log.d(TAG, "Closing camera");
                 cameraDevice.close();
-                cameraDevice = null;
+            } else {
+                Log.d(TAG, "Tried to close cam, but it was not open.");
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera closing.");
@@ -225,6 +257,8 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     private void closeSession() {
+        Log.d(TAG, Thread.currentThread().getName());
+        Log.d(TAG, "Closing session");
         if (currentSession == null) {
             throw new IllegalStateException("Session is not running.");
         }
@@ -241,6 +275,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     private void stopBackgroundThread() {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "Stopping background thread");
 
         if (backgroundThread == null) {
@@ -258,6 +293,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     private void startBackgroundThread() {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "Starting background thread");
         backgroundThread = new HandlerThread("CameraBackground");
         backgroundThread.start();
@@ -265,6 +301,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     protected void startPreview() {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "Starting preview");
         if(!cameraReady() || !allSurfacesReady() || !sessionReady()) {
             throw new IllegalStateException("Not ready");
@@ -280,12 +317,14 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     protected void setRepeatingRequest(CaptureRequest.Builder builder) throws CameraAccessException {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "Setting repeating capture request");
         currentSession.stopRepeating();
         currentSession.setRepeatingRequest(builder.build(), null, backgroundHandler);
     }
 
     protected void setCaptureRequest(CaptureRequest.Builder builder, CameraCaptureSession.CaptureCallback callback) throws CameraAccessException {
+        Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "Setting non-repeating capture request");
         currentSession.stopRepeating();
         currentSession.capture(builder.build(), callback, backgroundHandler);
@@ -317,6 +356,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            Log.d(TAG, Thread.currentThread().getName());
             Log.d(TAG, "Preview surface available.");
             getSupportedSizesAndStartCamera(width, height);
 
@@ -342,6 +382,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     private void getSupportedSizesAndStartCamera(int width, int height) {
         CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
+            Log.d(TAG, Thread.currentThread().getName());
             Log.d(TAG, "tryAcquire");
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
@@ -355,7 +396,9 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                     Size[] validOutputSizes = map.getOutputSizes(SurfaceTexture.class);
                     Size optimalSize = calculatePreviewSize(map, validOutputSizes, new Size(width, height));
+                    previewSize = optimalSize;
                     // TODO: Configure transform
+                    sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                     configureTransform(optimalSize.getWidth(), optimalSize.getHeight());
                     // TODO: Init surfaces and open the cam and if all is here, start the session.
                     externalRenderTargets = createSurfacesProviders();
@@ -398,7 +441,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         int w = Math.max(width, height);
         int h = Math.min(width, height);
         for (Size option : choices) {
-            Log.d(TAG, String.format("Choice: %d x %d", option.getWidth(), option.getHeight())) ;
+            //Log.d(TAG, String.format("Choice: %d x %d", option.getWidth(), option.getHeight())) ;
             if (option.getWidth() >= w && option.getHeight() >= h) {
                 bigEnough.add(option);
             }
