@@ -161,6 +161,7 @@ public class VideoRecorder implements SurfaceProvider {
     }
 
     private void setUpMediaRecorder(int orientation) throws IOException {
+        // Note: This calls have to happen in exactly this order. Especially, the input surface has to be set directly before prepare!
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);

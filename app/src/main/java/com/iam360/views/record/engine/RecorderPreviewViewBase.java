@@ -467,11 +467,12 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     }
 
     public static Matrix getTransform(Size sourceSize, Size targetSize, int displayRotation) {
-        int height = sourceSize.getWidth();
-        int width = sourceSize.getHeight();
+        Log.d(TAG, "Formatting: video: " + sourceSize + ", view: " + targetSize + ", rotation: " + displayRotation);
+        float height = sourceSize.getWidth();
+        float width = sourceSize.getHeight();
 
-        int viewWidth = targetSize.getWidth();
-        int viewHeight = targetSize.getHeight();
+        float viewWidth = targetSize.getWidth();
+        float viewHeight = targetSize.getHeight();
         int rotation = displayRotation;
 
         Matrix matrix = new Matrix();
@@ -481,23 +482,22 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
 
+        //matrix.setScale(height / width, width / height);
+
         bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-        matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+        matrix.setRectToRect(bufferRect, viewRect, Matrix.ScaleToFit.FILL);
 
-        float[] vals = new float[9];
-        matrix.getValues(vals);
+        //float scale = Math.max(
+        //        (float) viewHeight / height,
+        //        (float) viewWidth  / width);
 
-        float scale = Math.max(
-                (float) viewHeight / height,
-                (float) viewWidth  / width);
+        //matrix.postScale(scale, scale, centerX, centerY);
 
-        matrix.postScale(scale, scale, centerX, centerY);
-
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
-        }
+        //if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+        //    matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+        //} else if (Surface.ROTATION_180 == rotation) {
+        //    matrix.postRotate(180, centerX, centerY);
+        //}
 
         return matrix;
         //textureView.setTransform(matrix);

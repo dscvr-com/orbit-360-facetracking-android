@@ -64,7 +64,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
 
         Log.d(TAG, Thread.currentThread().getName());
         Log.d(TAG, "createSurfaceProviders");
-        return new SurfaceProvider[] {  imageRecorder,/* videoRecorder, */inMemoryRecorder };
+        return new SurfaceProvider[] {  imageRecorder/*, videoRecorder*/, inMemoryRecorder };
     }
 
     @Override
