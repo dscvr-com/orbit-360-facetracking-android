@@ -44,18 +44,14 @@ public class BluetoothCameraApplicationContext extends Application {
         return connector != null ? connector.getBluetoothService() : null;
     }
 
-    public void setFocalLengthInPx(CameraManager cameraManager, String cameraId) {
+    public void setFocalLengthInPx(CameraCharacteristics cameraCharacteristics) {
         float[] focalLengths;
-        try {
-            CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
-            focalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-            //array because, if the camera has optical zoom, we get more than one result. This is very unlikely.
-            float focalLength = focalLengths[0];
-            float sensorWidth = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE).getWidth();
-            this.focalLengthInPx = focalLength / sensorWidth;
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "error setting focalLength.", e);
-        }
+
+        focalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+        //array because, if the camera has optical zoom, we get more than one result. This is very unlikely.
+        float focalLength = focalLengths[0];
+        float sensorWidth = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE).getWidth();
+        this.focalLengthInPx = focalLength / sensorWidth;
     }
 
     public void setDemoMode() {

@@ -23,6 +23,8 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,9 +85,6 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                 if (allSurfacesReady() && cameraReady()) {
                     startSession();
                 }
-
-                // TODO Lotti: This needs to be refeactored via some listener or a getter.
-                //((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(manager, cameraDevice.getId());
             }
         }
 
@@ -415,6 +414,9 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                         return;
                     }
 
+                    // TODO Lotti: This needs to be refeactored via some listener or a getter.
+                    ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(characteristics);
+
                     Log.d(TAG, "Opening camera...");
                     manager.openCamera(cameraId, stateCallback, null);
 
@@ -481,26 +483,27 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
-
-        //matrix.setScale(height / width, width / height);
-
+        matrix.setScale(1f, 1f);
+/*
         bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
         matrix.setRectToRect(bufferRect, viewRect, Matrix.ScaleToFit.FILL);
 
-        //float scale = Math.max(
-        //        (float) viewHeight / height,
-        //        (float) viewWidth  / width);
+        float scale = Math.max(
+                (float) viewHeight / height,
+                (float) viewWidth  / width);
 
-        //matrix.postScale(scale, scale, centerX, centerY);
+        matrix.postScale(scale, scale, centerX, centerY);
 
-        //if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-        //    matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        //} else if (Surface.ROTATION_180 == rotation) {
-        //    matrix.postRotate(180, centerX, centerY);
-        //}
+*/
+        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+
+           // matrix.postScale(viewWidth / viewHeight, viewHeight / viewWidth);
+        } else if (Surface.ROTATION_180 == rotation) {
+            matrix.postRotate(180, centerX, centerY);
+        }
 
         return matrix;
-        //textureView.setTransform(matrix);
     }
 
 
