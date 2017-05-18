@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class FaceDetection {
     public static final String TAG = "FaceDetection";
-    private final int SIZE_OF_SCALED_IMAGE = 240;
+    private final int SIZE_OF_SCALED_IMAGE = 120;
     private CascadeClassifier detector;
     private ArrayList<FaceDetectionResultListener> resultListeners = new ArrayList<>();
     private ArrayList<NonPermanentFaceDetectionResultListener> onlyOnceCalledListener = new ArrayList<>();
@@ -82,7 +82,7 @@ public class FaceDetection {
 
         MatOfRect resultMatOfRect = new MatOfRect();
         detector.detectMultiScale(grey, resultMatOfRect);
-        informListeners(resizeAndReformatFaces(resultMatOfRect.toList(), scale), width, height);
+        informListeners(resizeAndReformatFaces(resultMatOfRect.toList(), scale, scale), grey.width() * scale, grey.height() * scale);
 
     }
 
@@ -99,10 +99,10 @@ public class FaceDetection {
         }
     }
 
-    private List<android.graphics.RectF> resizeAndReformatFaces(List<Rect> rects, float scale) {
+    private List<android.graphics.RectF> resizeAndReformatFaces(List<Rect> rects, float sx, float sy) {
         List<android.graphics.RectF> resultsResized = new ArrayList<>(rects.size());
         for (Rect face : rects) {
-            RectF res = new RectF(face.x * scale, face.y * scale, (face.x + face.width) * scale, (face.y + face.height) * scale);
+            RectF res = new RectF(face.x * sx, face.y * sy, (face.x + face.width) * sx, (face.y + face.height) * sy);
 
             resultsResized.add(res);
         }
@@ -134,9 +134,9 @@ public class FaceDetection {
             Core.flip(grey, grey, 0);
         }
 
-        /*
+
         // Writes debug images:
-        Imgcodecs.imwrite(
+        /*Imgcodecs.imwrite(
                 new File(
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString(),
                         System.currentTimeMillis() + ".jpg").getAbsolutePath(),
@@ -144,7 +144,7 @@ public class FaceDetection {
         );
         */
 
-        Imgproc.equalizeHist(grey, grey);
+        //Imgproc.equalizeHist(grey, grey);
         return grey;
     }
 

@@ -134,7 +134,7 @@ public class InMemoryImageProvider implements SurfaceProvider {
         }
 
         this.callback = callback;
-        this.size = size;
+        this.size = new Size(size.getHeight(), size.getWidth());
 
         decoderHandler.obtainMessage(START_DECODER).sendToTarget();
    }

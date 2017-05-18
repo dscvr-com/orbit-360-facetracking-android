@@ -51,7 +51,8 @@ public class OverlayCanvasView extends View {
 
             RectF res = new RectF();
             transform.mapRect(res, rect);
-            Log.d("RECT", "x: " + res.centerX() + " y: " + res.centerY());
+            Log.d("RECT1", "x: " + rect.centerX() + " y: " + rect.centerY());;
+            Log.d("RECT2", "x: " + res.centerX() + " y: " + res.centerY());
             canvas.drawRect(rect, paint);
         }
         super.onDraw(canvas);

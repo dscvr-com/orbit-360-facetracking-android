@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
@@ -35,24 +34,24 @@ public class BluetoothEngineControlService {
     private static final float EPSILON_X_Steps = 10;
     private static final float EPSILON_Y_Steps = 10;
     private static final float P = 0.5f;
-    private static final EngineCommandPoint SPEED_FACTOR = new EngineCommandPoint(0.5f, 0.5f);//FIXME Android
+    private static final EngineCommandPoint SPEED_FACTOR = new EngineCommandPoint(0.5f, 1.0f); // Speed factor to compaensate poort racking performance.
     private static final EngineCommandPoint MOVE_BACK_SPEED = new EngineCommandPoint(800f, 800f);
 
 
     private BluetoothGattService bluetoothService;
     private BluetoothGatt gatt;
     //this value has to be multiplied with the width because we don't have the width when we calc this value
-    private float focalLengthInPx;
+    private float unitFocalLength;
     private long lastTimeInMillis;
     private boolean firstRun = true;
     private EngineCommandPoint movedSteps = new EngineCommandPoint(0, 0);
     private boolean stopped = false;
-    private static final EngineCommandPoint MAX_VALUE = new EngineCommandPoint(1000f, 1000f);
+    private static final EngineCommandPoint MAX_SPEED = new EngineCommandPoint(1000f, 1000f);
+    private static final EngineCommandPoint MIN_SPEED = new EngineCommandPoint(50, 50f);
     private EngineCommandPoint trackingPoint = null;
     public BluetoothEngineControlService(boolean directStart) {
         stopped = !directStart;
     }
-
     public boolean setBluetoothGatt(BluetoothGatt gatt) throws NoBluetoothConnectionException {
         if (gatt == null && this.hasBluetoothService()) {
             stop();
@@ -130,18 +129,16 @@ public class BluetoothEngineControlService {
         }
 
         if (detectionResult.size() > 0) {
-            EngineCommandPoint pointOfFace = EngineCommandPoint.CreateMiddel(detectionResult);
-
+            EngineCommandPoint pointOfFace = EngineCommandPoint.AveragePosition(detectionResult);
             EngineCommandPoint steps = getSteps(width, height, pointOfFace);
-            long currentTime = System.nanoTime();
+            long currentTime = System.currentTimeMillis();
 
             long deltaTime = currentTime - lastTimeInMillis;
             lastTimeInMillis = currentTime;
-            EngineCommandPoint speed = steps.div(deltaTime).abs();
+            EngineCommandPoint speed = steps.div(deltaTime / 1000f).abs();
             speed = speed.mul(SPEED_FACTOR);
-            speed = speed.min(MAX_VALUE);
-            speed = speed.max(new EngineCommandPoint(250f, 250f));
-
+            speed = speed.min(MAX_SPEED);
+            speed = speed.max(MIN_SPEED);
 
             EngineCommandPoint stepsAbs = steps.abs();
             if (stepsAbs.getX() > EPSILON_X_Steps || stepsAbs.getY() > EPSILON_Y_Steps)
@@ -154,28 +151,30 @@ public class BluetoothEngineControlService {
     }
 
     private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace) {
-        float deltaX = (width / 2) - pointOfFace.getX();
-        float deltaY = (height / 3) - pointOfFace.getY();
+        float deltaX = (width / 2.0f) - pointOfFace.getX();
+        float deltaY = (height / 3.0f) - pointOfFace.getY();
         EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
-        return steps.mul(P).mul(0.5f).mul(-1);
+        return steps.mul(P).mul(-1);
     }
 
     private void stop() throws NoBluetoothConnectionException {
         sendCommand(EngineCommand.stop());
     }
 
-    public void setFocalLengthInPx(float focalLengthInPx) {
-        this.focalLengthInPx = focalLengthInPx;
+    public void setUnitFocalLength(float unitFocalLength) {
+        this.unitFocalLength = unitFocalLength;
     }
 
     public int getStepsX(int width, float deltaX) {
-        double angX = Math.atan2(deltaX, focalLengthInPx * width);
+        double angX = Math.atan2(deltaX / width, unitFocalLength);
+        Log.d(TAG, "angX: " + angX);
         return (int) (STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI));
 
     }
 
     public int getStepsY(int height, float deltaY) {
-        double angY = Math.atan2(deltaY, focalLengthInPx * height);
+        double angY = Math.atan2(deltaY / height, unitFocalLength);
+        Log.d(TAG, "angY: " + angY);
         return (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI));
 
     }

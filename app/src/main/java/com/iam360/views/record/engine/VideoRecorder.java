@@ -35,13 +35,13 @@ public class VideoRecorder implements SurfaceProvider {
 
     static {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 270);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 180);
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 90);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180);
+        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 90);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180);
+        INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 0);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
+        INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
 
     private MediaRecorder recorder;

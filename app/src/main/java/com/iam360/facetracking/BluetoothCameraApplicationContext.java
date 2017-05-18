@@ -2,12 +2,7 @@ package com.iam360.facetracking;
 
 import android.app.Application;
 import android.bluetooth.BluetoothGatt;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.util.Log;
 
 import com.iam360.engine.connection.BluetoothConnector;
 import com.iam360.engine.connection.BluetoothEngineControlService;
@@ -19,7 +14,7 @@ import com.iam360.engine.connection.BluetoothEngineControlService;
 public class BluetoothCameraApplicationContext extends Application {
     private static final String TAG = "ApplicationContext";
     private BluetoothConnector connector;
-    private float focalLengthInPx;
+    private float unitFocalLength;
     private boolean demoMode = false;
     private boolean isFrontCamera = true;
 
@@ -30,7 +25,7 @@ public class BluetoothCameraApplicationContext extends Application {
 
     public void setBluetoothConnector(BluetoothConnector connector) {
         this.connector = connector;
-        connector.getBluetoothService().setFocalLengthInPx(focalLengthInPx);
+        connector.getBluetoothService().setUnitFocalLength(unitFocalLength);
     }
 
     public boolean setBluetoothService(BluetoothGatt gatt) throws BluetoothEngineControlService.NoBluetoothConnectionException {
@@ -45,14 +40,15 @@ public class BluetoothCameraApplicationContext extends Application {
         return connector != null ? connector.getBluetoothService() : null;
     }
 
-    public void setFocalLengthInPx(CameraCharacteristics cameraCharacteristics) {
+    public void setFocalLength(CameraCharacteristics cameraCharacteristics) {
         float[] focalLengths;
 
         focalLengths = cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
         //array because, if the camera has optical zoom, we get more than one result. This is very unlikely.
         float focalLength = focalLengths[0];
         float sensorWidth = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE).getWidth();
-        this.focalLengthInPx = focalLength / sensorWidth;
+        this.unitFocalLength = focalLength / sensorWidth;
+        connector.getBluetoothService().setUnitFocalLength(unitFocalLength);
     }
 
     public void setDemoMode() {

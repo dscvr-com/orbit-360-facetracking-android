@@ -54,6 +54,9 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     protected int sensorOrientation;
     protected Size previewSize;
 
+    public Size getVideoSize() {
+        return previewSize;
+    }
 
     public RecorderPreviewViewBase(Activity context) {
         super(context);
@@ -417,7 +420,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     }
 
                     // TODO Lotti: This needs to be refeactored via some listener or a getter.
-                    ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLengthInPx(characteristics);
+                    ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFocalLength(characteristics);
 
                     Log.d(TAG, "Opening camera...");
                     manager.openCamera(cameraId, stateCallback, null);

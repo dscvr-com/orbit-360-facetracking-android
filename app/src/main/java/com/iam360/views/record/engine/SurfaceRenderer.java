@@ -95,12 +95,6 @@ class SurfaceRenderer {
         GLES20.glEnableVertexAttribArray(maTextureHandle);
         checkGlError("glEnableVertexAttribArray maTextureHandle");
         Matrix.setIdentityM(mMVPMatrix, 0);
-
-        if(targetWidth > targetHeight) {
-            Matrix.scaleM(mMVPMatrix, 0, targetHeight / targetWidth, 1, 1);
-        } else if (targetWidth < targetHeight) {
-            Matrix.scaleM(mMVPMatrix, 0, 1, targetWidth / targetHeight, 1);
-        }
         GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
         GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, mSTMatrix, 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);

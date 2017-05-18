@@ -15,12 +15,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.iam360.engine.connection.BluetoothConnectionReciever;
 import com.iam360.engine.connection.BluetoothEngineControlService;
@@ -32,6 +34,7 @@ import com.iam360.views.record.OverlayCanvasView;
 import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 import com.iam360.views.record.RotationFragment;
+import com.iam360.views.record.engine.RecorderPreviewViewBase;
 
 import java.util.List;
 
@@ -202,7 +205,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         recordPreview.setPreviewListener(
                 new FaceTrackingListener(
                         this,
-                        new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects)},
+                        new FaceDetection.FaceDetectionResultListener[]{(rects, width, height) -> drawRects(rects, width, height)},
                         orientation));
         FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_container);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -213,11 +216,11 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         overlayCanvas.bringToFront();
     }
 
-    private void drawRects(List<RectF> rects) {
+    private void drawRects(List<RectF> rects, int width, int height) {
         if (overlayCanvas != null) {
-            Matrix mat = new Matrix();
-            recordPreview.getTransform(mat);
-            overlayCanvas.setTransform(mat);
+            // We don't need display rotation here, since facetracker results are already rotated
+            // int preview space.
+            overlayCanvas.setTransform(RecorderPreviewViewBase.getTransform(new Size(width, height), new Size(overlayCanvas.getWidth(), overlayCanvas.getHeight()), 0));
             overlayCanvas.setRects(rects);
             runOnUiThread(() -> overlayCanvas.invalidate());
         }
@@ -297,6 +300,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     public void onRecordingClicked(boolean shouldRecord, boolean startRecord) {
         if (shouldRecord) {
+            Toast.makeText(getApplicationContext(), "Video will be available in the next version!", Toast.LENGTH_LONG).show();
+            /*
             if (!startRecord) {
                 Log.i(TAG, "stop video");
                 recordPreview.stopVideo();
@@ -306,6 +311,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 recordPreview.startVideo();
                 overlayFragment.startTimer();
             }
+            */
         } else {
             recordPreview.takePicture();
         }

@@ -26,9 +26,9 @@ public class EngineCommandPoint {
         this.y = y;
     }
 
-    public static EngineCommandPoint CreateMiddel(Collection<RectF> rects) {
-        int centerX = 0;
-        int centerY = 0;
+    public static EngineCommandPoint AveragePosition(Collection<RectF> rects) {
+        float centerX = 0;
+        float centerY = 0;
         for (RectF rect : rects) {
             centerX += rect.centerX();
             centerY += rect.centerY();
