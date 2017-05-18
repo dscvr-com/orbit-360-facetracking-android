@@ -21,6 +21,7 @@ public class BluetoothCameraApplicationContext extends Application {
     private BluetoothConnector connector;
     private float focalLengthInPx;
     private boolean demoMode = false;
+    private boolean isFrontCamera = true;
 
     public BluetoothCameraApplicationContext() {
         super();
@@ -68,5 +69,13 @@ public class BluetoothCameraApplicationContext extends Application {
 
     public boolean isInDemo() {
         return demoMode;
+    }
+
+    public void isFrontCamera(boolean isFrontCamera) {
+        this.isFrontCamera = isFrontCamera;
+    }
+
+    public boolean isFrontCamera(){
+        return isFrontCamera;
     }
 }

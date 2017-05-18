@@ -48,7 +48,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private static final int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 100;
     private GestureDetector gestureDetector;
-    public static final String KEY_CAMERA_IS_FRONT = "isFrontCamera";
     public static final String KEY_FILM_MODE = "isFilmMode";
 
 
@@ -154,7 +153,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         createDrawView();
-        createRecorderPreview(sharedPref.getBoolean(KEY_CAMERA_IS_FRONT, true));
+        createRecorderPreview(((BluetoothCameraApplicationContext)getApplicationContext()).isFrontCamera());
         BluetoothEngineControlService bluetoothService = ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService();
         if (sharedPref.getBoolean(KEY_TRACKING, true)) {
             bluetoothService.startTracking();
@@ -266,21 +265,25 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     @Override
-    public void onCameraClicked(boolean isFrontCamera) {
-        splashFrag = new RotationFragment();
-        splashFrag.setArguments(getIntent().getExtras());
+    public void onCameraClicked() {
+        boolean isFrontCamera = !((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera();
+        if(isFrontCamera){
+            splashFrag = new RotationFragment();
+            splashFrag.setArguments(getIntent().getExtras());
 
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.camera_fragment_container, splashFrag).commit();
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.camera_fragment_container, splashFrag).commit();
 
-        try {
-            ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
-        } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-            if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
-                sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            try {
+                ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+            } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
+                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                    sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
+            }
+            getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
         }
-        getSupportFragmentManager().beginTransaction().hide(overlayFragment).commit();
-        getSharedPreferences().edit().putBoolean(KEY_CAMERA_IS_FRONT, isFrontCamera).apply();
+
+        ((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera(isFrontCamera);
 
         FrameLayout layout = (FrameLayout) findViewById(R.id.camera_fragment_container);
         layout.removeView(recordPreview);
