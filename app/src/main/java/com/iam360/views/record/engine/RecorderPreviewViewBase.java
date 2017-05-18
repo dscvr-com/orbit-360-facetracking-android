@@ -356,13 +356,14 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             Log.d(TAG, Thread.currentThread().getName());
-            Log.d(TAG, "Preview surface available.");
+            Log.d(TAG, "Preview surface available: width: " + width + " height: " + height);
             getSupportedSizesAndStartCamera(width, height);
 
         }
 
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+            Log.d(TAG, "Preview surface size changed: width: " + width + " height: " + height);
             configureTransform(width, height);
         }
 
@@ -398,6 +399,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     previewSize = optimalSize;
                     // TODO: Configure transform
                     sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+
                     configureTransform(optimalSize.getWidth(), optimalSize.getHeight());
                     // TODO: Init surfaces and open the cam and if all is here, start the session.
                     externalRenderTargets = createSurfacesProviders();
@@ -435,23 +437,24 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         this.setTransform(m);
     }
 
-    public static Size chooseOptimalPreviewSize(Size[] choices, int width, int height) {
-        // Collect the supported resolutions that are at least as big as the preview Surface
-        List<Size> bigEnough = new ArrayList<>();
+    public static Size chooseOptimalPreviewSize(Size[] choices, int minWidth, int minHeight, float aspectW, float aspectH) {
 
-        // hack hack
-        int w = Math.max(width, height);
-        int h = Math.min(width, height);
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        List<Size> aspectOk  = new ArrayList<>();
+
+        float aspect = aspectW / aspectH;
+
         for (Size option : choices) {
-            //Log.d(TAG, String.format("Choice: %d x %d", option.getWidth(), option.getHeight())) ;
-            if (option.getWidth() >= w && option.getHeight() >= h) {
-                bigEnough.add(option);
+            Log.d(TAG, String.format("Choice: %d x %d", option.getWidth(), option.getHeight())) ;
+            if (Math.abs(option.getWidth() - option.getHeight() * aspect) < 1 &&
+                    option.getWidth() > minWidth && option.getHeight() > minHeight) {
+                aspectOk.add(option);
             }
         }
 
         // Pick the smallest of those, assuming we found any
-        if (bigEnough.size() > 0) {
-            return Collections.min(bigEnough, new CompareSizesByArea());
+        if (aspectOk.size() > 0) {
+            return Collections.min(aspectOk, new CompareSizesByArea());
         } else {
             Log.e(TAG, "Couldn't find any suitable preview size");
             return choices[0];
@@ -467,41 +470,52 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     (long) rhs.getWidth() * rhs.getHeight());
         }
     }
+    public static class CompareSizesByAspect implements Comparator<Size> {
+        @Override
+        public int compare(Size lhs, Size rhs) {
+            // We cast here to ensure the multiplications won't overflow
+            return (int)Math.signum((float) lhs.getHeight() / lhs.getWidth() - (float) rhs.getHeight() / rhs.getWidth());
+        }
+    }
 
     public static Matrix getTransform(Size sourceSize, Size targetSize, int displayRotation) {
         Log.d(TAG, "Formatting: video: " + sourceSize + ", view: " + targetSize + ", rotation: " + displayRotation);
-        float height = sourceSize.getWidth();
-        float width = sourceSize.getHeight();
 
         float viewWidth = targetSize.getWidth();
         float viewHeight = targetSize.getHeight();
         int rotation = displayRotation;
 
         Matrix matrix = new Matrix();
-        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, width, height);
+        matrix.setTranslate(-viewWidth / 2, -viewHeight / 2); // Translate to origin.
+        if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
+            // We swap width/height because of the sensor orientation.
+            float width = sourceSize.getHeight();
+            float height = sourceSize.getWidth();
 
-        float centerX = viewRect.centerX();
-        float centerY = viewRect.centerY();
-        matrix.setScale(1f, 1f);
-/*
-        bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-        matrix.setRectToRect(bufferRect, viewRect, Matrix.ScaleToFit.FILL);
+            float videoAspect = width / height;
+            float viewAspect = viewWidth / viewHeight;
 
-        float scale = Math.max(
-                (float) viewHeight / height,
-                (float) viewWidth  / width);
+            // Just scale the aspect so it looks nice again
+            matrix.postScale(Math.max(1.0f, videoAspect / viewAspect), Math.max(viewAspect / videoAspect, 1.0f));
 
-        matrix.postScale(scale, scale, centerX, centerY);
+            // If we need to, rotate
+            if (Surface.ROTATION_180 == rotation) {
+                matrix.postRotate(180, 0, 0);
+            }
+        } else {
+            float height = sourceSize.getHeight();
+            float width = sourceSize.getWidth();
 
-*/
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+            float videoAspect = width / height;
+            float viewAspect = viewWidth / viewHeight;
 
-           // matrix.postScale(viewWidth / viewHeight, viewHeight / viewWidth);
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
+            // Compensate swapped w/h in landscape mode
+            matrix.postScale(height / width, width / height);
+            // Fix the aspect and rotate
+            matrix.postScale(Math.max(1.0f, videoAspect / viewAspect), Math.max(viewAspect / videoAspect, 1.0f));
+            matrix.postRotate(90 * (rotation - 2), 0, 0);
         }
+        matrix.postTranslate(viewWidth / 2, viewHeight / 2); // Translate to view coordinates.
 
         return matrix;
     }
