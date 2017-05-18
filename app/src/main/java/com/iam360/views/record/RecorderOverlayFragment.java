@@ -194,8 +194,7 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void cameraClicked() {
-        sharedPref.edit().putBoolean(CameraActivity.KEY_FILM_MODE, !isFilmMode()).commit();
-        mListener.onCameraClicked(isFilmMode());
+        mListener.onCameraClicked();
     }
 
     private void trackingPointsClicked() {
@@ -317,7 +316,7 @@ public class RecorderOverlayFragment extends Fragment {
 
         void onTrackingClicked(boolean isTrackingNowOn);
 
-        void onCameraClicked(boolean frontCamera);
+        void onCameraClicked();
 
         void onRecordingClicked(boolean shouldRecord, boolean startRecord);
     }
