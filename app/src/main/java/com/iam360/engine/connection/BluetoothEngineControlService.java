@@ -153,6 +153,7 @@ public class BluetoothEngineControlService {
     private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace) {
         float deltaX = getTrackingPoint(width, height).getX() - pointOfFace.getX();
         float deltaY = getTrackingPoint(width, height).getY() - pointOfFace.getY();
+        Log.d(TAG, "deltax: " + deltaX + " deltay: " + deltaY);
         EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
         return steps.mul(P).mul(-1);
     }
@@ -197,6 +198,10 @@ public class BluetoothEngineControlService {
     }
 
     public void setTrackingPoint(float x, float y) {
+        if (x < 0 || x > 1 || y < 0 || y > 1) {
+            throw new IllegalArgumentException(x + ", " + y + " is not a valid tracking point");
+        }
+        Log.w(TAG, "Setting tracking point" + x + ", " + y);
         trackingPoint = new EngineCommandPoint(x,y);
     }
 
