@@ -447,7 +447,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
     private void configureTransform(int width, int height) {
         int rotation = context.getWindowManager().getDefaultDisplay().getRotation();
-        Matrix m = getTransform(new Size(width, height), new Size(this.getWidth(), this.getHeight()), rotation);
+        Matrix m = getTransformForPreviewByAspect(new Size(width, height), new Size(this.getWidth(), this.getHeight()), rotation);
         this.setTransform(m);
     }
 
@@ -492,7 +492,15 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         }
     }
 
-    public static Matrix getTransform(Size sourceSize, Size targetSize, int displayRotation) {
+    /***
+     * Use this method to calculate a transform for a preview view, that already scales the video to fit, but
+     * destroys aspect.
+     * @param sourceSize
+     * @param targetSize
+     * @param displayRotation
+     * @return
+     */
+    public static Matrix getTransformForPreviewByAspect(Size sourceSize, Size targetSize, int displayRotation) {
         Log.d(TAG, "Formatting: video: " + sourceSize + ", view: " + targetSize + ", rotation: " + displayRotation);
 
         // Be careful when layouting!
@@ -530,6 +538,15 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         }
         matrix.postTranslate(viewWidth / 2, viewHeight / 2); // Translate to view coordinates.
 
+        return matrix;
+    }
+
+    public static Matrix getTransformFitCenter(Size sourceSize, Size targetSize) {
+
+        Matrix matrix = new Matrix();
+
+        matrix.setRectToRect(new RectF(0, 0, sourceSize.getWidth(), sourceSize.getHeight()),
+                new RectF(0, 0, targetSize.getWidth(), targetSize.getHeight()), Matrix.ScaleToFit.CENTER);
         return matrix;
     }
 }

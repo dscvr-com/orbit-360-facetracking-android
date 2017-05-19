@@ -1,9 +1,10 @@
 package com.iam360.facedetection;
 
 import android.content.Context;
-import android.graphics.Matrix;
+import android.graphics.Bitmap;
+import android.graphics.PointF;
 import android.graphics.RectF;
-import android.os.Environment;
+import android.media.FaceDetector;
 import android.util.Log;
 import com.iam360.facetracking.R;
 
@@ -12,7 +13,6 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +32,7 @@ import java.util.List;
  */
 public class FaceDetection {
     public static final String TAG = "FaceDetection";
-    private final int SIZE_OF_SCALED_IMAGE = 120;
+    private final int SIZE_OF_SCALED_IMAGE = 240;
     private CascadeClassifier detector;
     private ArrayList<FaceDetectionResultListener> resultListeners = new ArrayList<>();
     private ArrayList<NonPermanentFaceDetectionResultListener> onlyOnceCalledListener = new ArrayList<>();
@@ -75,6 +78,8 @@ public class FaceDetection {
     public void detect(byte[] data, int width, int height, int orientation) {
 
         //Log.d("GET DATA", "w: " + width + ", h: " + height);
+
+        // Opencv detector
         Mat grey = getGreyMat(data, width, height, orientation);
 
 
@@ -82,7 +87,38 @@ public class FaceDetection {
 
         MatOfRect resultMatOfRect = new MatOfRect();
         detector.detectMultiScale(grey, resultMatOfRect);
-        informListeners(resizeAndReformatFaces(resultMatOfRect.toList(), scale, scale), grey.width() * scale, grey.height() * scale);
+        List<Rect> results = resultMatOfRect.toList();
+
+        informListeners(resizeAndReformatFaces(results, scale, scale), grey.width() * scale, grey.height() * scale);
+
+        // Android Detector
+        /*
+        Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        ByteBuffer pixelBuffer = ByteBuffer.wrap(data);
+        pixelBuffer.rewind();
+        bmp.copyPixelsFromBuffer(pixelBuffer);
+
+        FaceDetector dect = new FaceDetector(width, height, 16);
+
+        Log.d(TAG, "Detecting faces");
+        FaceDetector.Face[] faces = new FaceDetector.Face[16];
+
+        dect.findFaces(bmp, faces);
+
+        ArrayList<Rect> results = new ArrayList<>();
+        for(FaceDetector.Face f : faces) {
+            if(f != null) {
+                Log.d(TAG, "Face: " + f.confidence());
+            }
+            if(f != null && f.confidence() > 0.3) {
+                PointF mid = new PointF();
+                f.getMidPoint(mid);
+                results.add(new Rect((int)mid.x, (int)mid.y, (int)f.eyesDistance() * 2, (int)f.eyesDistance() * 3));
+            }
+        }
+
+        informListeners(resizeAndReformatFaces(results, 1, 1), width, height);
+        */
 
     }
 
