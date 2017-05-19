@@ -87,4 +87,10 @@ public class BluetoothCameraApplicationContext extends Application {
     public void setFilmMode(boolean filmMode) {
         this.isFilmMode = filmMode;
     }
+
+    public void stopTracking() throws BluetoothEngineControlService.NoBluetoothConnectionException {
+        if(getBluetoothService()!=null){
+            getBluetoothService().stopTracking();
+        }
+    }
 }

@@ -150,25 +150,16 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
         requestCameraPermission();
     }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //No call for super(). Bug on API Level > 11.
+    }
 
     private void createCameraView() {
         overlayFragment = new RecorderOverlayFragment();
-        boolean isIn = false;
-        if (getSupportFragmentManager().getFragments() == null) {
-            isIn = false;
-        } else {
-            for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-                isIn = fragment.getClass().isAssignableFrom(RecorderOverlayFragment.class);
-                if (isIn) continue;
-            }
-        }
-        if (isIn) {
-            getSupportFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                     .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
-        } else {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.camera_overlay_fragment_container, overlayFragment).commit();
-        }
+
         createDrawView();
         createRecorderPreview(((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera());
         BluetoothEngineControlService bluetoothService = ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService();
@@ -176,7 +167,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             bluetoothService.startTracking();
         } else {
             try {
-                bluetoothService.stopTracking();
+                ((BluetoothCameraApplicationContext) getApplicationContext()).stopTracking();
             } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
                 if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
                     sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
@@ -258,6 +249,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         gestureDetector.onTouchEvent(event);
         if (reactForTouchEvents) {
             ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX() / (float)overlayCanvas.getWidth(), event.getY() / (float)overlayCanvas.getHeight());
+            overlayFragment.trackingPointsClicked();
         }
         return true;
     }
