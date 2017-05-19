@@ -399,16 +399,22 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                     Size[] validOutputSizes = map.getOutputSizes(SurfaceTexture.class);
                     Size optimalSize = calculatePreviewSize(map, validOutputSizes, new Size(width, height));
+
+
+                    if(this.getHeight() > this.getWidth()) {
+                        //optimalSize = new Size(optimalSize.getHeight(), optimalSize.getWidth());
+                        this.configureTransform(optimalSize.getHeight(), optimalSize.getWidth());
+                    } else {
+                        //optimalSize = new Size(optimalSize.getWidth(), optimalSize.getHeight());
+                        this.configureTransform(optimalSize.getWidth(), optimalSize.getHeight());
+                    }
+                    // The call to setDefaultBufferSize is very important for correct scaling.
+                    this.getSurfaceTexture().setDefaultBufferSize(optimalSize.getWidth(), optimalSize.getHeight());
+
                     previewSize = optimalSize;
                     // TODO: Configure transform
                     sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                    // The call to setDefaultBufferSize is very important for correct scaling.
-                    this.getSurfaceTexture().setDefaultBufferSize(optimalSize.getWidth(), optimalSize.getHeight());
-                    if(this.getHeight() > this.getWidth()) {
-                        configureTransform(optimalSize.getHeight(), optimalSize.getWidth());
-                    } else {
-                        configureTransform(optimalSize.getWidth(), optimalSize.getHeight());
-                    }
+
                     // TODO: Init surfaces and open the cam and if all is here, start the session.
                     externalRenderTargets = createSurfacesProviders();
                     externalRenderTargetReady = new boolean[externalRenderTargets.length];

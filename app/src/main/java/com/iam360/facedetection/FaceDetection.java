@@ -141,9 +141,9 @@ public class FaceDetection {
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString(),
                         System.currentTimeMillis() + ".jpg").getAbsolutePath(),
                 grey
-        );
-        */
+        );*/
 
+        // For this project, we don't do histogram equalization, as the camera runs on full auto anyway.
         //Imgproc.equalizeHist(grey, grey);
         return grey;
     }

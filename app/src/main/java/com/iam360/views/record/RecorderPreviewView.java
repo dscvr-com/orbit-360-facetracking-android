@@ -51,7 +51,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
     protected Size calculatePreviewSize(StreamConfigurationMap map, Size[] supportedPreviewSizes, Size viewSize) {
         // Sizing is actually simple - the stream has the max resolution/aspect, and we choose by setting the size of our surface.
         // We take the smallest size that fits our aspect and is larger than our preview
-        return chooseOptimalPreviewSize(supportedPreviewSizes, Math.max(viewSize.getHeight(), viewSize.getWidth()), Math.min(viewSize.getHeight(), viewSize.getWidth()), supportedPreviewSizes[0].getWidth(), supportedPreviewSizes[0].getHeight());
+        return chooseOptimalPreviewSize(supportedPreviewSizes, Math.max(viewSize.getHeight(), viewSize.getWidth()), Math.min(viewSize.getHeight(), viewSize.getWidth()), 4, 3);
     }
 
     @Override
