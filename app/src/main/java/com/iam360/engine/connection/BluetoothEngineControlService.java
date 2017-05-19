@@ -181,9 +181,9 @@ public class BluetoothEngineControlService {
 
     private EngineCommandPoint getTrackingPoint(int width, int height){
         if(trackingPoint != null){
-            return trackingPoint;
+            return new EngineCommandPoint(trackingPoint.getX() * width, trackingPoint.getY() * height);
         }else{
-            return new EngineCommandPoint(width/2f, height/2f);
+            return new EngineCommandPoint(width/2f, height/3f);
         }
     }
 

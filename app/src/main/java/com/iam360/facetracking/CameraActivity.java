@@ -19,6 +19,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -37,6 +38,7 @@ import com.iam360.views.record.OverlayCanvasView;
 import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 import com.iam360.views.record.RotationFragment;
+import com.iam360.views.record.engine.RecorderPreviewViewBase;
 
 import java.util.List;
 import java.util.Timer;
@@ -255,7 +257,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onTouchEvent(event);
         gestureDetector.onTouchEvent(event);
         if (reactForTouchEvents) {
-            ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX(), event.getY());
+            ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX() / (float)overlayCanvas.getWidth(), event.getY() / (float)overlayCanvas.getHeight());
         }
         return true;
     }
