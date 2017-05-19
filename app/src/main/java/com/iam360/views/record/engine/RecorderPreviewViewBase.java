@@ -402,8 +402,13 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     previewSize = optimalSize;
                     // TODO: Configure transform
                     sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-
-                    configureTransform(optimalSize.getWidth(), optimalSize.getHeight());
+                    // The call to setDefaultBufferSize is very important for correct scaling.
+                    this.getSurfaceTexture().setDefaultBufferSize(optimalSize.getWidth(), optimalSize.getHeight());
+                    if(this.getHeight() > this.getWidth()) {
+                        configureTransform(optimalSize.getHeight(), optimalSize.getWidth());
+                    } else {
+                        configureTransform(optimalSize.getWidth(), optimalSize.getHeight());
+                    }
                     // TODO: Init surfaces and open the cam and if all is here, start the session.
                     externalRenderTargets = createSurfacesProviders();
                     externalRenderTargetReady = new boolean[externalRenderTargets.length];
@@ -484,20 +489,24 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
     public static Matrix getTransform(Size sourceSize, Size targetSize, int displayRotation) {
         Log.d(TAG, "Formatting: video: " + sourceSize + ", view: " + targetSize + ", rotation: " + displayRotation);
 
+        // Be careful when layouting!
+        // If matrix is identity, video width and height equals view width and height
+        // we have to make sure video aspect is met.
         float viewWidth = targetSize.getWidth();
         float viewHeight = targetSize.getHeight();
         int rotation = displayRotation;
 
+        // We swap width/height because of the native sensor orientation.
+        float height = sourceSize.getHeight();
+        float width = sourceSize.getWidth();
+
+        float videoAspect = width / height;
+        float viewAspect = viewWidth / viewHeight;
+
         Matrix matrix = new Matrix();
         matrix.setTranslate(-viewWidth / 2, -viewHeight / 2); // Translate to origin.
         if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
-            // We swap width/height because of the sensor orientation.
-            float width = sourceSize.getHeight();
-            float height = sourceSize.getWidth();
-
-            float videoAspect = width / height;
-            float viewAspect = viewWidth / viewHeight;
-
+            Log.d(TAG, "Video scalex: " + Math.max(1.0f, videoAspect / viewAspect) + ", scaley: " + Math.max(viewAspect / videoAspect, 1.0f));
             // Just scale the aspect so it looks nice again
             matrix.postScale(Math.max(1.0f, videoAspect / viewAspect), Math.max(viewAspect / videoAspect, 1.0f));
 
@@ -506,22 +515,15 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                 matrix.postRotate(180, 0, 0);
             }
         } else {
-            float height = sourceSize.getHeight();
-            float width = sourceSize.getWidth();
-
-            float videoAspect = width / height;
-            float viewAspect = viewWidth / viewHeight;
-
             // Compensate swapped w/h in landscape mode
-            matrix.postScale(height / width, width / height);
-            // Fix the aspect and rotate
-            matrix.postScale(Math.max(1.0f, videoAspect / viewAspect), Math.max(viewAspect / videoAspect, 1.0f));
+            matrix.postScale(1 / viewWidth, 1 / viewHeight);
             matrix.postRotate(90 * (rotation - 2), 0, 0);
+            matrix.postScale(viewWidth, viewHeight);
+            // Fix the aspect
+            matrix.postScale(Math.max(1.0f, videoAspect / viewAspect), Math.max(viewAspect / videoAspect, 1.0f));
         }
         matrix.postTranslate(viewWidth / 2, viewHeight / 2); // Translate to view coordinates.
 
         return matrix;
     }
-
-
 }

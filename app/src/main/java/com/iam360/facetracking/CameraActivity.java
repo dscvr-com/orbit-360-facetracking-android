@@ -220,7 +220,8 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         if (overlayCanvas != null) {
             // We don't need display rotation here, since facetracker results are already rotated
             // int preview space.
-            overlayCanvas.setTransform(RecorderPreviewViewBase.getTransform(new Size(width, height), new Size(overlayCanvas.getWidth(), overlayCanvas.getHeight()), 0));
+            // TODO: Put this back
+            // overlayCanvas.setTransform(RecorderPreviewViewBase.getTransform(new Size(width, height), new Size(overlayCanvas.getWidth(), overlayCanvas.getHeight()), 0));
             overlayCanvas.setRects(rects);
             runOnUiThread(() -> overlayCanvas.invalidate());
         }
