@@ -49,7 +49,9 @@ public class BluetoothCameraApplicationContext extends Application {
         float focalLength = focalLengths[0];
         float sensorWidth = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE).getWidth();
         this.unitFocalLength = focalLength / sensorWidth;
-        connector.getBluetoothService().setUnitFocalLength(unitFocalLength);
+        if (connector != null && connector.getBluetoothService() != null) {
+            connector.getBluetoothService().setUnitFocalLength(unitFocalLength);
+        }
     }
 
     public void setDemoMode() {
@@ -72,7 +74,7 @@ public class BluetoothCameraApplicationContext extends Application {
         this.isFrontCamera = isFrontCamera;
     }
 
-    public boolean isFrontCamera(){
+    public boolean isFrontCamera() {
         return isFrontCamera;
     }
 
@@ -89,7 +91,7 @@ public class BluetoothCameraApplicationContext extends Application {
     }
 
     public void stopTracking() throws BluetoothEngineControlService.NoBluetoothConnectionException {
-        if(getBluetoothService()!=null){
+        if (getBluetoothService() != null) {
             getBluetoothService().stopTracking();
         }
     }

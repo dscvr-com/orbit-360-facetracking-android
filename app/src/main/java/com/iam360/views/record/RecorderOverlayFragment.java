@@ -142,7 +142,7 @@ public class RecorderOverlayFragment extends Fragment {
         changeTracking();
     }
 
-    private void changeTracking(){
+    private void changeTracking() {
         changeTracking(((BluetoothCameraApplicationContext) getContext().getApplicationContext()).isTracking());
     }
 
@@ -171,12 +171,12 @@ public class RecorderOverlayFragment extends Fragment {
     private void takePicture() {
         counter.setVisibility(View.VISIBLE);
         counter.setText("");
-        if(photoTask!= null){
+        if (photoTask != null) {
             photoTask.cancel();
         }
         photoTask = new TimerTask() {
             int count = 4;
-            boolean shouldTrackAfterPhoto = ((BluetoothCameraApplicationContext)getActivity().getApplicationContext()).isTracking();
+            boolean shouldTrackAfterPhoto = ((BluetoothCameraApplicationContext) getActivity().getApplicationContext()).isTracking();
 
             @Override
             public void run() {
@@ -309,7 +309,7 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void changeToVideo() {
-        photoTask.cancel();
+        if (photoTask != null) photoTask.cancel();
         ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFilmMode(true);
         if (time != null) {
             time.setVisibility(View.VISIBLE);
@@ -320,11 +320,11 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     public void setFilmMode(boolean filmMode) {
-       if(filmMode){
-           changeToVideo();
-       }else{
-           changeToCamera();
-       }
+        if (filmMode) {
+            changeToVideo();
+        } else {
+            changeToCamera();
+        }
     }
 
 

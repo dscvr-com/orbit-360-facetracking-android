@@ -30,7 +30,7 @@ public class SingleThreadWithoutQueueExecutor implements Executor {
             @Override
             public void facesDetected(List<RectF> rects, int width, int height) {
                 try {
-                    motorControlService.reactOnFaces(rects, width, height);
+                    if(motorControlService!= null) motorControlService.reactOnFaces(rects, width, height);
                 } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
                     if (!((BluetoothCameraApplicationContext) context.getApplicationContext()).isInDemo())
                         context.sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));

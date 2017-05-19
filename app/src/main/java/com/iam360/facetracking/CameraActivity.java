@@ -150,6 +150,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
         requestCameraPermission();
     }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         //No call for super(). Bug on API Level > 11.
@@ -158,7 +159,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private void createCameraView() {
         overlayFragment = new RecorderOverlayFragment();
         getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
+                .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
 
         createDrawView();
         createRecorderPreview(((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera());
@@ -248,7 +249,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         super.onTouchEvent(event);
         gestureDetector.onTouchEvent(event);
         if (reactForTouchEvents) {
-            ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX() / (float)overlayCanvas.getWidth(), event.getY() / (float)overlayCanvas.getHeight());
+            ((BluetoothCameraApplicationContext) this.getApplicationContext()).getBluetoothService().setTrackingPoint(event.getX() / (float) overlayCanvas.getWidth(), event.getY() / (float) overlayCanvas.getHeight());
             overlayFragment.trackingPointsClicked();
         }
         return true;
@@ -260,7 +261,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().startTracking();
         } else {
             try {
-                ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
+
+                if (((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService() != null)
+                    ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().stopTracking();
             } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
                 if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
                     sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
@@ -351,31 +354,28 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         boolean result = false;
-        try {
-            float diffY = e2.getY() - e1.getY();
-            float diffX = e2.getX() - e1.getX();
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0) {
-                        Log.d(getClass().getSimpleName(), "swipe Right");
-                        overlayFragment.onSwipeRight();
-                    } else {
-                        Log.d(getClass().getSimpleName(), "swipe Left");
-                        overlayFragment.onSwipeLeft();
-                    }
-                    result = true;
-                }
-            } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                if (diffY > 0) {
-                    overlayFragment.onSwipeBottom();
+        float diffY = e2.getY() - e1.getY();
+        float diffX = e2.getX() - e1.getX();
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffX > 0) {
+                    Log.d(getClass().getSimpleName(), "swipe Right");
+                    overlayFragment.onSwipeRight();
                 } else {
-                    overlayFragment.onSwipeTop();
+                    Log.d(getClass().getSimpleName(), "swipe Left");
+                    overlayFragment.onSwipeLeft();
                 }
                 result = true;
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+            if (diffY > 0) {
+                overlayFragment.onSwipeBottom();
+            } else {
+                overlayFragment.onSwipeTop();
+            }
+            result = true;
         }
+
         return result;
     }
 
