@@ -176,6 +176,7 @@ public class RecorderOverlayFragment extends Fragment {
         }
         photoTask = new TimerTask() {
             int count = 4;
+            boolean shouldTrackAfterPhoto = ((BluetoothCameraApplicationContext)getActivity().getApplicationContext()).isTracking();
 
             @Override
             public void run() {
@@ -188,7 +189,7 @@ public class RecorderOverlayFragment extends Fragment {
                             changeTracking(true);
                         }
                     });
-                    mListener.onTrackingClicked(true);
+                    mListener.onTrackingClicked(shouldTrackAfterPhoto);
                     mListener.onRecordingClicked(isFilmMode(), false);
                     this.cancel();
                 } else {
@@ -211,13 +212,13 @@ public class RecorderOverlayFragment extends Fragment {
         mListener.onCameraClicked();
     }
 
-    private void trackingPointsClicked() {
+    public void trackingPointsClicked() {
         if (trackingPointsGrid.getVisibility() == View.VISIBLE) {
             trackingPointsGrid.setVisibility(View.INVISIBLE);
         } else {
             trackingPointsGrid.setVisibility(View.VISIBLE);
         }
-        mListener.onTrackingPointsClicked(trackingPointsGrid.getVisibility() != View.VISIBLE);
+        mListener.onTrackingPointsClicked(trackingPointsGrid.getVisibility() == View.VISIBLE);
 
     }
 
