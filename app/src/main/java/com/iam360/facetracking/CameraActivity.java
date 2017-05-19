@@ -60,7 +60,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private RotationFragment splashFrag;
     private OverlayCanvasView overlayCanvas;
     private ButtomReciever buttomReciever;
-    public static final String KEY_TRACKING = "isTracking";
     private IntentFilter filter;
     private boolean active;
 
@@ -96,7 +95,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         } else {
             requestCameraPermission();
         }
-        if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection()) {
+        if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection() && !((BluetoothCameraApplicationContext)getApplicationContext()).isInDemo() ) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().removeTrackingPoint();
         }
         filter = new IntentFilter();
@@ -154,18 +153,16 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         overlayFragment = new RecorderOverlayFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         createDrawView();
         createRecorderPreview(((BluetoothCameraApplicationContext)getApplicationContext()).isFrontCamera());
         BluetoothEngineControlService bluetoothService = ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService();
-        if (sharedPref.getBoolean(KEY_TRACKING, true)) {
+        if (((BluetoothCameraApplicationContext)getApplicationContext()).isTracking()) {
             bluetoothService.startTracking();
         } else {
             try {
                 bluetoothService.stopTracking();
             } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-
-                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                    if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
                     sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
             }
         }
@@ -251,7 +248,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onTrackingClicked(boolean isTrackingNowOn) {
-        getSharedPreferences().edit().putBoolean(KEY_TRACKING, isTrackingNowOn).commit();
         if (isTrackingNowOn) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().startTracking();
         } else {

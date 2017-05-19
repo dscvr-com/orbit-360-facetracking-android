@@ -45,6 +45,7 @@ public class RecorderOverlayFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private TimerTask task;
     private SharedPreferences sharedPref;
+    private TimerTask photoTask;
 
     public RecorderOverlayFragment() {
         // Required empty public constructor
@@ -140,8 +141,12 @@ public class RecorderOverlayFragment extends Fragment {
         changeTracking();
     }
 
-    private void changeTracking() {
-        if (((BluetoothCameraApplicationContext) getContext().getApplicationContext()).getBluetoothService().isTracking()) {
+    private void changeTracking(){
+        changeTracking(((BluetoothCameraApplicationContext) getContext().getApplicationContext()).isTracking());
+    }
+
+    private void changeTracking(boolean b) {
+        if (b) {
             tracking.setImageResource(R.drawable.tracking_on);
         } else {
             tracking.setImageResource(R.drawable.tracking_off);
@@ -164,8 +169,12 @@ public class RecorderOverlayFragment extends Fragment {
 
     private void takePicture() {
         counter.setVisibility(View.VISIBLE);
-        timer.schedule(new TimerTask() {
-            int count = 3;
+        counter.setText("");
+        if(photoTask!= null){
+            photoTask.cancel();
+        }
+        photoTask = new TimerTask() {
+            int count = 4;
 
             @Override
             public void run() {
@@ -175,9 +184,10 @@ public class RecorderOverlayFragment extends Fragment {
                         @Override
                         public void run() {
                             counter.setVisibility(View.INVISIBLE);
-                            changeTracking();
+                            changeTracking(true);
                         }
                     });
+                    mListener.onTrackingClicked(true);
                     mListener.onRecordingClicked(isFilmMode(), false);
                     this.cancel();
                 } else {
@@ -185,12 +195,15 @@ public class RecorderOverlayFragment extends Fragment {
                         @Override
                         public void run() {
                             tracking.setImageResource(R.drawable.tracking_off);
+                            changeTracking(false);
                             counter.setText(String.valueOf(count));
                         }
                     });
+                    mListener.onTrackingClicked(false);
                 }
             }
-        }, 1000, 1000);
+        };
+        timer.schedule(photoTask, 0, 1000);
     }
 
     private void cameraClicked() {

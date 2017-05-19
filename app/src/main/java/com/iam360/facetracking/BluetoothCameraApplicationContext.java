@@ -74,4 +74,8 @@ public class BluetoothCameraApplicationContext extends Application {
     public boolean isFrontCamera(){
         return isFrontCamera;
     }
+
+    public boolean isTracking() {
+        return getBluetoothService().isTracking();
+    }
 }
