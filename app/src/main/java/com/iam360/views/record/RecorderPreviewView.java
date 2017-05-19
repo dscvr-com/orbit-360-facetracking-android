@@ -57,7 +57,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
     @Override
     protected boolean canUseCamera(CameraCharacteristics characteristics) {
         // Odd comparison because of odd terminology
-        return isFrontCamera != (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT);
+        return isFrontCamera == (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT);
     }
 
     @Override
@@ -182,4 +182,6 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
         Log.d(TAG, "stopVideo");
         videoRecorder.stopRecording(VideoRecorder.getVideoAbsolutePath());
     }
+
+
 }

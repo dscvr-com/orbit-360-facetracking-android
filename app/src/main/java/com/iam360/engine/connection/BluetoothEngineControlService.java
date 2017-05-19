@@ -151,8 +151,8 @@ public class BluetoothEngineControlService {
     }
 
     private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace) {
-        float deltaX = (width / 2.0f) - pointOfFace.getX();
-        float deltaY = (height / 3.0f) - pointOfFace.getY();
+        float deltaX = getTrackingPoint(width, height).getX() - pointOfFace.getX();
+        float deltaY = getTrackingPoint(width, height).getY() - pointOfFace.getY();
         EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
         return steps.mul(P).mul(-1);
     }
