@@ -17,6 +17,7 @@ public class BluetoothCameraApplicationContext extends Application {
     private float unitFocalLength;
     private boolean demoMode = false;
     private boolean isFrontCamera = true;
+    private boolean isFilmMode = false;
 
     public BluetoothCameraApplicationContext() {
         super();
@@ -76,6 +77,14 @@ public class BluetoothCameraApplicationContext extends Application {
     }
 
     public boolean isTracking() {
-        return getBluetoothService().isTracking();
+        return getBluetoothService() != null && getBluetoothService().isTracking();
+    }
+
+    public boolean isFilmMode() {
+        return isFilmMode;
+    }
+
+    public void setFilmMode(boolean filmMode) {
+        this.isFilmMode = filmMode;
     }
 }
