@@ -9,13 +9,16 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.Size;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -34,9 +37,10 @@ import com.iam360.views.record.OverlayCanvasView;
 import com.iam360.views.record.RecorderOverlayFragment;
 import com.iam360.views.record.RecorderPreviewView;
 import com.iam360.views.record.RotationFragment;
-import com.iam360.views.record.engine.RecorderPreviewViewBase;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CameraActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, RecorderOverlayFragment.OnFragmentInteractionListener, RotationFragment.OnFragmentInteractionListener, GestureDetector.OnGestureListener {
 
@@ -60,11 +64,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     private OverlayCanvasView overlayCanvas;
     private ButtomReciever buttomReciever;
     private IntentFilter filter;
-    private boolean active;
+    private Timer torchTimer = new Timer();
 
     @Override
     public void onResume() {
-        active = true;
         Log.d(TAG, "Camera View onResume");
         super.onResume();
         if (recordPreview != null) {
@@ -76,7 +79,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     @Override
     public void onPause() {
-        active = false;
         unregisterReceiver(buttomReciever);
         Log.d(TAG, "Camera View onPause");
         super.onPause();
@@ -94,15 +96,14 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
         } else {
             requestCameraPermission();
         }
-        if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection() && !((BluetoothCameraApplicationContext)getApplicationContext()).isInDemo() ) {
+        if (((BluetoothCameraApplicationContext) getApplicationContext()).hasBluetoothConnection() && !((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo()) {
             ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService().removeTrackingPoint();
         }
         filter = new IntentFilter();
         filter.addAction(RemoteButtonListener.UPPER_BUTTON_PRESSED);
         filter.addAction(RemoteButtonListener.LOWER_BUTTON_PRESSED);
-        buttomReciever = new ButtomReciever(() -> remoteRecordingClicked() , () -> remoteTrackingClicked());
+        buttomReciever = new ButtomReciever(() -> remoteRecordingClicked(), () -> remoteTrackingClicked());
         gestureDetector = new GestureDetector(this, this);
-        active = false;
 
     }
 
@@ -150,18 +151,32 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
     private void createCameraView() {
         overlayFragment = new RecorderOverlayFragment();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
+        boolean isIn = false;
+        if (getSupportFragmentManager().getFragments() == null) {
+            isIn = false;
+        } else {
+            for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+                isIn = fragment.getClass().isAssignableFrom(RecorderOverlayFragment.class);
+                if (isIn) continue;
+            }
+        }
+        if (isIn) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.camera_overlay_fragment_container, overlayFragment).commit();
+        } else {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.camera_overlay_fragment_container, overlayFragment).commit();
+        }
         createDrawView();
-        createRecorderPreview(((BluetoothCameraApplicationContext)getApplicationContext()).isFrontCamera());
+        createRecorderPreview(((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera());
         BluetoothEngineControlService bluetoothService = ((BluetoothCameraApplicationContext) getApplicationContext()).getBluetoothService();
-        if (((BluetoothCameraApplicationContext)getApplicationContext()).isTracking()) {
+        if (((BluetoothCameraApplicationContext) getApplicationContext()).isTracking()) {
             bluetoothService.startTracking();
         } else {
             try {
                 bluetoothService.stopTracking();
             } catch (BluetoothEngineControlService.NoBluetoothConnectionException e) {
-                    if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
+                if (!((BluetoothCameraApplicationContext) getApplicationContext()).isInDemo())
                     sendBroadcast(new Intent(BluetoothConnectionReciever.DISCONNECTED));
             }
         }
@@ -184,10 +199,10 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
 
         int orientation = 0;
 
-        switch(((WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation()) {
+        switch (((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation()) {
             case Surface.ROTATION_0:
             case Surface.ROTATION_180:
-                 orientation = 0;
+                orientation = 0;
                 break;
             case Surface.ROTATION_90:
                 orientation = 90;
@@ -266,7 +281,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     public void onCameraClicked() {
         boolean isFrontCamera = !((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera();
-        if(isFrontCamera){
+        if (isFrontCamera) {
             splashFrag = new RotationFragment();
             splashFrag.setArguments(getIntent().getExtras());
 

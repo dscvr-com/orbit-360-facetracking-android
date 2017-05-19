@@ -3,15 +3,18 @@ package com.iam360.views.record;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.hardware.camera2.CameraAccessException;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.iam360.facetracking.BluetoothCameraApplicationContext;
 import com.iam360.facetracking.CameraActivity;
@@ -44,7 +47,6 @@ public class RecorderOverlayFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
     private TimerTask task;
-    private SharedPreferences sharedPref;
     private TimerTask photoTask;
 
     public RecorderOverlayFragment() {
@@ -90,11 +92,10 @@ public class RecorderOverlayFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
     }
 
-    private boolean isFilmMode(){
-        return ((BluetoothCameraApplicationContext)getContext().getApplicationContext()).isFilmMode();
+    private boolean isFilmMode() {
+        return ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).isFilmMode();
     }
 
     @Override
@@ -157,13 +158,13 @@ public class RecorderOverlayFragment extends Fragment {
         if (!isFilmMode()) {
             takePicture();
         } else {
-            isRecording = isFilmMode() != isRecording;
+//            isRecording = isFilmMode() != isRecording;
             mListener.onRecordingClicked(isFilmMode(), isRecording && isFilmMode());
-            if (isRecording && isFilmMode()) {
-                recording.setImageResource(R.drawable.start);
-            } else {
-                recording.setImageResource(R.drawable.start_photo);
-            }
+//            if (isRecording && isFilmMode()) {
+//                recording.setImageResource(R.drawable.start);
+//            } else {
+//                recording.setImageResource(R.drawable.start_photo);
+//            }
         }
     }
 
@@ -259,13 +260,20 @@ public class RecorderOverlayFragment extends Fragment {
     }
 
     private void changeToCamera() {
-            ((BluetoothCameraApplicationContext)getContext().getApplicationContext()).setFilmMode(false);
-            getLeftText().setVisibility(View.VISIBLE);
-            getRightText().setVisibility(View.INVISIBLE);
-            getMiddelText().setText(R.string.Photo);
-            if (time != null) {
-                time.setVisibility(View.INVISIBLE);
-            }
+        checkVideoStopped();
+        ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFilmMode(false);
+        getLeftText().setVisibility(View.VISIBLE);
+        getRightText().setVisibility(View.INVISIBLE);
+        getMiddelText().setText(R.string.Photo);
+        if (time != null) {
+            time.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private void checkVideoStopped() {
+        if (isRecording) {
+            recordingClicked();
+        }
     }
 
     private TextView getLeftText() {
@@ -299,14 +307,15 @@ public class RecorderOverlayFragment extends Fragment {
         }
     }
 
-    private void changeToVideo(){
-            ((BluetoothCameraApplicationContext)getContext().getApplicationContext()).setFilmMode(true);
-            if (time != null) {
-                time.setVisibility(View.VISIBLE);
-            }
-            getLeftText().setVisibility(View.INVISIBLE);
-            getRightText().setVisibility(View.VISIBLE);
-            getMiddelText().setText(R.string.Video);
+    private void changeToVideo() {
+        photoTask.cancel();
+        ((BluetoothCameraApplicationContext) getContext().getApplicationContext()).setFilmMode(true);
+        if (time != null) {
+            time.setVisibility(View.VISIBLE);
+        }
+        getLeftText().setVisibility(View.INVISIBLE);
+        getRightText().setVisibility(View.VISIBLE);
+        getMiddelText().setText(R.string.Video);
     }
 
     public void setFilmMode(boolean filmMode) {
