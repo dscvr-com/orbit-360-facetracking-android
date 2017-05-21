@@ -138,8 +138,8 @@ public class BluetoothConnectionFragment extends Fragment implements BluetoothCo
 
     @Override
     public void onDetach() {
-        super.onDetach();
         getContext().unregisterReceiver(bluetoothConnector);
+        super.onDetach();
         mListener = null;
     }
 

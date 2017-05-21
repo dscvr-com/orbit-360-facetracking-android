@@ -278,7 +278,7 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     @Override
     public void onCameraClicked() {
         boolean isFrontCamera = !((BluetoothCameraApplicationContext) getApplicationContext()).isFrontCamera();
-        if (isFrontCamera) {
+        if (!isFrontCamera) {
             splashFrag = new RotationFragment();
             splashFrag.setArguments(getIntent().getExtras());
 
