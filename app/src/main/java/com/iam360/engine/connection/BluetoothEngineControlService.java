@@ -155,7 +155,7 @@ public class BluetoothEngineControlService {
         float deltaY = getTrackingPoint(width, height).getY() - pointOfFace.getY();
         Log.d(TAG, "deltax: " + deltaX + " deltay: " + deltaY);
         EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
-        return steps.mul(P).mul(-1);
+        return steps.mul(P).mul(P).mul(-1);
     }
 
     private void stop() throws NoBluetoothConnectionException {
