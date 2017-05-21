@@ -119,7 +119,7 @@ public class BluetoothEngineControlService {
         return !stopped;
     }
 
-    public void reactOnFaces(@NonNull List<RectF> detectionResult, int width, int height) throws NoBluetoothConnectionException {
+    public void reactOnFaces(@NonNull List<RectF> detectionResult, int width, int height, boolean isFrontCamera) throws NoBluetoothConnectionException {
         if (stopped) {
             return;
         }
@@ -130,7 +130,7 @@ public class BluetoothEngineControlService {
 
         if (detectionResult.size() > 0) {
             EngineCommandPoint pointOfFace = EngineCommandPoint.AveragePosition(detectionResult);
-            EngineCommandPoint steps = getSteps(width, height, pointOfFace);
+            EngineCommandPoint steps = getSteps(width, height, pointOfFace, isFrontCamera);
             long currentTime = System.currentTimeMillis();
 
             long deltaTime = currentTime - lastTimeInMillis;
@@ -150,12 +150,12 @@ public class BluetoothEngineControlService {
         }
     }
 
-    private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace) {
+    private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace, boolean isFrontCamera) {
         float deltaX = getTrackingPoint(width, height).getX() - pointOfFace.getX();
         float deltaY = getTrackingPoint(width, height).getY() - pointOfFace.getY();
         Log.d(TAG, "deltax: " + deltaX + " deltay: " + deltaY);
         EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX), getStepsY(height, deltaY));
-        return steps.mul(P).mul(P).mul(-1);
+        return steps.mul(P).mul(P).mul(isFrontCamera?-1:1);
     }
 
     private void stop() throws NoBluetoothConnectionException {

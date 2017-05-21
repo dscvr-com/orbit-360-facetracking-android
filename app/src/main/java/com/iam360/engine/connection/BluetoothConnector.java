@@ -72,6 +72,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void addDeviceFromScan(BluetoothDevice device) {
+        if (!device.getName().startsWith("XT-")) {return;}
         nextDevice.add(device);
         if (!currentlyConnecting) {
             if (nextDevice.size() > 0) {
