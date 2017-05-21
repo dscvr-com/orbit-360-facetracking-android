@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.util.Log;
 
 import com.iam360.facetracking.BluetoothCameraApplicationContext;
 
@@ -37,6 +38,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     private boolean currentlyConnecting = false;
     private BluetoothEngineControlService controlService = new BluetoothEngineControlService(true);
     private BluetoothLeScanCallback scanCallback;
+    private String TAG = "BluetoothConnector";
 
 
     public BluetoothConnector(BluetoothAdapter adapter, Context context, BluetoothLoadingListenerWithStartConnect listener, BluetoothConnectionCallback.ButtonValueListener upperButtomListener, BluetoothConnectionCallback.ButtonValueListener lowerButtonListener) {
@@ -72,6 +74,7 @@ public class BluetoothConnector extends BroadcastReceiver {
     }
 
     private void addDeviceFromScan(BluetoothDevice device) {
+        Log.d(TAG, "Found device: " + device);
         if (!device.getName().startsWith("XT-")) {return;}
         nextDevice.add(device);
         if (!currentlyConnecting) {

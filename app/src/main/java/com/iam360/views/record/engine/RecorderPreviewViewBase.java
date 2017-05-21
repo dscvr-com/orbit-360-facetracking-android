@@ -19,6 +19,7 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -400,7 +401,6 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
                     Size[] validOutputSizes = map.getOutputSizes(SurfaceTexture.class);
                     Size optimalSize = calculatePreviewSize(map, validOutputSizes, new Size(width, height));
 
-
                     if(this.getHeight() > this.getWidth()) {
                         //optimalSize = new Size(optimalSize.getHeight(), optimalSize.getWidth());
                         this.configureTransform(optimalSize.getHeight(), optimalSize.getWidth());
@@ -422,7 +422,7 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
 
                     for(SurfaceProvider target : externalRenderTargets) {
                         Log.d(TAG, "Creating external surface " + target.getClass().getName());
-                        target.createSurface(optimalSize, externalSurfaceCallback);
+                        initializeExternalSurfaceProvider(optimalSize, target, externalSurfaceCallback);
                     }
 
                     // TODO: Do this somewhere else
@@ -443,6 +443,10 @@ public abstract class RecorderPreviewViewBase extends AutoFitTextureView {
         } catch (CameraAccessException | NullPointerException | InterruptedException e) {
             Log.e(TAG, e.getMessage(), e);
         }
+    }
+
+    protected void initializeExternalSurfaceProvider(Size optimalSize, SurfaceProvider target, SurfaceProvider.SurfaceProviderCallback externalSurfaceCallback) {
+        target.createSurface(optimalSize, externalSurfaceCallback);
     }
 
     private void configureTransform(int width, int height) {

@@ -29,7 +29,7 @@ public class BluetoothEngineControlService extends AbstractBluetoothEngineServic
     private static final float EPSILON_X_Steps = 10;
     private static final float EPSILON_Y_Steps = 10;
     private static final float P = 0.5f;
-    private static final EngineCommandPoint SPEED_FACTOR = new EngineCommandPoint(0.5f, 1.0f); // Speed factor to compaensate poort racking performance.
+    private static final EngineCommandPoint SPEED_FACTOR = new EngineCommandPoint(1f, 1f); // Speed factor to compaensate poort racking performance.
     //this value has to be multiplied with the width because we don't have the width when we calc this value
     private float unitFocalLength;
     private long lastTimeInMillis;
@@ -80,6 +80,7 @@ public class BluetoothEngineControlService extends AbstractBluetoothEngineServic
 
             long deltaTime = currentTime - lastTimeInMillis;
             lastTimeInMillis = currentTime;
+            Log.d(TAG, "Delta time: " + deltaTime);
             EngineCommandPoint speed = steps.div(deltaTime / 1000f).abs();
             speed = speed.mul(SPEED_FACTOR);
             speed = speed.min(MAX_SPEED);
@@ -96,11 +97,12 @@ public class BluetoothEngineControlService extends AbstractBluetoothEngineServic
     }
 
     private EngineCommandPoint getSteps(int width, int height, EngineCommandPoint pointOfFace, boolean isFrontCamera) {
+        Log.d(TAG, "Focal len: " + unitFocalLength);
         float deltaX = getTrackingPoint(width, height).getX() - pointOfFace.getX();
         float deltaY = getTrackingPoint(width, height).getY() - pointOfFace.getY();
         Log.d(TAG, "deltax: " + deltaX + " deltay: " + deltaY);
         EngineCommandPoint steps = new EngineCommandPoint(getStepsX(width, deltaX, isFrontCamera), getStepsY(height, deltaY));
-        return steps.mul(P).mul(P).mul(-1f);
+        return steps.mul(P).mul(-1f);
     }
 
     public void setUnitFocalLength(float unitFocalLength) {
@@ -108,14 +110,14 @@ public class BluetoothEngineControlService extends AbstractBluetoothEngineServic
     }
 
     public int getStepsX(int width, float deltaX, boolean isFrontCamera) {
-        double angX = Math.atan2(deltaX / width, unitFocalLength);
+        double angX = Math.atan2(deltaX / width, unitFocalLength * 2);
         Log.d(TAG, "angX: " + angX);
         return (int) ((STEPS_FOR_ONE_ROUND_X * angX / (2 * Math.PI)) * (isFrontCamera ? 1f : -1f));
 
     }
 
     public int getStepsY(int height, float deltaY) {
-        double angY = Math.atan2(deltaY / height, unitFocalLength);
+        double angY = Math.atan2(deltaY / height, unitFocalLength * 2);
         Log.d(TAG, "angY: " + angY);
         return (int) (STEPS_FOR_ONE_ROUND_Y * angY / (2 * Math.PI));
 

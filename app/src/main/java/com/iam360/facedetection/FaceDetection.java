@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.media.FaceDetector;
+import android.os.Environment;
 import android.util.Log;
 import com.iam360.facetracking.R;
 
@@ -13,6 +14,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -36,12 +38,13 @@ public class FaceDetection {
     private CascadeClassifier detector;
     private ArrayList<FaceDetectionResultListener> resultListeners = new ArrayList<>();
     private ArrayList<NonPermanentFaceDetectionResultListener> onlyOnceCalledListener = new ArrayList<>();
+    private ArrayList<Rect> knownFaces = new ArrayList<>();
 
     public FaceDetection(Context context) {
         try {
             InputStream input = context.getResources().openRawResource(R.raw.haarcascade_frontalface_default);
             File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
-            File cascadeFile = new File(cascadeDir, "haarcascade_frontalface_default.xml");
+            File cascadeFile = new File(cascadeDir, "haarcascade_frontalface_alt.xml");
             FileOutputStream out = new FileOutputStream(cascadeFile);
             byte[] buffer = new byte[4096];
             int bytesRead;
@@ -87,9 +90,52 @@ public class FaceDetection {
 
         MatOfRect resultMatOfRect = new MatOfRect();
         detector.detectMultiScale(grey, resultMatOfRect);
-        List<Rect> results = resultMatOfRect.toList();
+        List<Rect> results = new ArrayList<>(resultMatOfRect.toList());
 
-        informListeners(resizeAndReformatFaces(results, scale, scale), grey.width() * scale, grey.height() * scale);
+        // Crappy model tracker.
+        // We know faces.
+        List<Rect> goodFaces = new ArrayList<>();
+
+        // We iterate all known faces from the last tracking cycle
+        for(Rect f : knownFaces) {
+            if(results.size() == 0)
+                break;
+
+            double minError = -1;
+            Rect best = null;
+
+            // Then, we get the best candidate we currently see and associate it.
+            for(Rect r : results) {
+                double curError =
+                        Math.abs((r.x + r.width / 2) - (f.x - f.width / 2)) +
+                        Math.abs((r.y + r.height / 2) - (f.y - f.height / 2)) +
+                        Math.pow(Math.abs(r.width - f.width), 2) +
+                        Math.pow(Math.abs(r.height - f.height), 2);
+                if(best == null || curError < minError) {
+                    best = r;
+                    minError = curError;
+                }
+            }
+            Log.d(TAG, "Min Error: " + minError);
+            goodFaces.add(best);
+            results.remove(best);
+        }
+
+        // All other faces from results are added to known faces,
+        // but not to the current goodFaces set.
+        // So we keep them only, if we see them at least twice.
+        // Known faces we did not see are dropped.
+        ArrayList<Rect> newKnownFaces = new ArrayList<>(goodFaces);
+
+        for(Rect f : results) {
+            if(!newKnownFaces.contains(f)) {
+                newKnownFaces.add(f);
+            }
+        }
+
+        knownFaces = newKnownFaces;
+
+        informListeners(resizeAndReformatFaces(goodFaces, scale, scale), grey.width() * scale, grey.height() * scale);
 
         // Android Detector
         /*
@@ -179,7 +225,7 @@ public class FaceDetection {
                 grey
         );*/
 
-        // For this project, we don't do histogram equalization, as the camera runs on full auto anyway.
+        // For this project, do we need histogram equalization? The camera runs on full auto anyway.
         //Imgproc.equalizeHist(grey, grey);
         return grey;
     }

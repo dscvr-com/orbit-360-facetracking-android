@@ -70,7 +70,7 @@ public class InMemoryImageProvider implements SurfaceProvider {
                                 codecSurface.drawImage(false);
                                 dataListener.imageDataReady(codecSurface.fetchPixels(), codecSurface.mWidth,
                                         codecSurface.mHeight, CodecSurface.colorFormat);
-                                //Log.d(TAG, "Fetch frame done");
+                                Log.d(TAG, "Fetch frame done");
                             } else {
                                 Log.e(TAG, "Fetch frame failed");
                                 Thread.sleep(10, 0);

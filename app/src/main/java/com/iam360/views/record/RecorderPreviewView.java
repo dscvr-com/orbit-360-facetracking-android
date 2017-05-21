@@ -36,6 +36,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
     private InMemoryImageProvider inMemoryRecorder;
     private FaceTrackingListener dataListener;
     private boolean isFrontCamera;
+    private static int DETECTOR_IMAGE_SIZE = 240;
 
     public RecorderPreviewView(Activity context, boolean isFrontCamera) {
         super(context);
@@ -158,6 +159,17 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
             });
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void initializeExternalSurfaceProvider(Size optimalSize, SurfaceProvider target, SurfaceProvider.SurfaceProviderCallback externalSurfaceCallback) {
+        Log.w(TAG, "Vendor: " + android.os.Build.MANUFACTURER);
+        if(target == inMemoryRecorder /*&& android.os.Build.MANUFACTURER.equals("Huawei")*/) {
+            float aspect = (float)optimalSize.getWidth() / (float)optimalSize.getHeight();
+            super.initializeExternalSurfaceProvider(new Size((int)(DETECTOR_IMAGE_SIZE * Math.min(1, aspect)), (int)(DETECTOR_IMAGE_SIZE * Math.min(1, 1.f / aspect))), target, externalSurfaceCallback);
+        } else {
+            super.initializeExternalSurfaceProvider(optimalSize, target, externalSurfaceCallback);
         }
     }
 
