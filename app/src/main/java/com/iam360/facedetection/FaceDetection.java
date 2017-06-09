@@ -14,6 +14,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
@@ -89,7 +90,7 @@ public class FaceDetection {
         int scale = makeSmaller(grey);
 
         MatOfRect resultMatOfRect = new MatOfRect();
-        detector.detectMultiScale(grey, resultMatOfRect);
+        detector.detectMultiScale(grey, resultMatOfRect, 1.1, 8, 0, new Size(0, 0), new Size(0, 0));
         List<Rect> results = new ArrayList<>(resultMatOfRect.toList());
 
         // Crappy model tracker.
@@ -205,7 +206,12 @@ public class FaceDetection {
         Mat grey = new Mat(height, width, CvType.CV_8UC1);
 
         rgba.put(0, 0, data);
-        Imgproc.cvtColor(rgba, grey, Imgproc.COLOR_RGBA2GRAY);
+
+        // /Imgproc.cvtColor(rgba, grey, Imgproc.COLOR_RGBA2GRAY);
+        List<Mat> channels = new ArrayList<>(3);
+        Core.split(rgba, channels);
+
+        grey = channels.get(0); // Red channel
 
         if (orientation == 270) {
             Core.transpose(grey, grey);
@@ -215,7 +221,6 @@ public class FaceDetection {
             Core.transpose(grey, grey);
             Core.flip(grey, grey, 0);
         }
-
 
         // Writes debug images:
         /*Imgcodecs.imwrite(
