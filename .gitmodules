@@ -1,0 +1,3 @@
+[submodule "media"]
+	path = media
+	url = git@gitlab.com:Sisa241995/oribit360media.git
