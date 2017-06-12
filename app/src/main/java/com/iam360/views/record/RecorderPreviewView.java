@@ -16,13 +16,16 @@ import android.util.Size;
 import android.view.Surface;
 
 import com.iam360.facedetection.FaceTrackingListener;
-import com.iam360.views.record.engine.ImageRecorder;
-import com.iam360.views.record.engine.InMemoryImageProvider;
-import com.iam360.views.record.engine.RecorderPreviewViewBase;
-import com.iam360.views.record.engine.SurfaceProvider;
-import com.iam360.views.record.engine.VideoRecorder;
+import com.iam360.facetracking.BluetoothCameraApplicationContext;
 
 import java.io.IOException;
+
+import iam360.com.orbit360media.FocalLengthListener;
+import iam360.com.orbit360media.ImageRecorder;
+import iam360.com.orbit360media.InMemoryImageProvider;
+import iam360.com.orbit360media.RecorderPreviewViewBase;
+import iam360.com.orbit360media.SurfaceProvider;
+import iam360.com.orbit360media.VideoRecorder;
 
 /**
  * Created by Emi on 15/05/2017.
@@ -39,7 +42,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
     private static int DETECTOR_IMAGE_SIZE = 240;
 
     public RecorderPreviewView(Activity context, boolean isFrontCamera) {
-        super(context);
+        super(context,(FocalLengthListener) characteristics -> ((BluetoothCameraApplicationContext) context.getApplicationContext()).setFocalLength(characteristics));
 
         imageRecorder = new ImageRecorder(context);
         videoRecorder = new VideoRecorder(context, 90);
@@ -171,6 +174,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
         } else {
             super.initializeExternalSurfaceProvider(optimalSize, target, externalSurfaceCallback);
         }
+
     }
 
     public void startVideo() {

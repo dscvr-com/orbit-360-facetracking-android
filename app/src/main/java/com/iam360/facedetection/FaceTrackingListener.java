@@ -3,7 +3,8 @@ package com.iam360.facedetection;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.hardware.camera2.CameraDevice;
-import com.iam360.views.record.RecorderPreviewListener;
+
+import iam360.com.record.RecorderPreviewListener;
 
 /**
  * Created by Charlotte on 03.11.2016.
