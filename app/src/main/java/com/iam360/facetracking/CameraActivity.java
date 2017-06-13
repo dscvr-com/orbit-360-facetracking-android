@@ -129,16 +129,9 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
         if (!(isCameraPermGranted && isAudioPermGranted && isWritePermGranted)) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA) && ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.RECORD_AUDIO) && ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                createCameraView();
-            } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         REQUEST_CAMERA_PERMISSION);
-            }
         } else {
             createCameraView();
         }
@@ -188,7 +181,6 @@ public class CameraActivity extends AppCompatActivity implements ActivityCompat.
     }
 
     private void createRecorderPreview(boolean isFrontCamera) {
-        // TODO.
         recordPreview = new RecorderPreviewView(this, isFrontCamera);
 
         int orientation = 0;

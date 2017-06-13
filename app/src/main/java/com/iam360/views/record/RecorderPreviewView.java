@@ -42,7 +42,7 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
     private static int DETECTOR_IMAGE_SIZE = 240;
 
     public RecorderPreviewView(Activity context, boolean isFrontCamera) {
-        super(context,(FocalLengthListener) characteristics -> ((BluetoothCameraApplicationContext) context.getApplicationContext()).setFocalLength(characteristics));
+        super(context, characteristics -> ((BluetoothCameraApplicationContext) context.getApplicationContext()).setFocalLength(characteristics));
 
         imageRecorder = new ImageRecorder(context);
         videoRecorder = new VideoRecorder(context, 90);
@@ -71,6 +71,8 @@ public class RecorderPreviewView extends RecorderPreviewViewBase {
         Log.d(TAG, "createSurfaceProviders");
         return new SurfaceProvider[] {  imageRecorder/*, videoRecorder*/, inMemoryRecorder };
     }
+
+
 
     @Override
     public CaptureRequest.Builder setupPreviewSession(CameraDevice device, Surface previewSurface) throws CameraAccessException {
